@@ -65,6 +65,7 @@ model_file = os.path.join(model_dir, 'model_stacked_2fit_' + model_type + '.pkl'
 scaler = StandardScaler()
 selected_features = []
 numeric_features = []
+
 # Load your feature-engineered data
 base_data_path = './Model_build1/data/model_data_training_newPoisson.xlsx'
 new_prediction_path = './Model_build1/data/merged_data_prediction.csv'
@@ -72,14 +73,16 @@ real_scores_path = './Model_build1/made_predictions/predictions_stacked_2fit_mer
 base_data = pd.read_excel(base_data_path)
 logging.info(f"Data loaded from {base_data_path} with shape: {base_data.shape}")
 
+# Load data for prediction
 new_prediction_data = pd.read_csv(new_prediction_path)
 logging.info(f"Data loaded from {new_prediction_path} with shape: {new_prediction_data.shape}")
-# new_prediction_data = new_prediction_data[(new_prediction_data['season_encoded'] == 4)]
 logging.info(f"Data loaded with {len(new_prediction_data)} rows")
 
 # Filter data to only include away_goals from 0 to 5
 base_data = base_data[(base_data['home_goals'] >= 0) & (base_data['home_goals'] <= 6) & (base_data['away_goals'] >= 0) & (base_data['away_goals'] <= 6) ]
+base_data = base_data.dropna()
 logging.info(f"Data filtered to only include away_goals from 0 to 6. rows: {len(base_data)} Filtered data shape: {base_data.shape}")
+
 # Drop unnecessary columns
 data = base_data.drop(columns=['Unnamed: 0.1', 'Unnamed: 0','match_outcome', 'home_goals','away_goals',  'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
 
