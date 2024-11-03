@@ -1,0 +1,359 @@
+2024-10-17 20:41:53,978 - INFO - Model directory checked/created.
+2024-10-17 20:42:02,621 - INFO - Data loaded from ./Model_build1/model_data.xlsx with shape: (15440, 94)
+2024-10-17 20:42:04,528 - INFO - Data prepared for modeling. Feature shape: (15440, 28), Target shape: (15440,)
+2024-10-17 20:42:04,528 - INFO - Data split into train and test. Train shape: (12352, 28), Test shape: (3088, 28)
+2024-10-17 20:42:04,544 - INFO - Data scaling completed.
+2024-10-17 20:42:18,478 - INFO - Feature selection using RFE completed.
+2024-10-17 20:42:18,692 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15945, 20)
+2024-10-17 20:43:43,045 - INFO - Stacking model trained successfully.
+2024-10-17 20:43:43,667 - INFO - Stacking Model Accuracy: 0.9863989637305699
+2024-10-17 20:43:43,676 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       0.99      0.98      0.99       939
+           0       0.98      0.99      0.98       839
+           1       0.98      0.99      0.99      1310
+
+    accuracy                           0.99      3088
+   macro avg       0.99      0.99      0.99      3088
+weighted avg       0.99      0.99      0.99      3088
+
+2024-10-17 21:03:03,811 - INFO - Cross-Validation Scores: [0.98933835 0.99059266 0.98871119 0.99027908 0.99027908 0.98871119
+ 0.99059266 0.98651615 0.98996551 0.99278771 0.99027908 0.98902477
+ 0.99404202 0.98839762 0.98902477]
+2024-10-17 22:14:28,349 - INFO - Model directory checked/created.
+2024-10-17 22:14:37,403 - INFO - Data loaded from ./Model_build1/model_data.xlsx with shape: (15440, 94)
+2024-10-17 22:14:39,231 - INFO - Data prepared for modeling. Feature shape: (15440, 28), Target shape: (15440,)
+2024-10-17 22:14:39,234 - INFO - Data split into train and test. Train shape: (12352, 28), Test shape: (3088, 28)
+2024-10-17 22:14:39,234 - INFO - Data scaling completed.
+2024-10-17 22:14:53,206 - INFO - Feature selection using RFE completed.
+2024-10-17 22:14:53,500 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15945, 20)
+2024-10-17 22:16:17,916 - INFO - Stacking model trained successfully.
+2024-10-17 22:16:18,483 - INFO - Stacking Model Accuracy: 0.9851036269430051
+2024-10-17 22:16:18,483 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       0.99      0.98      0.98       939
+           0       0.98      0.98      0.98       839
+           1       0.98      0.99      0.99      1310
+
+    accuracy                           0.99      3088
+   macro avg       0.99      0.98      0.98      3088
+weighted avg       0.99      0.99      0.99      3088
+
+2024-10-17 22:32:28,439 - INFO - Cross-Validation Scores: [0.98871119 0.98996551 0.98871119 0.99059266 0.98996551 0.98839762
+ 0.99121982 0.98933835 0.99184697 0.99247413 0.99027908 0.98777046
+ 0.9943556  0.98714331 0.98839762]
+2024-10-18 17:45:58,104 - INFO - Model directory checked/created.
+2024-10-18 17:46:11,129 - INFO - Data loaded from ./Model_build1/model_data.xlsx with shape: (15440, 94)
+2024-10-18 17:46:16,442 - INFO - Data prepared for modeling. Feature shape: (15440, 28), Target shape: (15440,)
+2024-10-18 17:46:16,449 - INFO - Data split into train and test. Train shape: (12352, 28), Test shape: (3088, 28)
+2024-10-18 17:46:16,458 - INFO - Data scaling completed.
+2024-10-18 17:46:28,726 - INFO - Feature selection using RFE completed.
+2024-10-18 17:46:29,115 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-18 17:48:39,999 - INFO - Stacking model trained successfully.
+2024-10-18 17:48:40,927 - INFO - Stacking Model Accuracy: 0.9880181347150259
+2024-10-18 17:48:40,927 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       0.99      0.99      0.99       915
+           0       0.99      0.98      0.98       842
+           1       0.99      0.99      0.99      1331
+
+    accuracy                           0.99      3088
+   macro avg       0.99      0.99      0.99      3088
+weighted avg       0.99      0.99      0.99      3088
+
+2024-10-18 18:12:02,705 - INFO - Cross-Validation Scores: [0.99118665 0.99055713 0.98866499 0.99086902 0.98835013 0.98929808
+ 0.99055713 0.99149874 0.98677582 0.98992443 0.98740951 0.98961284
+ 0.98992443 0.98960957 0.99055416]
+2024-10-18 18:49:28,493 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-18 18:49:28,494 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 0.1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-18 18:49:29,299 - INFO - Assets written to: ram://f63f5bf0-aec5-4e10-941b-da2ae4bc1902/assets
+2024-10-18 21:34:17,761 - INFO - Model directory checked/created.
+2024-10-18 21:34:32,677 - INFO - Data loaded from ./Model_build1/model_data.xlsx with shape: (15440, 93)
+2024-10-18 21:34:49,492 - INFO - Data prepared for modeling. Feature shape: (15440, 28), Target shape: (15440,)
+2024-10-18 21:34:49,497 - INFO - Data split into train and test. Train shape: (12352, 28), Test shape: (3088, 28)
+2024-10-18 21:34:49,505 - INFO - Data scaling completed.
+2024-10-18 21:35:03,971 - INFO - Feature selection using RFE completed.
+2024-10-18 21:35:04,399 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-18 21:36:15,034 - INFO - Stacking model trained successfully.
+2024-10-18 21:36:27,670 - INFO - Neural Network model trained and saved.
+2024-10-18 21:36:28,489 - INFO - Stacking Model Accuracy: 0.9883419689119171
+2024-10-18 21:36:28,489 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       0.99      0.99      0.99       915
+           0       0.99      0.98      0.99       842
+           1       0.99      0.99      0.99      1331
+
+    accuracy                           0.99      3088
+   macro avg       0.99      0.99      0.99      3088
+weighted avg       0.99      0.99      0.99      3088
+
+2024-10-18 21:47:31,439 - INFO - Cross-Validation Scores: [0.99087189 0.99055713 0.98897985 0.99118388 0.98866499 0.98929808
+ 0.99055713 0.9918136  0.98677582 0.98960957 0.98677998 0.98961284
+ 0.98960957 0.98960957 0.99086902]
+2024-10-18 22:10:56,459 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-18 22:10:56,462 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 0.1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-18 22:10:56,789 - INFO - Models saved successfully.
+2024-10-18 22:25:18,558 - INFO - Model directory checked/created.
+2024-10-18 22:25:29,497 - INFO - Data loaded from ./Model_build1/model_data.xlsx with shape: (15440, 93)
+2024-10-18 22:25:39,521 - INFO - Data prepared for modeling. Feature shape: (15440, 28), Target shape: (15440,)
+2024-10-18 22:25:39,527 - INFO - Data split into train and test. Train shape: (12352, 28), Test shape: (3088, 28)
+2024-10-18 22:25:39,537 - INFO - Data scaling completed.
+2024-10-18 22:25:51,926 - INFO - Feature selection using RFE completed.
+2024-10-18 22:25:51,972 - INFO - RFE selector saved.
+2024-10-18 22:25:52,404 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-18 22:27:19,353 - INFO - Stacking model trained successfully.
+2024-10-18 22:27:32,627 - INFO - Neural Network model trained and saved.
+2024-10-18 22:27:33,384 - INFO - Stacking Model Accuracy: 0.9880181347150259
+2024-10-18 22:27:33,384 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       0.99      0.99      0.99       915
+           0       0.98      0.98      0.98       842
+           1       0.99      0.99      0.99      1331
+
+    accuracy                           0.99      3088
+   macro avg       0.99      0.99      0.99      3088
+weighted avg       0.99      0.99      0.99      3088
+
+2024-10-18 22:38:49,502 - INFO - Cross-Validation Scores: [0.98961284 0.99181618 0.98929471 0.99023929 0.98960957 0.98835379
+ 0.99024237 0.99118388 0.98866499 0.99055416 0.98709474 0.98835379
+ 0.99023929 0.99023929 0.98992443]
+2024-10-18 22:40:39,578 - INFO - Model directory checked/created.
+2024-10-18 22:40:57,745 - INFO - Data loaded from ./Model_build1/model_data.xlsx with shape: (15440, 93)
+2024-10-18 22:41:05,207 - INFO - Data prepared for modeling. Feature shape: (15440, 28), Target shape: (15440,)
+2024-10-18 22:41:05,212 - INFO - Data split into train and test. Train shape: (12352, 28), Test shape: (3088, 28)
+2024-10-18 22:41:05,221 - INFO - Data scaling completed.
+2024-10-18 22:41:16,826 - INFO - Feature selection using RFE completed.
+2024-10-18 22:41:16,883 - INFO - RFE selector saved.
+2024-10-18 22:41:17,256 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-18 22:42:17,235 - INFO - Stacking model trained successfully.
+2024-10-18 22:42:27,873 - INFO - Neural Network model trained and saved.
+2024-10-18 22:42:28,589 - INFO - Stacking Model Accuracy: 0.9883419689119171
+2024-10-18 22:42:28,589 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       0.99      0.99      0.99       915
+           0       0.99      0.98      0.99       842
+           1       0.99      0.99      0.99      1331
+
+    accuracy                           0.99      3088
+   macro avg       0.99      0.99      0.99      3088
+weighted avg       0.99      0.99      0.99      3088
+
+2024-10-18 22:53:32,419 - INFO - Cross-Validation Scores: [0.99087189 0.99055713 0.98897985 0.99118388 0.98866499 0.98929808
+ 0.99055713 0.9918136  0.98677582 0.98960957 0.98677998 0.98961284
+ 0.98960957 0.98960957 0.99086902]
+2024-10-18 23:15:38,680 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-18 23:15:38,683 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 0.1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-18 23:15:38,986 - INFO - Models saved successfully.
+2024-10-19 03:50:13,351 - INFO - Model directory checked/created.
+2024-10-19 03:50:13,450 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 03:50:13,453 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'match_outcome', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_goals', 'away_win_rate összege', 'Away_wins összege', 'away_xG_rolling_avg összege', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate összege', 'Home_wins összege', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'draw', 'away_win', 'home_goals', 'home_points', 'home_win', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 03:50:37,152 - INFO - Data prepared for modeling. Feature shape: (15440, 49), Target shape: (15440,)
+2024-10-19 03:50:37,166 - INFO - Data split into train and test. Train shape: (12352, 49), Test shape: (3088, 49)
+2024-10-19 03:50:37,184 - INFO - Data scaling completed.
+2024-10-19 03:50:54,236 - INFO - Feature selection using RFE completed.
+2024-10-19 03:50:54,291 - INFO - RFE selector saved.
+2024-10-19 03:50:54,695 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-19 03:51:13,160 - INFO - Stacking model trained successfully.
+2024-10-19 03:51:26,975 - INFO - Neural Network model trained and saved.
+2024-10-19 03:51:27,221 - INFO - Stacking Model Accuracy: 1.0
+2024-10-19 03:51:27,221 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       1.00      1.00      1.00       915
+           0       1.00      1.00      1.00       842
+           1       1.00      1.00      1.00      1331
+
+    accuracy                           1.00      3088
+   macro avg       1.00      1.00      1.00      3088
+weighted avg       1.00      1.00      1.00      3088
+
+2024-10-19 03:55:34,785 - INFO - Cross-Validation Scores: [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+2024-10-19 04:03:17,143 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-19 04:03:17,144 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 0.1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-19 04:03:17,342 - INFO - Models saved successfully.
+2024-10-19 16:45:29,631 - INFO - Model directory checked/created.
+2024-10-19 16:45:29,748 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 16:45:29,752 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'match_outcome', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_goals', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'draw', 'away_win', 'home_goals', 'home_points', 'home_win', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 16:45:41,255 - INFO - Data prepared for modeling. Feature shape: (15440, 49), Target shape: (15440,)
+2024-10-19 16:45:41,263 - INFO - Data split into train and test. Train shape: (12352, 49), Test shape: (3088, 49)
+2024-10-19 16:45:41,276 - INFO - Data scaling completed.
+2024-10-19 16:45:57,121 - INFO - Feature selection using RFE completed.
+2024-10-19 16:45:57,159 - INFO - RFE selector saved.
+2024-10-19 16:45:57,539 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-19 16:46:15,672 - INFO - Stacking model trained successfully.
+2024-10-19 16:46:29,800 - INFO - Neural Network model trained and saved.
+2024-10-19 16:46:29,955 - INFO - Stacking Model Accuracy: 1.0
+2024-10-19 16:46:29,955 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       1.00      1.00      1.00       915
+           0       1.00      1.00      1.00       842
+           1       1.00      1.00      1.00      1331
+
+    accuracy                           1.00      3088
+   macro avg       1.00      1.00      1.00      3088
+weighted avg       1.00      1.00      1.00      3088
+
+2024-10-19 16:50:55,343 - INFO - Cross-Validation Scores: [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+2024-10-19 16:59:25,155 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-19 16:59:25,155 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 0.1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-19 16:59:25,348 - INFO - Models saved successfully.
+2024-10-19 18:12:30,796 - INFO - Model directory checked/created.
+2024-10-19 18:12:30,988 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:12:30,997 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 18:12:33,497 - INFO - Data prepared for modeling. Feature shape: (15440, 42), Target shape: (15440,)
+2024-10-19 18:12:33,497 - INFO - Data split into train and test. Train shape: (12352, 42), Test shape: (3088, 42)
+2024-10-19 18:12:33,519 - INFO - Data scaling completed.
+2024-10-19 18:13:03,381 - INFO - Feature selection using RFE completed.
+2024-10-19 18:13:04,087 - INFO - RFE selector saved.
+2024-10-19 18:13:04,315 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-19 18:13:43,512 - INFO - Stacking model trained successfully.
+2024-10-19 18:13:53,387 - INFO - Model directory checked/created.
+2024-10-19 18:13:53,447 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:13:53,447 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 18:13:55,846 - INFO - Data prepared for modeling. Feature shape: (15440, 42), Target shape: (15440,)
+2024-10-19 18:13:55,862 - INFO - Data split into train and test. Train shape: (12352, 42), Test shape: (3088, 42)
+2024-10-19 18:13:55,862 - INFO - Data scaling completed.
+2024-10-19 18:14:24,095 - INFO - Feature selection using RFE completed.
+2024-10-19 18:14:25,112 - INFO - RFE selector saved.
+2024-10-19 18:14:25,341 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-19 18:15:05,095 - INFO - Stacking model trained successfully.
+2024-10-19 18:15:11,496 - INFO - Neural Network model trained and saved.
+2024-10-19 18:15:11,929 - INFO - Stacking Model Accuracy: 0.9996761658031088
+2024-10-19 18:15:11,929 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       1.00      1.00      1.00       915
+           0       1.00      1.00      1.00       842
+           1       1.00      1.00      1.00      1331
+
+    accuracy                           1.00      3088
+   macro avg       1.00      1.00      1.00      3088
+weighted avg       1.00      1.00      1.00      3088
+
+2024-10-19 18:22:42,945 - INFO - Cross-Validation Scores: [1.         0.99968524 1.         1.         0.99968514 0.99968524
+ 1.         0.99937028 1.         0.99968514 1.         1.
+ 0.99968514 1.         1.        ]
+2024-10-19 18:38:09,415 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-19 18:38:09,417 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-19 18:38:14,832 - INFO - Models saved successfully.
+2024-10-19 18:54:16,661 - INFO - Model directory checked/created.
+2024-10-19 18:54:16,866 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:54:16,874 - INFO - Numeric features selected: ['season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 18:54:19,277 - INFO - Data prepared for modeling. Feature shape: (15440, 41), Target shape: (15440,)
+2024-10-19 18:54:19,283 - INFO - Data split into train and test. Train shape: (12352, 41), Test shape: (3088, 41)
+2024-10-19 18:54:19,296 - INFO - Data scaling completed.
+2024-10-19 18:54:19,329 - INFO - Scaler saved for future use.
+2024-10-19 18:54:46,764 - INFO - Feature selection using RFE completed.
+2024-10-19 18:54:47,454 - INFO - RFE selector saved.
+2024-10-19 18:54:47,663 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-19 18:55:29,042 - INFO - Stacking model trained successfully.
+2024-10-19 18:55:35,580 - INFO - Neural Network model trained and saved.
+2024-10-19 18:55:36,028 - INFO - Stacking Model Accuracy: 0.9996761658031088
+2024-10-19 18:55:36,028 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       1.00      1.00      1.00       915
+           0       1.00      1.00      1.00       842
+           1       1.00      1.00      1.00      1331
+
+    accuracy                           1.00      3088
+   macro avg       1.00      1.00      1.00      3088
+weighted avg       1.00      1.00      1.00      3088
+
+2024-10-19 19:02:10,750 - INFO - Model directory checked/created.
+2024-10-19 19:02:10,929 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 19:02:10,929 - INFO - Numeric features selected: ['season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 19:02:13,145 - INFO - Data prepared for modeling. Feature shape: (15440, 41), Target shape: (15440,)
+2024-10-19 19:02:13,145 - INFO - Data split into train and test. Train shape: (12352, 41), Test shape: (3088, 41)
+2024-10-19 19:02:13,161 - INFO - Data scaling completed.
+2024-10-19 19:02:13,177 - INFO - Scaler saved for future use.
+2024-10-19 19:02:39,179 - INFO - Feature selection using RFE completed.
+2024-10-19 19:02:39,762 - INFO - RFE selector saved.
+2024-10-19 19:02:39,995 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-19 19:03:20,428 - INFO - Stacking model trained successfully.
+2024-10-19 19:03:26,696 - INFO - Neural Network model trained and saved.
+2024-10-19 19:03:27,112 - INFO - Stacking Model Accuracy: 0.9996761658031088
+2024-10-19 19:03:27,112 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       1.00      1.00      1.00       915
+           0       1.00      1.00      1.00       842
+           1       1.00      1.00      1.00      1331
+
+    accuracy                           1.00      3088
+   macro avg       1.00      1.00      1.00      3088
+weighted avg       1.00      1.00      1.00      3088
+
+2024-10-19 19:11:14,845 - INFO - Cross-Validation Scores: [1.         1.         1.         0.99968514 1.         1.
+ 1.         1.         1.         0.99937028 1.         1.
+ 1.         1.         1.        ]
+2024-10-19 19:26:00,326 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-19 19:26:00,328 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-19 19:26:02,802 - INFO - Models saved successfully.
+2024-10-19 21:43:37,362 - INFO - Model directory checked/created.
+2024-10-19 21:43:37,538 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 21:43:37,548 - INFO - Numeric features selected: ['season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 21:43:39,868 - INFO - Data prepared for modeling. Feature shape: (15440, 41), Target shape: (15440,)
+2024-10-19 21:43:39,873 - INFO - Data split into train and test. Train shape: (12352, 41), Test shape: (3088, 41)
+2024-10-19 21:43:39,884 - INFO - Data scaling completed.
+2024-10-19 21:43:39,908 - INFO - Scaler saved for future use.
+2024-10-19 21:43:58,664 - INFO - Feature selection using RFE completed.
+2024-10-19 21:43:59,193 - INFO - RFE selector saved.
+2024-10-19 21:43:59,713 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-19 21:44:37,062 - INFO - Stacking model trained successfully.
+2024-10-19 21:44:43,863 - INFO - Neural Network model trained and saved.
+2024-10-19 21:44:44,299 - INFO - Stacking Model Accuracy: 1.0
+2024-10-19 21:44:44,312 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       1.00      1.00      1.00       915
+           0       1.00      1.00      1.00       842
+           1       1.00      1.00      1.00      1331
+
+    accuracy                           1.00      3088
+   macro avg       1.00      1.00      1.00      3088
+weighted avg       1.00      1.00      1.00      3088
+
+2024-10-19 21:51:09,448 - INFO - Cross-Validation Scores: [1.         0.99968524 1.         0.99968514 1.         1.
+ 1.         1.         1.         0.99968514 1.         1.
+ 1.         1.         1.        ]
+2024-10-19 22:02:52,697 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-19 22:02:52,697 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-19 22:02:54,947 - INFO - Models saved successfully.
+2024-10-20 20:22:14,430 - INFO - Model directory checked/created.
+2024-10-20 20:22:14,641 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-20 20:22:14,653 - INFO - Numeric features selected: ['season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-20 20:22:17,381 - INFO - Data prepared for modeling. Feature shape: (15440, 41), Target shape: (15440,)
+2024-10-20 20:22:17,388 - INFO - Data split into train and test. Train shape: (12352, 41), Test shape: (3088, 41)
+2024-10-20 20:22:17,388 - INFO - Data scaling completed.
+2024-10-20 20:22:17,423 - INFO - Scaler saved for future use.
+2024-10-20 20:22:36,854 - INFO - Feature selection using RFE completed.
+2024-10-20 20:22:37,388 - INFO - RFE selector saved.
+2024-10-20 20:22:37,591 - INFO - SMOTE applied to handle class imbalance. Resampled train shape: (15882, 20)
+2024-10-20 20:25:07,707 - INFO - Stacking model trained successfully.
+2024-10-20 20:25:15,488 - INFO - Neural Network model trained and saved.
+2024-10-20 20:25:15,922 - INFO - Stacking Model Accuracy: 0.9996761658031088
+2024-10-20 20:25:15,922 - INFO - Stacking Model Classification Report:
+              precision    recall  f1-score   support
+
+          -1       1.00      1.00      1.00       915
+           0       1.00      1.00      1.00       842
+           1       1.00      1.00      1.00      1331
+
+    accuracy                           1.00      3088
+   macro avg       1.00      1.00      1.00      3088
+weighted avg       1.00      1.00      1.00      3088
+
+2024-10-20 20:31:38,839 - INFO - Cross-Validation Scores: [1.         1.         1.         0.99968514 1.         1.
+ 1.         1.         1.         0.99937028 1.         1.
+ 1.         1.         1.        ]
+2024-10-20 20:43:03,320 - INFO - GridSearchCV completed for hyperparameter tuning.
+2024-10-20 20:43:03,322 - INFO - Best Params from GridSearch: {'rf__max_depth': 20, 'rf__n_estimators': 200, 'svm__C': 1, 'svm__gamma': 0.1, 'svm__kernel': 'linear'}
+2024-10-20 20:43:05,404 - INFO - Models saved successfully.

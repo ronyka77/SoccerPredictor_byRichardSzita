@@ -1,0 +1,171 @@
+2024-10-19 18:03:33,995 - INFO - Model directory checked/created.
+2024-10-19 18:03:34,175 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:03:34,182 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 18:03:53,145 - INFO - Model directory checked/created.
+2024-10-19 18:03:53,362 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:03:53,362 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 18:03:53,380 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 18:03:55,663 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 18:03:55,663 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 18:03:55,680 - INFO - Data scaling completed.
+2024-10-19 18:10:13,098 - INFO - Feature selection using RFE completed.
+2024-10-19 18:10:14,461 - INFO - RFE selector saved.
+2024-10-19 18:13:00,444 - INFO - Stacking model for away Goals trained successfully.
+2024-10-19 18:13:01,533 - INFO - away Goals Stacking Model MSE: 0.05819316392735502, R2: 0.9516398111118084
+2024-10-19 18:13:43,406 - INFO - Model directory checked/created.
+2024-10-19 18:13:43,554 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:13:43,559 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 18:13:43,568 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 18:13:46,363 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 18:13:46,389 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 18:13:46,409 - INFO - Data scaling completed.
+2024-10-19 18:20:28,829 - INFO - Feature selection using RFE completed.
+2024-10-19 18:20:31,312 - INFO - RFE selector saved.
+2024-10-19 18:23:23,310 - INFO - Stacking model for away Goals trained successfully.
+2024-10-19 18:23:24,460 - INFO - away Goals Stacking Model MSE: 0.05791828662089359, R2: 0.9518682420401928
+2024-10-19 18:26:38,144 - INFO - Model directory checked/created.
+2024-10-19 18:26:38,316 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:26:38,321 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 18:26:38,329 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 18:26:40,928 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 18:26:40,928 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 18:26:40,945 - INFO - Data scaling completed.
+2024-10-19 18:33:23,345 - INFO - Feature selection using RFE completed.
+2024-10-19 18:33:24,412 - INFO - RFE selector saved.
+2024-10-19 18:36:14,345 - INFO - Stacking model for away Goals trained successfully.
+2024-10-19 18:36:15,467 - INFO - away Goals Stacking Model MSE: 0.05773001869054487, R2: 0.9520246980920517
+2024-10-19 18:38:14,163 - INFO - Model directory checked/created.
+2024-10-19 18:38:14,270 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:38:14,278 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 18:38:14,288 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 18:38:22,286 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 18:38:22,300 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 18:38:22,312 - INFO - Data scaling completed.
+2024-10-19 18:42:42,102 - INFO - Feature selection using RFE completed.
+2024-10-19 18:42:42,144 - INFO - RFE selector saved.
+2024-10-19 18:46:24,987 - INFO - Stacking model for away Goals trained successfully.
+2024-10-19 18:46:26,730 - INFO - away Goals Stacking Model MSE: 0.05754187006098942, R2: 0.9521810550015285
+2024-10-19 18:46:27,381 - INFO - Assets written to: C:\Users\T480\AppData\Local\Temp\tmp8r4xvba1\assets
+2024-10-19 18:46:27,446 - INFO - Stacking model for away Goals saved successfully.
+2024-10-19 18:57:45,254 - INFO - Model directory checked/created.
+2024-10-19 18:57:45,382 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 18:57:45,394 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 18:57:45,408 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 18:58:37,776 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 18:58:37,816 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 18:58:37,838 - INFO - Data scaling completed.
+2024-10-19 18:58:37,847 - INFO - Scaler saved for future use.
+2024-10-19 19:03:42,003 - INFO - Feature selection using RFE completed.
+2024-10-19 19:03:42,043 - INFO - RFE selector saved.
+2024-10-19 19:06:28,224 - INFO - Stacking model for away Goals trained successfully.
+2024-10-19 19:06:29,941 - INFO - away Goals Stacking Model MSE: 0.05530186476546636, R2: 0.9540425636718127
+2024-10-19 19:06:30,598 - INFO - Assets written to: C:\Users\T480\AppData\Local\Temp\tmpnjqk1b8j\assets
+2024-10-19 19:06:30,658 - INFO - Stacking model for away Goals saved successfully.
+2024-10-19 19:38:52,021 - INFO - Model directory checked/created.
+2024-10-19 19:38:52,114 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 19:38:52,123 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 19:38:52,134 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 19:38:59,044 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 19:38:59,059 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 19:38:59,078 - INFO - Data scaling completed.
+2024-10-19 19:38:59,081 - INFO - Scaler saved to ./models/scaler_awaygoals.pkl
+2024-10-19 19:43:48,032 - INFO - Feature selection using RFE completed.
+2024-10-19 19:43:48,071 - INFO - RFE selector saved to ./models/rfe_awaygoals_selector.pkl
+2024-10-19 19:46:46,314 - INFO - Stacking model for Away Goals trained successfully.
+2024-10-19 19:46:48,650 - INFO - Away Goals Stacking Model MSE: 0.05608452034879366, R2: 0.953392154426298
+2024-10-19 19:46:49,395 - INFO - Assets written to: C:\Users\T480\AppData\Local\Temp\tmpnovd_d6y\assets
+2024-10-19 19:46:49,472 - INFO - Stacking model for Away Goals saved to ./models/awayscore_stacking_model.pkl
+2024-10-19 19:54:59,332 - INFO - Model directory checked/created.
+2024-10-19 19:54:59,418 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 19:54:59,424 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 19:54:59,434 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 19:55:04,590 - INFO - Imputer saved to ./models/imputer_awaygoals.pkl
+2024-10-19 19:55:04,591 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 19:55:04,597 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 19:55:04,608 - INFO - Data scaling completed.
+2024-10-19 19:55:04,609 - INFO - Scaler saved to ./models/scaler_awaygoals.pkl
+2024-10-19 20:00:23,403 - INFO - Feature selection using RFE completed.
+2024-10-19 20:00:23,453 - INFO - RFE selector saved to ./models/rfe_awaygoals_selector.pkl
+2024-10-19 20:03:05,728 - INFO - Stacking model for Away Goals trained successfully.
+2024-10-19 20:03:07,435 - INFO - Away Goals Stacking Model MSE: 0.05561603889840597, R2: 0.9537814759531297
+2024-10-19 20:03:08,173 - INFO - Assets written to: C:\Users\T480\AppData\Local\Temp\tmpmhxelmzd\assets
+2024-10-19 20:03:08,239 - INFO - Stacking model for Away Goals saved to ./models/awayscore_stacking_model.pkl
+2024-10-19 21:43:14,129 - INFO - Model directory checked/created.
+2024-10-19 21:43:14,196 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 21:43:14,196 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 21:43:14,196 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 21:43:17,162 - INFO - Imputer saved to ./models/imputer_awaygoals.pkl
+2024-10-19 21:43:17,162 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 21:43:17,178 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 21:43:17,180 - INFO - Data scaling completed.
+2024-10-19 21:43:17,196 - INFO - Scaler saved to ./models/scaler_awaygoals.pkl
+2024-10-19 21:46:15,830 - INFO - Feature selection using RFE completed.
+2024-10-19 21:46:16,746 - INFO - RFE selector saved to ./models/rfe_awaygoals_selector.pkl
+2024-10-19 21:47:57,213 - INFO - Stacking model for Away Goals trained successfully.
+2024-10-19 21:47:58,419 - INFO - Away Goals Stacking Model MSE: 0.05609419507529731, R2: 0.9533841144509885
+2024-10-19 22:11:11,217 - INFO - Model directory checked/created.
+2024-10-19 22:11:11,301 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 22:11:11,304 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 22:11:11,312 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 22:11:15,323 - INFO - Imputer saved to ./models/imputer_awaygoals.pkl
+2024-10-19 22:11:15,325 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 22:11:15,331 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 22:11:15,346 - INFO - Data scaling completed.
+2024-10-19 22:11:15,348 - INFO - Scaler saved to ./models/scaler_awaygoals.pkl
+2024-10-19 22:14:47,360 - INFO - Feature selection using RFE completed.
+2024-10-19 22:14:47,394 - INFO - RFE selector saved to ./models/rfe_awaygoals_selector.pkl
+2024-10-19 22:17:07,208 - INFO - Stacking model for Away Goals trained successfully.
+2024-10-19 22:17:08,926 - INFO - Away Goals Stacking Model MSE: 0.05738976630601002, R2: 0.9523074575860415
+2024-10-19 22:17:09,500 - INFO - Assets written to: C:\Users\T480\AppData\Local\Temp\tmpu1lt_hcr\assets
+2024-10-19 22:17:09,551 - INFO - Stacking model for Away Goals saved to ./models/awayscore_stacking_model.pkl
+2024-10-19 22:37:46,036 - INFO - Model directory checked/created.
+2024-10-19 22:37:46,136 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-19 22:37:46,140 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-19 22:37:46,148 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-19 22:37:50,915 - INFO - Imputer saved to ./models/imputer_awaygoals.pkl
+2024-10-19 22:37:50,916 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-19 22:37:50,925 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-19 22:37:50,941 - INFO - Data scaling completed.
+2024-10-19 22:37:50,942 - INFO - Scaler saved to ./models/scaler_awaygoals.pkl
+2024-10-19 22:41:30,846 - INFO - Feature selection using RFE completed.
+2024-10-19 22:41:30,881 - INFO - RFE selector saved to ./models/rfe_awaygoals_selector.pkl
+2024-10-19 22:43:44,210 - INFO - Stacking model for Away Goals trained successfully.
+2024-10-19 22:43:45,870 - INFO - Away Goals Stacking Model MSE: 0.05643480599690732, R2: 0.9531010570024022
+2024-10-19 22:43:46,449 - INFO - Assets written to: C:\Users\T480\AppData\Local\Temp\tmprzbolps3\assets
+2024-10-19 22:43:46,523 - INFO - Stacking model for Away Goals saved to ./models/awayscore_stacking_model.pkl
+2024-10-20 19:38:08,826 - INFO - Model directory checked/created.
+2024-10-20 19:38:08,923 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-20 19:38:08,934 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-20 19:38:08,945 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-20 19:38:13,114 - INFO - Imputer saved to ./models/imputer_awaygoals.pkl
+2024-10-20 19:38:13,116 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-20 19:38:13,121 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-20 19:38:13,134 - INFO - Data scaling completed.
+2024-10-20 19:38:13,135 - INFO - Scaler saved to ./models/scaler_awaygoals.pkl
+2024-10-20 19:41:47,682 - INFO - Feature selection using RFE completed.
+2024-10-20 19:41:47,717 - INFO - RFE selector saved to ./models/rfe_awaygoals_selector.pkl
+2024-10-20 19:44:26,173 - INFO - Stacking model for away Goals trained successfully.
+2024-10-20 19:44:27,889 - INFO - away Goals Stacking Model MSE: 0.05686870318281052, R2: 0.9527404759916408
+2024-10-20 19:44:28,448 - INFO - Assets written to: C:\Users\T480\AppData\Local\Temp\tmphwchkkdy\assets
+2024-10-20 19:44:28,495 - INFO - Stacking model for away goals (without Keras) saved to ./models/awayscore_stacking_model.pkl
+2024-10-20 19:44:28,873 - INFO - Assets written to: ./models/nn_regressor_away_model\assets
+2024-10-20 19:44:28,892 - INFO - Keras neural network model saved to ./models/nn_regressor_away_model
+2024-10-20 20:18:11,573 - INFO - Model directory checked/created.
+2024-10-20 20:18:11,725 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-20 20:18:11,725 - INFO - Data filtered to only include away_goals from 0 to 5. Filtered data shape: (15411, 50)
+2024-10-20 20:18:11,743 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-20 20:18:14,288 - INFO - Imputer saved to ./models/imputer_awaygoals.pkl
+2024-10-20 20:18:14,288 - INFO - Data prepared for modeling. Feature shape: (15411, 42), Target shape: (15411,)
+2024-10-20 20:18:14,288 - INFO - Data split into train and test. Train shape: (12328, 42), Test shape: (3083, 42)
+2024-10-20 20:18:14,306 - INFO - Data scaling completed.
+2024-10-20 20:18:14,322 - INFO - Scaler saved to ./models/scaler_awaygoals.pkl
+2024-10-20 20:20:59,153 - INFO - Feature selection using RFE completed.
+2024-10-20 20:21:00,088 - INFO - RFE selector saved to ./models/rfe_awaygoals_selector.pkl
+2024-10-20 20:22:48,010 - INFO - Stacking model for away Goals trained successfully.
+2024-10-20 20:22:49,257 - INFO - away Goals Stacking Model MSE: 0.058877534691945614, R2: 0.9510710793706287
+2024-10-20 20:22:49,765 - INFO - Assets written to: C:\Users\szita\AppData\Local\Temp\tmp9jl_n82c\assets
+2024-10-20 20:22:49,838 - INFO - Stacking model for away goals (without Keras) saved to ./models/awayscore_stacking_model.pkl
+2024-10-20 20:22:50,339 - INFO - Assets written to: ./models/nn_regressor_away_model\assets
+2024-10-20 20:22:50,425 - INFO - Keras neural network model saved to ./models/nn_regressor_away_model
+2024-10-20 20:22:50,494 - INFO - Imputer loaded from ./models/imputer_awaygoals.pkl
+2024-10-20 20:22:51,806 - INFO - New data loaded from ./Model_build1/merged_data_prediction.xlsx with shape: (3907, 42)

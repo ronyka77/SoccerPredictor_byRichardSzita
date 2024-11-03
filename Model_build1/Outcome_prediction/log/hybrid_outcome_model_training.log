@@ -1,0 +1,18 @@
+2024-10-20 20:43:33,973 - INFO - Model directory checked/created.
+2024-10-20 20:43:34,139 - INFO - Data loaded from ./Model_build1/model_data_training.csv with shape: (15440, 50)
+2024-10-20 20:43:34,156 - INFO - Numeric features selected: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'away_league_position', 'Away_points_cum', 'Away_goal_difference_cum', 'Away_draws', 'away_draw_rate', 'away_average_points', 'Away_team_matches', 'away_win_rate', 'Away_wins', 'away_xG_rolling_avg', 'away_shots_on_target_accuracy_rolling_avg', 'away_shots_on_target_rolling_avg', 'away_saves_accuracy_rolling_avg', 'away_points_rolling_avg', 'away_goals_rolling_avg', 'away_goal_difference_rolling_avg', 'home_average_points', 'home_draw_rate', 'Home_draws', 'Home_goal_difference_cum', 'home_league_position', 'Home_team_matches', 'home_win_rate', 'Home_wins', 'HomeTeam_last_away_match', 'home_xG_rolling_avg', 'home_shots_on_target_rolling_avg', 'home_shots_on_target_accuracy_rolling_avg', 'home_saves_accuracy_rolling_avg', 'home_points_rolling_avg', 'Home_points_cum', 'home_goals_rolling_avg', 'home_goal_difference_rolling_avg', 'referee_foul_rate', 'referee_encoded', 'home_advantage']
+2024-10-20 20:43:37,072 - INFO - Imputer saved to ./models/imputer_outcome.pkl
+2024-10-20 20:43:37,072 - INFO - Data prepared for modeling. Feature shape: (15440, 42), Target shape: (15440,)
+2024-10-20 20:43:37,089 - INFO - Data split into train and test. Train shape: (12352, 42), Test shape: (3088, 42)
+2024-10-20 20:43:37,089 - INFO - Data scaling completed.
+2024-10-20 20:43:37,120 - INFO - Scaler saved to ./models/scaler_outcome.pkl
+2024-10-20 20:44:45,272 - INFO - Feature selection using RFE completed.
+2024-10-20 20:44:45,422 - INFO - RFE selector saved to ./models/rfe_outcome_selector.pkl
+2024-10-20 20:45:58,539 - INFO - Stacking model for home Goals trained successfully.
+2024-10-20 20:45:59,260 - INFO - Home Goals Stacking Model MSE: 0.000644374770810448, R2: 0.9990913849520262
+2024-10-20 20:45:59,692 - INFO - Assets written to: C:\Users\szita\AppData\Local\Temp\tmpie4ya4cg\assets
+2024-10-20 20:45:59,757 - INFO - Stacking model for home goals (without Keras) saved to ./models/homescore_stacking_model.pkl
+2024-10-20 20:46:00,239 - INFO - Assets written to: ./models/nn_regressor_home_model\assets
+2024-10-20 20:46:00,357 - INFO - Keras neural network model saved to ./models/nn_regressor_home_model
+2024-10-20 20:46:00,423 - INFO - Imputer loaded from ./models/imputer_outcome.pkl
+2024-10-20 20:46:01,656 - INFO - New data loaded from ./Model_build1/merged_data_prediction.xlsx with shape: (3907, 42)
