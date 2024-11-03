@@ -157,8 +157,11 @@ selector = joblib.load(selector_file)
 
 # Prepare new data for prediction
 def prepare_new_data(new_data, imputer, scaler, selector):
+   
+    model_data = new_data.replace(',', '.', regex=True)
+    model_data = model_data.apply(pd.to_numeric, errors='coerce')
     # Apply imputation
-    model_data_imputed = imputer.transform(new_data)  # Use the saved imputer
+    model_data_imputed = imputer.transform(model_data)  # Use the saved imputer
     # Apply scaling
     model_data_scaled = scaler.transform(model_data_imputed)  # Use the saved scaler
     # Apply feature selection (RFE)

@@ -193,8 +193,10 @@ class CustomStackingRegressor:
    
 # Prepare data
 def prepare_data(data, features, model_type):
-   
-    model_data = data[features]
+    
+    model_data = data.replace(',', '.', regex=True)
+    model_data = model_data.apply(pd.to_numeric, errors='coerce')
+    model_data = model_data[features]
 
     # Apply Iterative Imputation
     imputer = IterativeImputer(random_state=42)
@@ -247,10 +249,14 @@ def add_predicted_values(new_real_scores,data):
 def prepare_new_data(new_data, imputer, selector):
     global selected_features
     global numeric_features
+    
+    model_data = new_data.replace(',', '.', regex=True)
+    model_data = model_data.apply(pd.to_numeric, errors='coerce')
+    
     logging.info(f"Prediction Selected Features: {numeric_features}")
     scaler_file = os.path.join(model_dir, 'scaler_' + model_type + '.pkl')
     # numeric_features = new_data.select_dtypes(include=['float64', 'int64']).columns.tolist()
-    model_data = new_data[numeric_features]
+    model_data = model_data[numeric_features]
     scaler_loaded = joblib.load(scaler_file)
     
     # Apply imputation
@@ -466,12 +472,14 @@ data_with_error = data_with_error.dropna()
 logging.info(f"data_with_error length: {len(data_with_error)}")
 
 prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals','draw','away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
+prediction_df = prediction_df.replace(',', '.', regex=True)
+prediction_df = prediction_df.apply(pd.to_numeric, errors='coerce')
 prediction_df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 logging.info(f"prediction_df length: {len(prediction_df)}")
 stacking_regressor = train_model(base_data, data, model_type)
 logging.info(f"Start {model_type} predictions")
-logging.info(f"columns of Prediction_df: {prediction_df.columns}")
+# logging.info(f"columns of Prediction_df: {prediction_df.columns}")
 
 try:
     if len(data_with_error)>0:
