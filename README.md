@@ -51,16 +51,17 @@ This project is a comprehensive machine learning pipeline designed to predict fo
 
    Run the following scripts to fetch the latest data:
 
-   
    python .\SoccerPredictor_byRichardSzita\data_tools\fbref_get_data.py
+
    python .\SoccerPredictor_byRichardSzita\data_tools\fbref_scraper.py
+
    python .\SoccerPredictor_byRichardSzita\data_tools\aggregation.py
 
 2. **Feature Engineering**:
 
    - **Python-Based**: Execute the feature engineering Python script to prepare data for modeling and prediction.
 
-   - **Power BI-Based**: Open the Power BI files located in the `data_tools` folder for model data (both prediction and training). Refresh the data and export the content of Worksheet1 to CSV files (`model_data_training_newPoisson.csv` for training and `model_data_prediction_newPoisson.csv` for prediction).
+   - **Power BI-Based**: Open the Power BI files located in the `data_tools` folder for model data (both prediction and training). Refresh the data and export the data of Table on Worksheet1 to CSV files (`model_data_training_newPoisson.csv` for training and `model_data_prediction_newPoisson.csv` for prediction).
 
 3. **Additional Data Processing**:
 
