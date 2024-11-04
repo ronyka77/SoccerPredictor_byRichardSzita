@@ -362,9 +362,6 @@ def load_and_prepare_data():
     data['home_points'] = data['home_win'].apply(lambda x: 3 if x == 1 else 0) + data['draw']
     data['away_points'] = data['away_win'].apply(lambda x: 3 if x == 1 else 0) + data['draw']
     
-    # data['home_form'] = data.apply(lambda row: calculate_team_form(row['home_encoded'], data), axis=1)
-    # data['away_form'] = data.apply(lambda row: calculate_team_form(row['away_encoded'], data), axis=1)
-    
     data['home_goal_difference'] = data['home_goals'] - data['away_goals']
     data['away_goal_difference'] = data['away_goals'] - data['home_goals']
 
@@ -421,92 +418,6 @@ def add_cumulative_sums(dataframe):
     print("CUMSUM Dataframes ready, start calculating values...")
     dataframe['home_cumcount'] = dataframe.groupby(['home_encoded', 'season_encoded', 'league_encoded'])['running_id'].cumcount() + 1
     dataframe['away_cumcount'] = dataframe.groupby(['away_encoded', 'season_encoded', 'league_encoded'])['running_id'].cumcount() + 1
-    
-    # cumsum_features = ['home_match_cumcount','away_match_cumcount','home_win_cumsum','away_win_cumsum']
-    # # Load data as a Dask DataFrame
-    # ddf = dd.from_pandas(dataframe, npartitions=mp.cpu_count())
-    # print('Calculate cumsum_features parallel_apply')
-    # for feat in cumsum_features:
-    #     print(feat)
-    #     ddf[feat] = ddf.apply(lambda row: calculate_sum_dask(row, cumsum_home_df, cumsum_away_df, feat), axis=1, meta=('x', 'f8')).ffill()
-        
-        
-    # # Compute the final result
-    # ddf = ddf.compute()  
-    # dataframe = ddf
-
-    # print('Calculating: home_match_cumcount')
-    # dataframe['home_match_cumcount'] = dataframe.apply(lambda row: 
-    #     calculate_cumulative_sum(cumsum_home_df,cumsum_away_df,
-    #                              row['running_id'],row['home_encoded'],row['Date'],
-    #                              'home_count','away_count',1), axis=1).ffill()
-    
-    # print('Calculating: away_match_cumcount')
-    # dataframe['away_match_cumcount'] = dataframe.apply(lambda row: 
-    #     calculate_cumulative_sum(cumsum_home_df,cumsum_away_df,
-    #                              row['running_id'],row['away_encoded'],row['Date'],
-    #                              'home_count','away_count',2), axis=1).ffill()
-    
-    # data['home_win_cumsum'] = data.groupby(['home_encoded', 'season_encoded', 'league_encoded'])['home_win'].cumsum()
-    # data['away_win_cumsum'] = data.groupby(['away_encoded', 'season_encoded', 'league_encoded'])['away_win'].cumsum()
-    # print('Calculating: home_win_cumsum')
-    # data['home_win_cumsum'] = data.apply(lambda row: 
-    #     calculate_cumulative_sum(cumsum_home_df,cumsum_away_df,
-    #                              row['running_id'],row['home_encoded'],row['Date'],
-    #                              'home_win_cumsum','away_win_cumsum',1), axis=1).ffill()
-    
-    # print('Calculating: away_win_cumsum')
-    # data['away_win_cumsum'] = data.apply(lambda row: 
-    #     calculate_cumulative_sum(cumsum_home_df,cumsum_away_df,
-    #                              row['running_id'],row['away_encoded'],row['Date'],
-    #                              'home_win_cumsum','away_win_cumsum',2), axis=1).ffill()
-    
-    # data['home_draw_cumsum'] = data.groupby(['home_encoded', 'season_encoded', 'league_encoded'])['draw'].cumsum()
-    # data['away_draw_cumsum'] = data.groupby(['away_encoded', 'season_encoded', 'league_encoded'])['draw'].cumsum()
-    
-    # print('Calculating: home_draw_cumsum')
-    # dataframe['home_draw_cumsum'] = dataframe.apply(lambda row: 
-    #     calculate_cumulative_sum(cumsum_home_df,cumsum_away_df,
-    #                              row['running_id'],row['home_encoded'],row['Date'],
-    #                              'draw_cumsum','draw_cumsum',1), axis=1).ffill()
-    
-    # print('Calculating: away_draw_cumsum')
-    # dataframe['away_draw_cumsum'] = dataframe.apply(lambda row: 
-    #     calculate_cumulative_sum(cumsum_home_df,cumsum_away_df,
-    #                              row['running_id'],row['away_encoded'],row['Date'],
-    #                              'draw_cumsum','draw_cumsum',2), axis=1).ffill()
-    # print('draw cumsum done...')
-    # print('Calculating: home_win_rate')
-    # dataframe['home_win_rate'] = dataframe['home_win_cumsum'] / dataframe['home_match_cumcount']
-    # dataframe['home_win_rate'] = dataframe['home_win_rate'].fillna(0)
-    # print('Calculating: away_win_rate')
-    # dataframe['away_win_rate'] = dataframe['away_win_cumsum'] / dataframe['away_match_cumcount'] 
-    # dataframe['away_win_rate'] = dataframe['away_win_rate'].fillna(0)
-    # print('Calculating: home_draw_rate')
-    # dataframe['home_draw_rate'] = dataframe['home_draw_cumsum'] / dataframe['home_match_cumcount']
-    # dataframe['home_draw_rate'] = dataframe['home_draw_rate'].fillna(0)
-    # print('Calculating: away_draw_rate')
-    # dataframe['away_draw_rate'] = dataframe['away_draw_cumsum'] / dataframe['away_match_cumcount'] 
-    # dataframe['away_draw_rate'] = dataframe['away_draw_rate'].fillna(0)
-    
-    # # Team targets
-    # # dataframe['home_team_average_points'] = dataframe['home_points_cumulative'] / dataframe['home_cumcount'] 
-    # # dataframe['away_team_average_points'] = dataframe['away_points_cumulative'] / dataframe['away_cumcount'] 
-    # print('Calculating: home_team_average_points')
-    # dataframe['home_team_average_points'] = dataframe.apply(lambda row: 
-    #     calculate_cumulative_sum(cumsum_home_df,cumsum_away_df,
-    #                              row['running_id'],row['home_encoded'],row['Date'],
-    #                              'home_points_cumsum','away_points_cumsum',1), axis=1).ffill()
-    
-    # print('Calculating: away_team_average_points')
-    # dataframe['away_team_average_points'] = dataframe.apply(lambda row: 
-    #     calculate_cumulative_sum(cumsum_home_df,cumsum_away_df,
-    #                              row['running_id'],row['away_encoded'],row['Date'],
-    #                              'home_points_cumsum','away_points_cumsum',2), axis=1).ffill()
-   
-    # print('Calculating: Strenth index')
-    # dataframe['home_strength_index'] = (dataframe['home_goal_diff_cumulative'] * 0.4 + dataframe['home_win_rate'])
-    # dataframe['away_strength_index'] = (dataframe['away_goal_diff_cumulative'] * 0.4 + dataframe['away_win_rate'])
     
     return dataframe
 
