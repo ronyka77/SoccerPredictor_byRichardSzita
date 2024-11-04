@@ -18,23 +18,23 @@ This project is a comprehensive machine learning pipeline designed to predict fo
 
 1. **Clone the Repository**:
 
-   bash
+   
    git clone <https://github.com/ronyka77/Football_predictor_byRichardSzita.git>
 
 2. **Navigate to the Project Directory**:
 
-   bash
+   
    cd Football_predictor_byRichardSzita
 
 3. **Create and Activate a Virtual Environment**:
 
-   bash
+   
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 4. **Install Dependencies**:
 
-   bash
+   
    pip install -r requirements.txt
 
 5. **Install MongoDB Server**:
@@ -51,7 +51,7 @@ This project is a comprehensive machine learning pipeline designed to predict fo
 
    Run the following scripts to fetch the latest data:
 
-   bash
+   
    python .\SoccerPredictor_byRichardSzita\data_tools\fbref_get_data.py
    python .\SoccerPredictor_byRichardSzita\data_tools\fbref_scraper.py
    python .\SoccerPredictor_byRichardSzita\data_tools\aggregation.py
