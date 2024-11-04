@@ -4,69 +4,83 @@ This project is a comprehensive machine learning pipeline designed to predict fo
 
 ## Features
 
-- Data Preprocessing: Handles missing values using iterative imputation and scales features for optimal model performance.
-- Feature Selection: Employs Recursive Feature Elimination (RFE) to identify the most significant features.
-- Model Training: Utilizes a stacking regressor that combines Random Forest, Support Vector Regressor (SVR), Neural Network, and XGBoost models.
-- Custom Metrics: Implements a custom metric to evaluate predictions within a specified tolerance range.
-- Model Persistence: Saves trained models using `joblib` and `cloudpickle` for future use.
+- **Data Scraping and Storage**: Automated scripts in data_tools folder (`fbref_get_data.py` and `fbref_scraper.py` and `aggregation.py`) are used to scrape football data, which is then stored in a MongoDB database. The project includes the latest database backup for convenience.
+
+- **Feature Engineering**: Features are engineered using two approaches:
+  - Python scripts for initial processing.
+  - Power BI files (located in the `data_tools\PowerBI` folder) for advanced feature engineering.
+
+- **Model Training**: The project trains stacked models combining regression techniques, XGBoost, and Keras neural networks. Separate models are developed for predicting match outcomes, home goals, and away goals.
+
+- **Prediction**: Scripts are provided to make predictions using the trained models.
 
 ## Installation
 
-1. Clone the Repository:
+1. **Clone the Repository**:
 
    bash
    git clone <https://github.com/ronyka77/Football_predictor_byRichardSzita.git>
 
-2. Navigate to the Project Directory:
+2. **Navigate to the Project Directory**:
 
    bash
    cd Football_predictor_byRichardSzita
 
-3. Create and Activate a Virtual Environment:
+3. **Create and Activate a Virtual Environment**:
 
    bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
-   
-4. Install Dependencies:
+
+4. **Install Dependencies**:
 
    bash
    pip install -r requirements.txt
 
+5. **Install MongoDB Server**:
+
+   Download and install MongoDB from the [official website](https://www.mongodb.com/try/download/community).
+
+6. **Restore Database Backup**:
+
+   Create a new database in MongoDB and restore the provided backup data.
+
 ## Usage
 
-1. Data Preparation: Ensure your dataset is in the correct format as expected by the script.
+1. **Data Scraping**:
 
-2. Model Training: Run the training script to preprocess data, select features, and train the stacking regressor.
-
-   bash
-   python train_model.py
-
-   
-
-3. Model Evaluation: Evaluate the model's performance using metrics such as Mean Squared Error (MSE), R-squared, Mean Absolute Error (MAE), Mean Absolute Percentage Error (MAPE), and the custom within-range metric.
-
-4. Prediction: Use the trained model to make predictions on new data.
+   Run the following scripts to fetch the latest data:
 
    bash
-   python predict.py
+   python .\SoccerPredictor_byRichardSzita\data_tools\fbref_get_data.py
+   python .\SoccerPredictor_byRichardSzita\data_tools\fbref_scraper.py
+   python .\SoccerPredictor_byRichardSzita\data_tools\aggregation.py
 
-## Model Saving and Loading
+2. **Feature Engineering**:
 
-The project saves the trained models in two parts:
+   - **Python-Based**: Execute the feature engineering Python script to prepare data for modeling and prediction.
 
-- Neural Network Model: Saved separately in H5 format.
-- Stacking Regressor: Saved using `cloudpickle` after removing the neural network component.
+   - **Power BI-Based**: Open the Power BI files located in the `data_tools` folder for model data (both prediction and training). Refresh the data and export the content of Worksheet1 to CSV files (`model_data_training_newPoisson.csv` for training and `model_data_prediction_newPoisson.csv` for prediction).
 
-This approach ensures that custom objects and layers are appropriately handled during the saving and loading process.
+3. **Additional Data Processing**:
 
-## Custom Metrics
+   - **Add ELO Scores**: Run the `add_ELO_scores.py` script to incorporate ELO scores into the dataset.
 
-The project includes a custom metric, `within_range_metric`, which evaluates the percentage of predictions within a specified tolerance range. This metric is integrated into the Keras model and is essential for assessing model performance.
+   - **Add xPoisson Columns**: Execute the `add_poisson_xG.py` script to add expected Poisson distribution columns.
 
-## Logging
+   - **Merge Data**: Run the `merge_data_for_prediction.py` script to combine all processed data.
 
-The training and prediction processes are logged extensively, providing insights into data preprocessing steps, model training progress, and evaluation metrics. Logs are saved in the `./Model_build1/score_prediction/log/` directory.
+4. **Final Data Preparation**:
+
+   Open the Power BI merge data file, refresh the data, and export it to a CSV file named `merged_data_prediction.csv`.
+
+5. **Model Training**:
+
+   Run the model training scripts in score_prediction folder to train the models on the prepared data. --> `model_stacked_2fit_outcome.py`, `model_stacked_2fit_homegoals.py`, `model_stacked_2fit_awaygoals.py`
+
+6. **Prediction**:
+
+   Use the prediction scripts to generate predictions based on the trained models. --> `stacked_2fit_outcome_prediction.py`, `stacked_2fit_homegoals_prediction.py`, `stacked_2fit_awaygoals_prediction.py`
 
 ## Contributing
 
