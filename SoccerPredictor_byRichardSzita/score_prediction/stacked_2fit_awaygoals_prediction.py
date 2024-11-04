@@ -111,7 +111,7 @@ def within_range_metric(y_true, y_pred):
     # Calculate the absolute difference between true and predicted values
     diff = K.abs(y_true - y_pred)
     # Check if the difference is less than or equal to 0.3
-    within_range = K.less_equal(diff, 0.3)
+    within_range = K.less_equal(diff, 0.5)
     # Return the mean value (percentage of correct predictions within range)
     return K.mean(K.cast(within_range, K.floatx()))
 

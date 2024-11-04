@@ -102,8 +102,8 @@ def get_future_matches(collection, historical_data):
     logging.info("Extracted date features successfully.")
     
     columns_to_drop = [ 'Round','_id_stats'
-                        ,'Home_xG', 'Attendance', 'Score', 'Away_xG', '_id', '_id_match', 'Day', 'Time', 'Venue',
-                       'Referee', 'Match Report', 'season', 'league', 'unique_id', 'match', 'team_stats', 'team_stats_extra',
+                        ,'Home_xG', 'Attendance', 'Score', 'Away_xG', '_id', '_id_match', 'Day', 'Time',
+                       'Match Report', 'season', 'league', 'unique_id', 'match', 'team_stats', 'team_stats_extra',
                        'url', 'match_outcome']
     
     future_matches = future_matches.drop(columns=columns_to_drop, errors='ignore')
@@ -168,7 +168,7 @@ def main():
     db = client['football_data']
     collection = db['aggregated_data']
     
-    historical_data = load_historical_data("./SoccerPredictor_byRichardSzita/data/model_data_prediction_withPoisson.xlsx")
+    historical_data = load_historical_data("./SoccerPredictor_byRichardSzita/data/model_data_prediction_newPoisson.xlsx")
     
     future_matches = get_future_matches(collection, historical_data)
     

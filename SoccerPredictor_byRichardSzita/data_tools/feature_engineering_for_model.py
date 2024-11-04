@@ -14,49 +14,6 @@ collection = db['aggregated_data']
 
 le = LabelEncoder()
 
-
-# # Function to apply multiprocessing
-# def parallel_apply(df, cumsum_home_df, cumsum_away_df, column, num_cores=4):
-#     # Prepare the data as needed
-#     df_split = np.array_split(df, num_cores)
-    
-#     # Create a pool of workers
-#     pool = mp.Pool(num_cores)
-    
-#     # Pass the partial function with the home and away cumulative dataframes
-#     results = pool.starmap(apply_cumulative_sum_chunk, [(chunk, cumsum_home_df, cumsum_away_df, column) for chunk in df_split])
-    
-#     # Close the pool
-#     pool.close()
-#     pool.join()
-    
-#     # Concatenate the results back
-#     return pd.concat(results, axis=0)
-
-# # Wrapper function to handle chunks of the DataFrame
-# def apply_cumulative_sum_chunk(df_chunk, cumsum_home_df, cumsum_away_df, column):
-#     df_chunk[column] = df_chunk.apply(lambda row: calculate_cumulative_sum_parallel(row, cumsum_home_df, cumsum_away_df, column), axis=1)
-#     return df_chunk
-
-# # Function to be applied in parallel
-# def calculate_cumulative_sum_parallel(row, cumsum_home_df, cumsum_away_df, column):
-#     if column == 'home_match_cumcount':
-#         return calculate_cumulative_sum(
-#             cumsum_home_df, cumsum_away_df, row['running_id'], row['home_encoded'], row['Date'], 'home_count', 'away_count', 1
-#         )
-#     if column == 'away_match_cumcount':
-#         return calculate_cumulative_sum(
-#             cumsum_home_df, cumsum_away_df, row['running_id'], row['away_encoded'], row['Date'], 'home_count', 'away_count', 2
-#         )
-#     if column == 'home_win_cumsum':
-#         return calculate_cumulative_sum(
-#             cumsum_home_df, cumsum_away_df, row['running_id'], row['home_encoded'], row['Date'], 'home_win_cumsum', 'away_win_cumsum', 1
-#         )
-#     if column == 'away_win_cumsum':
-#         return calculate_cumulative_sum(
-#             cumsum_home_df, cumsum_away_df, row['running_id'], row['away_encoded'], row['Date'], 'home_win_cumsum', 'away_win_cumsum', 2
-#         )
-
 # Helper function to convert string values to float (removing % if necessary)
 def convert_to_float(value):
     try:
@@ -684,8 +641,8 @@ def add_rolling_columns(dataframe):
     print("New features added and dataframeset saved!")
 
     # Drop unnecessary columns
-    dataframe = dataframe.drop(columns=['_id_match','_id_odds','season', 'Venue', 'league',
-                              'Date', 'Day', 'Referee', 'match', 'Attendance', 'Match Report', 'Score', 'url', 'Time'], errors='ignore')
+    dataframe = dataframe.drop(columns=['_id_match','_id_odds','season', 'league',
+                              'Date', 'Day', 'match', 'Attendance', 'Match Report', 'Score', 'url', 'Time'], errors='ignore')
     dataframe = dataframe.replace([np.inf, -np.inf], 0)
 
     print("dataframe Cleaning successful...")

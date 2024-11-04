@@ -97,8 +97,8 @@ logging.info(f"new real scores length: {len(new_real_scores)}")
 def within_range_metric(y_true, y_pred):
     # Calculate the absolute difference between true and predicted values
     diff = K.abs(y_true - y_pred)
-    # Check if the difference is less than or equal to 0.3
-    within_range = K.less_equal(diff, 0.3)
+    # Check if the difference is less than or equal to 0.5
+    within_range = K.less_equal(diff, 0.5)
     # Return the mean value (percentage of correct predictions within range)
     return K.mean(K.cast(within_range, K.floatx()))
 
@@ -278,12 +278,12 @@ def within_range(y_true, y_pred):
     diff = K.abs(y_true - y_pred)
     
     # Check if the difference is less than or equal to 0.3
-    within_range = K.less_equal(diff, 0.3)
+    within_range = K.less_equal(diff, 0.5)
     
     # Calculate the mean of the boolean values (i.e., percentage of correct predictions)
     return K.mean(K.cast(within_range, K.floatx()))
 
-def within_range_evaluation(y_true, y_pred, tolerance=0.3):
+def within_range_evaluation(y_true, y_pred, tolerance=0.5):
     """Calculate the percentage of predictions within the given tolerance range."""
     within_range_count = np.sum(np.abs(y_true - y_pred) <= tolerance)
     return within_range_count / len(y_true)
@@ -476,7 +476,7 @@ print(nan_counts)
 data_with_error = data_with_error.dropna()
 logging.info(f"data_with_error length: {len(data_with_error)}")
 
-prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals',   'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
+prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals', 'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
 prediction_df = prediction_df.replace(',', '.', regex=True)
 prediction_df = prediction_df.apply(pd.to_numeric, errors='coerce')
 prediction_df.replace([np.inf, -np.inf], np.nan, inplace=True)

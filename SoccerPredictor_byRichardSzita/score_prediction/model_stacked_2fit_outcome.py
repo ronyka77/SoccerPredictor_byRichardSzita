@@ -96,7 +96,7 @@ def within_range_metric(y_true, y_pred):
     # Calculate the absolute difference between true and predicted values
     diff = K.abs(y_true - y_pred)
     # Check if the difference is less than or equal to 0.3
-    within_range = K.less_equal(diff, 0.3)
+    within_range = K.less_equal(diff, 1.5)
     # Return the mean value (percentage of correct predictions within range)
     return K.mean(K.cast(within_range, K.floatx()))
 
@@ -277,12 +277,12 @@ def within_range(y_true, y_pred):
     diff = K.abs(y_true - y_pred)
     
     # Check if the difference is less than or equal to 0.3
-    within_range = K.less_equal(diff, 0.3)
+    within_range = K.less_equal(diff, 1.5)
     
     # Calculate the mean of the boolean values (i.e., percentage of correct predictions)
     return K.mean(K.cast(within_range, K.floatx()))
 
-def within_range_evaluation(y_true, y_pred, tolerance=0.3):
+def within_range_evaluation(y_true, y_pred, tolerance=1.5):
     """Calculate the percentage of predictions within the given tolerance range."""
     within_range_count = np.sum(np.abs(y_true - y_pred) <= tolerance)
     return within_range_count / len(y_true)

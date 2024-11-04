@@ -5,13 +5,16 @@ model_dir = "./models/"
 os.makedirs(model_dir, exist_ok=True)
 
 # Load your feature-engineered data
-training_data_path = './SoccerPredictor_byRichardSzita/data/model_data_training.csv'
-prediction_data_path = './SoccerPredictor_byRichardSzita/data/model_data_prediction.csv'
-training_data = pd.read_csv(training_data_path)
-prediction_data = pd.read_csv(prediction_data_path)
+training_data_path =  './SoccerPredictor_byRichardSzita/data/model_data_training_newPoisson.xlsx'
+prediction_data_path =  './SoccerPredictor_byRichardSzita/data/model_data_prediction_newPoisson.xlsx'
+merged_data_path = './SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv'
+training_data = pd.read_excel(training_data_path)
+prediction_data = pd.read_excel(prediction_data_path)
+merged_data = pd.read_csv(merged_data_path)
 
 training_data = training_data.sort_values(by='Datum')
 prediction_data = prediction_data.sort_values(by='Datum')
+merged_data = merged_data.sort_values(by='Date')
 
 # Initialize the ELO ratings for each team
 INITIAL_ELO = 1500
@@ -84,11 +87,59 @@ def add_elo_scores(matches):
         print(f"{team}: {rating:.2f}")
     return matches
 
+def add_elo_scores_to_merged(matches):
+   
+    # Process each match and update ELO ratings
+    for index, row in matches.iterrows():
+        home_team = row['home_encoded']
+        away_team = row['away_encoded']
+        home_goals = row['home_poisson_xG']
+        away_goals = row['away_poisson_xG']
+
+        # Get current ELO ratings for both teams before the match
+        home_elo = row['home_team_elo']
+        away_elo = row['away_team_elo']
+
+        # Store the ELO ratings before the match in the dataset
+        # matches.at[index, 'home_team_elo'] = home_elo
+        # matches.at[index, 'away_team_elo'] = away_elo
+
+        # Determine the outcome of the match
+        if home_goals > away_goals:
+            home_score = 1  # Home team wins
+            away_score = 0  # Away team loses
+        elif home_goals < away_goals:
+            home_score = 0  # Home team loses
+            away_score = 1  # Away team wins
+        else:
+            home_score = 0.5  # Draw
+            away_score = 0.5  # Draw
+
+        # Update ELO ratings based on the match result
+        new_home_elo = update_elo(home_elo, away_elo, home_score)
+        new_away_elo = update_elo(away_elo, home_elo, away_score)
+
+        # Save the new ELO ratings for the next match
+        row['home_team_elo'] = new_home_elo
+        row['away_team_elo'] = new_away_elo
+
+        # Log the updated ratings for each team (optional)
+        # print(f"{home_team} ELO: {new_home_elo:.2f}, {away_team} ELO: {new_away_elo:.2f}")
+
+    # Final ELO ratings after processing all matches
+    print("\nFinal ELO Ratings:")
+    for team, rating in elo_ratings.items():
+        print(f"{team}: {rating:.2f}")
+    return matches
+
 training_data = add_elo_scores(training_data)
 prediction_data = add_elo_scores(prediction_data)
-training_export_path = './SoccerPredictor_byRichardSzita/data/model_data_training_withELO.xlsx'
-prediction_export_path = './SoccerPredictor_byRichardSzita/data/model_data_prediction_withELO.xlsx'
+# merged_data = add_elo_scores_to_merged(merged_data)
+training_export_path = './SoccerPredictor_byRichardSzita/data/model_data_training_newPoisson.xlsx'
+prediction_export_path = './SoccerPredictor_byRichardSzita/data/model_data_prediction_newPoisson.xlsx'
+merged_export_path = './SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv'
 # View the dataset with ELO ratings
 print("\nExporting data:")
 training_data.to_excel(training_export_path)
 prediction_data.to_excel(prediction_export_path)
+merged_data.to_csv(merged_export_path)
