@@ -4364,3 +4364,217 @@ To silence this warning, decorate the function with @tf.autograph.experimental.d
 2024-11-04 23:31:01,053 - INFO - Feature selection using RFE completed.
 2024-11-04 23:31:01,055 - INFO - Selected Features: ['running_id', 'home_encoded', 'away_encoded', 'venue_encoded', 'Away_points_cum', 'home_draw_rate', 'away_draw_rate', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
 2024-11-04 23:31:01,056 - INFO - First fit started
+2024-11-04 23:33:39,572 - INFO - Model directory checked/created.
+2024-11-04 23:33:45,622 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/model_data_training_newPoisson.xlsx with shape: (13917, 63)
+2024-11-04 23:33:45,705 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv with shape: (3760, 53)
+2024-11-04 23:33:45,705 - INFO - Data loaded with 3760 rows
+2024-11-04 23:33:45,722 - INFO - Data filtered to only include away_goals from 0 to 6. rows: 12567 Filtered data shape: (12567, 63)
+2024-11-04 23:33:46,202 - INFO - new real scores length: 274
+2024-11-04 23:33:46,389 - INFO - Home MSE: 2.3183520599250937, Away MSE: 1.8614232209737829
+2024-11-04 23:33:46,389 - INFO - Home R2: -0.2766731553578048, Away R2: -0.5502581836024207
+2024-11-04 23:33:46,389 - INFO - Outcome MSE: 10.92134831460674, Outcome R2: -0.835518777848504
+2024-11-04 23:33:46,405 - INFO - data_with_error length: 173
+2024-11-04 23:33:46,405 - INFO - prediction_df length: 3760
+2024-11-04 23:33:46,420 - INFO - Numeric features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-04 23:33:48,259 - INFO - Imputer saved to ./models/imputer_match_outcome.pkl
+2024-11-04 23:33:48,262 - INFO - Data prepared for modeling. Feature shape: (12567, 48), Target shape: (12567,)
+2024-11-04 23:33:48,267 - INFO - Data split into train and test. Train shape: (10053, 48), Test shape: (2514, 48)
+2024-11-04 23:33:48,272 - INFO - Data split into train2 and test2. Train2 shape: (10053, 48), Test2 shape: (2514, 48)
+2024-11-04 23:33:48,272 - INFO - Data scaling started.
+2024-11-04 23:33:48,321 - INFO - Scaler saved to ./models/scaler_match_outcome.pkl
+2024-11-04 23:33:48,338 - INFO - Data scaling completed.
+2024-11-04 23:33:48,338 - INFO - Feature Selection started.
+2024-11-04 23:39:04,955 - INFO - RFE selector saved to ./models/rfe_match_outcome_selector.pkl
+2024-11-04 23:39:04,972 - INFO - Feature selection using RFE completed.
+2024-11-04 23:39:04,972 - INFO - Selected Features: ['running_id', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_draw_rate', 'away_draw_rate', 'away_average_points', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-04 23:39:04,972 - INFO - First fit started
+2024-11-04 23:42:47,723 - WARNING - Callback method `on_train_batch_begin` is slow compared to the batch time (batch time: 0.0000s vs `on_train_batch_begin` time: 0.0002s). Check your callbacks.
+2024-11-04 23:44:59,424 - INFO - Stacking model for match_outcome trained successfully on first split.
+2024-11-04 23:45:01,794 - INFO - match_outcome (1st fit) Stacking Model MSE: 5.755270072946548, R2: 0.11888810371318115, Stacking Model MAE: 2.1053089753171412, Stacking Model MAPE: 120.62199379855049%
+2024-11-04 23:45:01,799 - INFO - match_outcome (1st fit) Stacking Model Within Range (±0.3): 7.398568019093078%
+2024-11-04 23:45:01,799 - INFO - Second fit started
+2024-11-04 23:48:52,137 - WARNING - Callback method `on_predict_batch_end` is slow compared to the batch time (batch time: 0.0000s vs `on_predict_batch_end` time: 0.0023s). Check your callbacks.
+2024-11-04 23:50:54,042 - INFO - Stacking model for match_outcome trained successfully on second split.
+2024-11-04 23:50:56,694 - INFO - match_outcome (2nd fit) Stacking Model MSE: 5.550022640377117, R2: 0.12797740687488246, Stacking Model MAE: 2.042641870663327, Stacking Model MAPE: 117.9075722466711%
+2024-11-04 23:50:56,696 - INFO - match_outcome (2nd fit) Stacking Model Within Range (±0.3): 8.552108194112968%
+2024-11-04 23:50:56,701 - INFO - Start match_outcome predictions
+2024-11-04 23:50:56,705 - INFO - Train a residual model for error
+2024-11-04 23:50:56,708 - INFO - Residual model train data selected
+2024-11-04 23:50:56,730 - INFO - Residual model scaler loaded
+2024-11-04 23:50:56,738 - ERROR - Error occurred while making prediction: X has 52 features, but StandardScaler is expecting 48 features as input.
+2024-11-04 23:50:57,772 - INFO - Imputer loaded from ./models/imputer_match_outcome.pkl
+2024-11-04 23:50:57,772 - INFO - Prediction Selected Features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-04 23:51:01,456 - INFO - match_outcome predictions: [3.13341451 3.90659933 3.25834362 ... 3.5198536  2.94969834 4.00549703]
+2024-11-04 23:51:08,909 - INFO - Predictions saved to ./SoccerPredictor_byRichardSzita/predictions_hybrid_2fit_match_outcome.xlsx
+2024-11-04 23:51:12,847 - INFO - Assets written to: \\192.168.0.77\Betting\Chatgpt\tempdir\tmpckjg5m77\tmpetmjp8_q\assets
+2024-11-05 21:03:56,879 - INFO - Model directory checked/created.
+2024-11-05 21:04:04,082 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/model_data_training_newPoisson.xlsx with shape: (14596, 63)
+2024-11-05 21:04:04,122 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv with shape: (3890, 51)
+2024-11-05 21:04:04,128 - INFO - Data loaded with 3890 rows
+2024-11-05 21:04:04,140 - INFO - Data filtered to only include away_goals from 0 to 6. rows: 11979 Filtered data shape: (11979, 63)
+2024-11-05 21:04:04,646 - INFO - new real scores length: 274
+2024-11-05 21:04:06,089 - INFO - Home MSE: 2.3183520599250937, Away MSE: 1.8614232209737829
+2024-11-05 21:04:06,092 - INFO - Home R2: -0.2766731553578048, Away R2: -0.5502581836024207
+2024-11-05 21:04:06,094 - INFO - Outcome MSE: 10.92134831460674, Outcome R2: -0.835518777848504
+2024-11-05 21:04:06,105 - INFO - data_with_error length: 172
+2024-11-05 21:04:06,121 - INFO - prediction_df length: 3890
+2024-11-05 21:04:06,127 - INFO - Numeric features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-05 21:04:11,397 - INFO - Imputer saved to ./models/imputer_match_outcome.pkl
+2024-11-05 21:04:11,397 - INFO - Data prepared for modeling. Feature shape: (11979, 48), Target shape: (11979,)
+2024-11-05 21:04:11,412 - INFO - Data split into train and test. Train shape: (9583, 48), Test shape: (2396, 48)
+2024-11-05 21:04:11,415 - INFO - Data split into train2 and test2. Train2 shape: (9583, 48), Test2 shape: (2396, 48)
+2024-11-05 21:04:11,415 - INFO - Data scaling started.
+2024-11-05 21:04:11,449 - INFO - Scaler saved to ./models/scaler_match_outcome.pkl
+2024-11-05 21:04:11,458 - INFO - Data scaling completed.
+2024-11-05 21:04:11,459 - INFO - Feature Selection started.
+2024-11-05 21:08:59,896 - INFO - RFE selector saved to ./models/rfe_match_outcome_selector.pkl
+2024-11-05 21:08:59,896 - INFO - Feature selection using RFE completed.
+2024-11-05 21:08:59,896 - INFO - Selected Features: ['running_id', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-05 21:08:59,896 - INFO - First fit started
+2024-11-05 21:09:29,318 - WARNING - Callback method `on_train_batch_end` is slow compared to the batch time (batch time: 0.0000s vs `on_train_batch_end` time: 0.0001s). Check your callbacks.
+2024-11-05 21:14:41,799 - INFO - Stacking model for match_outcome trained successfully on first split.
+2024-11-05 21:14:44,031 - INFO - match_outcome (1st fit) Stacking Model MSE: 5.873254026341358, R2: 0.09141095342406558, Stacking Model MAE: 2.115094272640979, Stacking Model MAPE: 117.79595477992184%
+2024-11-05 21:14:44,031 - INFO - match_outcome (1st fit) Stacking Model Within Range (±0.3): 8.3889816360601%
+2024-11-05 21:14:44,031 - INFO - Second fit started
+2024-11-05 21:20:43,347 - INFO - Stacking model for match_outcome trained successfully on second split.
+2024-11-05 21:20:45,696 - INFO - match_outcome (2nd fit) Stacking Model MSE: 5.84320121376647, R2: 0.09103301551599219, Stacking Model MAE: 2.1084099784647004, Stacking Model MAPE: 117.94789054875669%
+2024-11-05 21:20:45,697 - INFO - match_outcome (2nd fit) Stacking Model Within Range (±0.3): 8.263772954924875%
+2024-11-05 21:20:45,697 - INFO - Start match_outcome predictions
+2024-11-05 21:20:45,697 - INFO - Train a residual model for error
+2024-11-05 21:20:45,714 - INFO - Residual model train data selected
+2024-11-05 21:20:45,731 - INFO - Residual model scaler loaded
+2024-11-05 21:20:45,748 - ERROR - Error occurred while making prediction: X has 50 features, but StandardScaler is expecting 48 features as input.
+2024-11-05 21:20:46,465 - INFO - Imputer loaded from ./models/imputer_match_outcome.pkl
+2024-11-05 21:20:46,482 - INFO - Prediction Selected Features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-05 21:20:50,117 - INFO - match_outcome predictions: [3.04514306 3.78020826 3.32299514 ... 2.93811371 3.69048778 4.11118145]
+2024-11-05 21:20:57,717 - INFO - Predictions saved to ./SoccerPredictor_byRichardSzita/predictions_hybrid_2fit_match_outcome.xlsx
+2024-11-05 21:21:01,862 - INFO - Assets written to: \\192.168.0.77\Betting\Chatgpt\tempdir\tmpudclnk7n\tmp3a9p0ih7\assets
+2024-11-05 22:00:51,225 - INFO - Model directory checked/created.
+2024-11-05 22:00:58,632 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/model_data_training_newPoisson.xlsx with shape: (14596, 63)
+2024-11-05 22:00:58,661 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv with shape: (3890, 51)
+2024-11-05 22:00:58,664 - INFO - Data loaded with 3890 rows
+2024-11-05 22:00:58,676 - INFO - Data filtered to only include away_goals from 0 to 6. rows: 11979 Filtered data shape: (11979, 63)
+2024-11-05 22:00:59,201 - INFO - new real scores length: 274
+2024-11-05 22:00:59,366 - INFO - Home MSE: 2.3183520599250937, Away MSE: 1.8614232209737829
+2024-11-05 22:00:59,366 - INFO - Home R2: -0.2766731553578048, Away R2: -0.5502581836024207
+2024-11-05 22:00:59,381 - INFO - Outcome MSE: 10.92134831460674, Outcome R2: -0.835518777848504
+2024-11-05 22:00:59,392 - INFO - data_with_error length: 172
+2024-11-05 22:00:59,405 - INFO - prediction_df length: 3890
+2024-11-05 22:00:59,409 - INFO - Numeric features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-05 22:01:01,178 - INFO - Imputer saved to ./models/imputer_match_outcome.pkl
+2024-11-05 22:01:01,181 - INFO - Data prepared for modeling. Feature shape: (11979, 48), Target shape: (11979,)
+2024-11-05 22:01:01,186 - INFO - Data split into train and test. Train shape: (9583, 48), Test shape: (2396, 48)
+2024-11-05 22:01:01,191 - INFO - Data split into train2 and test2. Train2 shape: (9583, 48), Test2 shape: (2396, 48)
+2024-11-05 22:01:01,193 - INFO - Data scaling started.
+2024-11-05 22:01:01,217 - INFO - Scaler saved to ./models/scaler_match_outcome.pkl
+2024-11-05 22:01:01,217 - INFO - Data scaling completed.
+2024-11-05 22:01:01,217 - INFO - Feature Selection started.
+2024-11-05 22:06:01,784 - INFO - RFE selector saved to ./models/rfe_match_outcome_selector.pkl
+2024-11-05 22:06:01,788 - INFO - Feature selection using RFE completed.
+2024-11-05 22:06:01,790 - INFO - Selected Features: ['running_id', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-05 22:06:01,791 - INFO - First fit started
+2024-11-05 22:12:40,495 - INFO - Stacking model for match_outcome trained successfully on first split.
+2024-11-05 22:12:44,884 - INFO - match_outcome (1st fit) Stacking Model MSE: 5.8699559490927085, R2: 0.09192116409253737, Stacking Model MAE: 2.1141540414402193, Stacking Model MAPE: 117.54845173508859%
+2024-11-05 22:12:44,886 - INFO - match_outcome (1st fit) Stacking Model Within Range (±1.5): 32.38731218697829%
+2024-11-05 22:12:44,887 - INFO - Second fit started
+2024-11-05 22:17:13,797 - WARNING - Callback method `on_predict_batch_end` is slow compared to the batch time (batch time: 0.0002s vs `on_predict_batch_end` time: 0.0003s). Check your callbacks.
+2024-11-05 22:19:05,581 - WARNING - Callback method `on_predict_batch_end` is slow compared to the batch time (batch time: 0.0000s vs `on_predict_batch_end` time: 0.0026s). Check your callbacks.
+2024-11-05 22:19:32,016 - INFO - Stacking model for match_outcome trained successfully on second split.
+2024-11-05 22:19:36,383 - INFO - match_outcome (2nd fit) Stacking Model MSE: 5.840624892978377, R2: 0.09143378736213348, Stacking Model MAE: 2.107207562541301, Stacking Model MAPE: 117.76627848420857%
+2024-11-05 22:19:36,383 - INFO - match_outcome (2nd fit) Stacking Model Within Range (1.5): 32.80467445742905%
+2024-11-05 22:19:36,399 - INFO - Start match_outcome predictions
+2024-11-05 22:19:36,399 - INFO - Train a residual model for error
+2024-11-05 22:19:36,399 - INFO - Residual model train data selected
+2024-11-05 22:19:36,416 - INFO - Residual model scaler loaded
+2024-11-05 22:19:36,632 - INFO - Residual model successfully fitted
+2024-11-05 22:19:37,314 - INFO - Imputer loaded from ./models/imputer_match_outcome.pkl
+2024-11-05 22:19:37,315 - INFO - Prediction Selected Features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-05 22:19:44,249 - INFO - match_outcome predictions: [3.03549106 3.80763443 3.33845618 ... 2.92044324 3.69539065 4.13989657]
+2024-11-05 22:19:44,253 - INFO - residual model prediction error: X has 30 features, but RandomForestRegressor is expecting 48 features as input.
+2024-11-05 22:19:53,079 - INFO - Predictions saved to ./SoccerPredictor_byRichardSzita/predictions_hybrid_2fit_match_outcome.xlsx
+2024-11-05 22:19:56,783 - INFO - Assets written to: \\192.168.0.77\Betting\Chatgpt\tempdir\tmp8h4_h_qz\tmp3a7umjyk\assets
+2024-11-06 19:08:36,257 - INFO - Model directory checked/created.
+2024-11-06 19:08:43,173 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/model_data_training_newPoisson.xlsx with shape: (14605, 63)
+2024-11-06 19:08:43,252 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv with shape: (3890, 51)
+2024-11-06 19:08:43,254 - INFO - Data loaded with 3890 rows
+2024-11-06 19:08:43,273 - INFO - Data filtered to only include away_goals from 0 to 6. rows: 11980 Filtered data shape: (11980, 63)
+2024-11-06 19:08:43,832 - INFO - new real scores length: 274
+2024-11-06 19:08:44,308 - INFO - Home MSE: 2.3183520599250937, Away MSE: 1.8614232209737829
+2024-11-06 19:08:44,310 - INFO - Home R2: -0.2766731553578048, Away R2: -0.5502581836024207
+2024-11-06 19:08:44,313 - INFO - Outcome MSE: 10.92134831460674, Outcome R2: -0.835518777848504
+2024-11-06 19:08:44,324 - INFO - data_with_error length: 172
+2024-11-06 19:08:44,342 - INFO - prediction_df length: 3890
+2024-11-06 19:08:44,347 - INFO - Numeric features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-06 19:08:48,667 - INFO - Imputer saved to ./models/imputer_match_outcome.pkl
+2024-11-06 19:08:48,669 - INFO - Data prepared for modeling. Feature shape: (11980, 48), Target shape: (11980,)
+2024-11-06 19:08:48,675 - INFO - Data split into train and test. Train shape: (9584, 48), Test shape: (2396, 48)
+2024-11-06 19:08:48,679 - INFO - Data split into train2 and test2. Train2 shape: (9584, 48), Test2 shape: (2396, 48)
+2024-11-06 19:08:48,681 - INFO - Data scaling started.
+2024-11-06 19:08:48,706 - INFO - Scaler saved to ./models/scaler_match_outcome.pkl
+2024-11-06 19:08:48,706 - INFO - Data scaling completed.
+2024-11-06 19:08:48,722 - INFO - Feature Selection started.
+2024-11-06 19:13:40,893 - INFO - RFE selector saved to ./models/rfe_match_outcome_selector.pkl
+2024-11-06 19:13:40,897 - INFO - Feature selection using RFE completed.
+2024-11-06 19:13:40,897 - INFO - Selected Features: ['running_id', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_draw_rate', 'home_average_points', 'away_average_points', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-06 19:13:40,897 - INFO - First fit started
+2024-11-06 19:20:10,707 - INFO - Stacking model for match_outcome trained successfully on first split.
+2024-11-06 19:20:15,129 - INFO - match_outcome (1st fit) Stacking Model MSE: 5.850579539933632, R2: 0.10424107835845153, Stacking Model MAE: 2.1147209606576034, Stacking Model MAPE: 119.12237222036082%
+2024-11-06 19:20:15,130 - INFO - match_outcome (1st fit) Stacking Model Within Range (±1.5): 31.803005008347245%
+2024-11-06 19:20:15,132 - INFO - Second fit started
+2024-11-06 19:27:07,990 - INFO - Stacking model for match_outcome trained successfully on second split.
+2024-11-06 19:27:12,857 - INFO - match_outcome (2nd fit) Stacking Model MSE: 5.843632679181434, R2: 0.08883624118426525, Stacking Model MAE: 2.10949649521101, Stacking Model MAPE: 119.05702932669213%
+2024-11-06 19:27:12,871 - INFO - match_outcome (2nd fit) Stacking Model Within Range (1.5): 32.17863105175292%
+2024-11-06 19:27:12,879 - INFO - Start match_outcome predictions
+2024-11-06 19:27:12,879 - INFO - Train a residual model for error
+2024-11-06 19:27:12,890 - INFO - Residual model train data selected
+2024-11-06 19:27:12,907 - INFO - Residual model scaler loaded
+2024-11-06 19:27:13,175 - INFO - Residual model successfully fitted
+2024-11-06 19:27:13,924 - INFO - Imputer loaded from ./models/imputer_match_outcome.pkl
+2024-11-06 19:27:13,940 - INFO - Prediction Selected Features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-06 19:27:17,712 - WARNING - Callback method `on_predict_batch_end` is slow compared to the batch time (batch time: 0.0000s vs `on_predict_batch_end` time: 0.0002s). Check your callbacks.
+2024-11-06 19:27:21,383 - INFO - match_outcome predictions: [3.05429    4.06879594 3.16382148 ... 3.05849093 3.66201042 4.16236222]
+2024-11-06 19:27:21,388 - INFO - residual model prediction error: X has 30 features, but RandomForestRegressor is expecting 48 features as input.
+2024-11-06 19:27:30,220 - INFO - Predictions saved to ./SoccerPredictor_byRichardSzita/predictions_hybrid_2fit_match_outcome.xlsx
+2024-11-06 19:27:34,879 - INFO - Assets written to: \\192.168.0.77\Betting\Chatgpt\tempdir\tmp3r__gar8\tmps6dyqu31\assets
+2024-11-06 20:27:40,436 - INFO - Model directory checked/created.
+2024-11-06 20:27:47,503 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/model_data_training_newPoisson.xlsx with shape: (14605, 67)
+2024-11-06 20:27:47,586 - INFO - Data loaded from ./SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv with shape: (3890, 55)
+2024-11-06 20:27:47,586 - INFO - Data loaded with 3890 rows
+2024-11-06 20:27:47,603 - INFO - Data filtered to only include away_goals from 0 to 6. rows: 11980 Filtered data shape: (11980, 67)
+2024-11-06 20:27:48,085 - INFO - new real scores length: 274
+2024-11-06 20:27:48,285 - INFO - Home MSE: 2.3183520599250937, Away MSE: 1.8614232209737829
+2024-11-06 20:27:48,300 - INFO - Home R2: -0.2766731553578048, Away R2: -0.5502581836024207
+2024-11-06 20:27:48,301 - INFO - Outcome MSE: 10.92134831460674, Outcome R2: -0.835518777848504
+2024-11-06 20:27:48,302 - INFO - data_with_error length: 41
+2024-11-06 20:27:48,302 - INFO - prediction_df length: 3890
+2024-11-06 20:27:48,321 - INFO - Numeric features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_saves_rollingaverage', 'away_saves_rollingaverage', 'home_goal_difference_rollingaverage', 'away_goal_difference_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-06 20:27:50,452 - INFO - Imputer saved to ./models/imputer_match_outcome.pkl
+2024-11-06 20:27:50,452 - INFO - Data prepared for modeling. Feature shape: (11980, 52), Target shape: (11980,)
+2024-11-06 20:27:50,452 - INFO - Data split into train and test. Train shape: (9584, 52), Test shape: (2396, 52)
+2024-11-06 20:27:50,470 - INFO - Data split into train2 and test2. Train2 shape: (9584, 52), Test2 shape: (2396, 52)
+2024-11-06 20:27:50,470 - INFO - Data scaling started.
+2024-11-06 20:27:50,503 - INFO - Scaler saved to ./models/scaler_match_outcome.pkl
+2024-11-06 20:27:50,503 - INFO - Data scaling completed.
+2024-11-06 20:27:50,503 - INFO - Feature Selection started.
+2024-11-06 20:34:17,486 - INFO - RFE selector saved to ./models/rfe_match_outcome_selector.pkl
+2024-11-06 20:34:17,486 - INFO - Feature selection using RFE completed.
+2024-11-06 20:34:17,486 - INFO - Selected Features: ['running_id', 'home_encoded', 'away_encoded', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_saves_rollingaverage', 'away_saves_rollingaverage', 'home_goal_difference_rollingaverage', 'away_goal_difference_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-06 20:34:17,500 - INFO - First fit started
+2024-11-06 20:41:01,087 - INFO - Stacking model for match_outcome trained successfully on first split.
+2024-11-06 20:41:05,532 - INFO - match_outcome (1st fit) Stacking Model MSE: 5.847613303817217, R2: 0.1046952269512258, Stacking Model MAE: 2.1137905076850463, Stacking Model MAPE: 118.96656687074487%
+2024-11-06 20:41:05,534 - INFO - match_outcome (1st fit) Stacking Model Within Range (±1.5): 32.053422370617696%
+2024-11-06 20:41:05,536 - INFO - Second fit started
+2024-11-06 20:47:30,437 - INFO - Stacking model for match_outcome trained successfully on second split.
+2024-11-06 20:47:34,889 - INFO - match_outcome (2nd fit) Stacking Model MSE: 5.821989319704148, R2: 0.09221096472652024, Stacking Model MAE: 2.1033486255238283, Stacking Model MAPE: 118.60929024229416%
+2024-11-06 20:47:34,891 - INFO - match_outcome (2nd fit) Stacking Model Within Range (1.5): 32.637729549248746%
+2024-11-06 20:47:34,900 - INFO - Start match_outcome predictions
+2024-11-06 20:47:34,903 - INFO - Train a residual model for error
+2024-11-06 20:47:34,906 - INFO - Residual model train data selected
+2024-11-06 20:47:34,919 - INFO - Residual model scaler loaded
+2024-11-06 20:47:35,018 - INFO - Residual model successfully fitted
+2024-11-06 20:47:35,802 - INFO - Imputer loaded from ./models/imputer_match_outcome.pkl
+2024-11-06 20:47:35,811 - INFO - Prediction Selected Features: ['running_id', 'season_encoded', 'league_encoded', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_league_position', 'away_league_position', 'Home_points_cum', 'Away_points_cum', 'Home_team_matches', 'Away_team_matches', 'Home_goal_difference_cum', 'Away_goal_difference_cum', 'Home_draws', 'Away_draws', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'away_average_points', 'home_win_rate', 'away_win_rate', 'Home_wins', 'Away_wins', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'home_xG_rolling_rollingaverage', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_saves_rollingaverage', 'away_saves_rollingaverage', 'home_goal_difference_rollingaverage', 'away_goal_difference_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+2024-11-06 20:47:42,660 - INFO - match_outcome predictions: [3.06245574 4.09298231 3.0278138  ... 3.28235944 3.7343988  4.06551414]
+2024-11-06 20:47:42,660 - INFO - residual model prediction error: X has 30 features, but RandomForestRegressor is expecting 52 features as input.
+2024-11-06 20:47:50,225 - INFO - Predictions saved to ./SoccerPredictor_byRichardSzita/predictions_hybrid_2fit_match_outcome.xlsx
+2024-11-06 20:47:54,017 - INFO - Assets written to: \\192.168.0.77\Betting\Chatgpt\tempdir\tmpf2xgch1o\tmpy0tia8bz\assets

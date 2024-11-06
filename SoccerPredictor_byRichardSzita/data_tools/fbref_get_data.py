@@ -20,46 +20,39 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
 def get_all_urls():
-    leagues = [
-        ('Premier League', '9'),
-        ('Championship','10'),
-        ('League One', '15'),
-        ('La Liga', '12'),
-        ('Segunda-Division', '17'),
-        ('Serie A', '11'),
-        ('Serie B', '18'),
-        ('Ligue 1', '13'),
-        ('Ligue 2', '60'),
-        ('Bundesliga', '20'),
-        ('2-Bundesliga','33'),
-        ('3-Liga','59'),
-        ('Serie A', '24'), #Brazil Serie A
-        ('Serie-B','38'), #Brazil Serie B
-        ('Liga-Profesional-Argentina', '21'),
-        ('Eredivisie','23'),
-        ('J1-League','25'),
-        ('Allsvenskan','29'),
-        ('Russian-Premier-League','30'),
-        ('Primeira-Liga','32'),
-        ('Ekstraklasa','36'),
-        ('Superettan','48'),
-        ('Eerste-Divisie','51')
-
-    ]   
-
     # leagues = [
-    #     ('Eerste-Divisie','51'),
+    #     ('Champions-League', '8'),
+    #     ('Premier League', '9'),
+    #     ('Championship','10'),
+    #     ('League One', '15'),
+    #     ('La Liga', '12'),
+    #     ('Segunda-Division', '17'),
+    #     ('Serie A', '11'),
+    #     ('Serie B', '18'),
+    #     ('Ligue 1', '13'),
+    #     ('Ligue 2', '60'),
+    #     ('Bundesliga', '20'),
+    #     ('2-Bundesliga','33'),
+    #     ('3-Liga','59'),
+    #     ('Serie A', '24'), #Brazil Serie A
+    #     ('Serie-B','38'), #Brazil Serie B
+    #     ('Liga-Profesional-Argentina', '21'),
+    #     ('Eredivisie','23'),
+    #     ('J1-League','25'),
+    #     ('Allsvenskan','29'),
+    #     ('Russian-Premier-League','30'),
+    #     ('Primeira-Liga','32'),
     #     ('Ekstraklasa','36'),
     #     ('Superettan','48'),
-    #     ('Primeira-Liga','32'),
-    #     ('Russian-Premier-League','30'),
-    #     ('3-Liga','59')
-       
-    # ]   
+    #     ('Eerste-Divisie','51')]   
+
+    leagues = [
+       ('Champions-League', '8')   
+    ]   
 
 
-    # seasons = ['2020-2021','2021-2022','2022-2023','2023-2024','2024-2025'] 
-    seasons = ['2024-2025'] 
+    seasons = ['2020-2021','2021-2022','2022-2023','2023-2024','2024-2025'] 
+    # seasons = ['2024-2025'] 
     urls = []
     
     for league, league_id in leagues:

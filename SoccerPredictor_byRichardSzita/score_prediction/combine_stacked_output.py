@@ -22,7 +22,7 @@ os.makedirs(model_dir, exist_ok=True)
 
 logging.info(f"Starting model training for {model_type}")
 column_order = ['running_id', 'Date', 'league', 'Home', 'Away', 'score_prediction', 'match_outcome_prediction_rounded', 'home_goals_prediction_rounded','away_goals_prediction_rounded'
-                 ,'home_goals_prediction','away_goals_prediction', 'match_outcome_prediction']
+                 ,'home_goals_prediction','away_goals_prediction', 'match_outcome_prediction','home_poisson_xG','away_poisson_xG']
 def add_home_away_columns(existing_df):
    
     # Get the list of running_ids to filter in MongoDB
@@ -58,7 +58,7 @@ stacked_home = pd.read_excel(stacked_home_path)
 stacked_away = pd.read_excel(stacked_away_path)
 stacked_outcome = pd.read_excel(stacked_outcome_path)
 
-stacked_home = stacked_home[['running_id','home_goals_prediction']].sort_values(by='running_id')
+stacked_home = stacked_home[['running_id','home_goals_prediction','home_poisson_xG','away_poisson_xG']].sort_values(by='running_id')
 stacked_away = stacked_away[['running_id','away_goals_prediction']].sort_values(by='running_id')
 stacked_outcome = stacked_outcome[['running_id','match_outcome_prediction']].sort_values(by='running_id')
 

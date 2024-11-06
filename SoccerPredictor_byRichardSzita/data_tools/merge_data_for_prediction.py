@@ -171,17 +171,17 @@ def main():
     historical_data = load_historical_data("./SoccerPredictor_byRichardSzita/data/model_data_prediction_newPoisson.xlsx")
     
     future_matches = get_future_matches(collection, historical_data)
+    print(future_matches)
+    # future_matches = feature_engineering(future_matches, historical_data)
     
-    future_matches = feature_engineering(future_matches, historical_data)
+    # future_matches = future_matches.drop_duplicates()
+    # # Ordering a dataframe by these columns
+    # future_matches = future_matches[column_order].sort_values(by=column_order)
+    # future_matches = future_matches.sort_values(by='Date')
+    # future_matches = future_matches.dropna()
     
-    future_matches = future_matches.drop_duplicates()
-    # Ordering a dataframe by these columns
-    future_matches = future_matches[column_order].sort_values(by=column_order)
-    future_matches = future_matches.sort_values(by='Date')
-    future_matches = future_matches.dropna()
-    
-    future_matches.to_excel('./SoccerPredictor_byRichardSzita/data/merged_data_prediction.xlsx', index=False)
-    logging.info("Exported future matches to merged_data_prediction.xlsx.")
+    # future_matches.to_excel('./SoccerPredictor_byRichardSzita/data/merged_data_prediction.xlsx', index=False)
+    # logging.info("Exported future matches to merged_data_prediction.xlsx.")
 
 if __name__ == "__main__":
     main()

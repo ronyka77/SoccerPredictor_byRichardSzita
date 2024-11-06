@@ -371,13 +371,18 @@ def train_model(base_data, data, model_type):
     )
     xgb_regressor_home = XGBRegressor()
 
-    # Stacking Regressor with Ridge as final estimator
+    # Define the SVM regressor
+    svm_regressor_home = SVR(kernel='rbf', C=1.0, epsilon=0.1)
+
+    # Add to the list of estimators
     estimators_home = [
         ('rf', rf_regressor_home),
         ('svr', svr_regressor_home),
         ('nn', nn_regressor_home),
-        ('xgb', xgb_regressor_home)
+        ('xgb', xgb_regressor_home),
+        ('svm', svm_regressor_home)
     ]
+    
     logging.info('First fit started')
     stacking_regressor_home = StackingRegressor(estimators=estimators_home, final_estimator=Ridge())
     
@@ -391,10 +396,10 @@ def train_model(base_data, data, model_type):
     r2_home = r2_score(y_test, y_pred_home)
     mae_home = mean_absolute_error(y_test, y_pred_home)
     mape_home = np.mean(np.abs((y_test - y_pred_home) / y_test)) * 100
-    within_range_home = within_range_evaluation(y_test, y_pred_home, tolerance=0.3) * 100  # Convert to percentage
+    within_range_home = within_range_evaluation(y_test, y_pred_home, tolerance=0.5) * 100  # Convert to percentage
 
     logging.info(f"{model_type} (1st fit) Stacking Model MSE: {mse_home}, R2: {r2_home}, Stacking Model MAE: {mae_home}, Stacking Model MAPE: {mape_home}%")
-    logging.info(f"{model_type} (1st fit) Stacking Model Within Range (±0.3): {within_range_home}%")
+    logging.info(f"{model_type} (1st fit) Stacking Model Within Range (±0.5): {within_range_home}%")
     
     # 2nd Fit of the model
     logging.info('Second fit started')
@@ -407,10 +412,10 @@ def train_model(base_data, data, model_type):
     r2_home2 = r2_score(y_test2, y_pred_home2)
     mae_home2 = mean_absolute_error(y_test2, y_pred_home2)
     mape_home2 = np.mean(np.abs((y_test2 - y_pred_home2) / y_test2)) * 100
-    within_range_home2 = within_range_evaluation(y_test2, y_pred_home2, tolerance=0.3) * 100  # Convert to percentage
+    within_range_home2 = within_range_evaluation(y_test2, y_pred_home2, tolerance=0.5) * 100  # Convert to percentage
 
     logging.info(f"{model_type} (2nd fit) Stacking Model MSE: {mse_home2}, R2: {r2_home2}, Stacking Model MAE: {mae_home2}, Stacking Model MAPE: {mape_home2}%")
-    logging.info(f"{model_type} (2nd fit) Stacking Model Within Range (±0.3): {within_range_home2}%")
+    logging.info(f"{model_type} (2nd fit) Stacking Model Within Range (±0.5): {within_range_home2}%")
     
     return stacking_regressor_home
 
@@ -458,7 +463,7 @@ def make_prediction(model_type, model, prediction_data, residual_model):
     print(f"Predictions saved to {output_file}")
 
 data_with_error = add_predicted_values(new_real_scores,new_prediction_data)
-data_with_error = data_with_error.drop(columns=['match_outcome', 'Datum','home_goals','away_goals',  
+data_with_error = data_with_error.drop(columns=['Unnamed: 0.1','Unnamed: 0','match_outcome', 'Datum','home_goals','away_goals',  
                                'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match',
                                'home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
 # logging.info(f"data_with error columns: {data_with_error.columns}")

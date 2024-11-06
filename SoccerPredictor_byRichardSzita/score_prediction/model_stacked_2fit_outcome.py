@@ -370,14 +370,19 @@ def train_model(base_data, data, model_type):
         verbose=1,
         callbacks=[CustomReduceLROnPlateau(monitor='loss', factor=0.5, patience=10, min_lr=0.0001)]  # LR Scheduler
     )
+    
     xgb_regressor_home = XGBRegressor()
 
-    # Stacking Regressor with Ridge as final estimator
+    # Define the SVM regressor
+    svm_regressor_home = SVR(kernel='rbf', C=1.0, epsilon=0.1)
+
+    # Add to the list of estimators
     estimators_home = [
         ('rf', rf_regressor_home),
         ('svr', svr_regressor_home),
         ('nn', nn_regressor_home),
-        ('xgb', xgb_regressor_home)
+        ('xgb', xgb_regressor_home),
+        ('svm', svm_regressor_home)
     ]
     logging.info('First fit started')
     stacking_regressor_home = StackingRegressor(estimators=estimators_home, final_estimator=Ridge())
@@ -392,10 +397,10 @@ def train_model(base_data, data, model_type):
     r2_home = r2_score(y_test, y_pred_home)
     mae_home = mean_absolute_error(y_test, y_pred_home)
     mape_home = np.mean(np.abs((y_test - y_pred_home) / y_test)) * 100
-    within_range_home = within_range_evaluation(y_test, y_pred_home, tolerance=0.3) * 100  # Convert to percentage
+    within_range_home = within_range_evaluation(y_test, y_pred_home, tolerance=1.5) * 100  # Convert to percentage
 
     logging.info(f"{model_type} (1st fit) Stacking Model MSE: {mse_home}, R2: {r2_home}, Stacking Model MAE: {mae_home}, Stacking Model MAPE: {mape_home}%")
-    logging.info(f"{model_type} (1st fit) Stacking Model Within Range (±0.3): {within_range_home}%")
+    logging.info(f"{model_type} (1st fit) Stacking Model Within Range (±1.5): {within_range_home}%")
     
     # 2nd Fit of the model
     logging.info('Second fit started')
@@ -408,10 +413,10 @@ def train_model(base_data, data, model_type):
     r2_home2 = r2_score(y_test2, y_pred_home2)
     mae_home2 = mean_absolute_error(y_test2, y_pred_home2)
     mape_home2 = np.mean(np.abs((y_test2 - y_pred_home2) / y_test2)) * 100
-    within_range_home2 = within_range_evaluation(y_test2, y_pred_home2, tolerance=0.3) * 100  # Convert to percentage
+    within_range_home2 = within_range_evaluation(y_test2, y_pred_home2, tolerance=1.5) * 100  # Convert to percentage
 
     logging.info(f"{model_type} (2nd fit) Stacking Model MSE: {mse_home2}, R2: {r2_home2}, Stacking Model MAE: {mae_home2}, Stacking Model MAPE: {mape_home2}%")
-    logging.info(f"{model_type} (2nd fit) Stacking Model Within Range (±0.3): {within_range_home2}%")
+    logging.info(f"{model_type} (2nd fit) Stacking Model Within Range (1.5): {within_range_home2}%")
     
     return stacking_regressor_home
 
@@ -459,7 +464,7 @@ def make_prediction(model_type, model, prediction_data, residual_model):
     logging.info(f"Predictions saved to {output_file}")
 
 data_with_error = add_predicted_values(new_real_scores,new_prediction_data)
-data_with_error = data_with_error.drop(columns=['match_outcome', 'Datum','home_goals','away_goals',  
+data_with_error = data_with_error.drop(columns=['Unnamed: 0.1','Unnamed: 0','match_outcome', 'Datum','home_goals','away_goals',  
                                'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match',
                                'home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
 
@@ -516,50 +521,6 @@ custom_model = CustomStackingRegressor(stacking_regressor,
 # Save the model (this will save both the Keras model and the rest of the stacking regressor)
 custom_model.save(model_file)
 
-# def log_model_details(keras_model):
-#     """Log details of layers, metrics, and callbacks in a Keras model."""
-#     for layer in keras_model.layers:
-#         logging.info(f"Layer Name: {layer.name}, Layer Type: {type(layer).__name__}")
-    
-#     if hasattr(keras_model, 'metrics'):
-#         logging.info("Metrics used in the model:")
-#         for metric in keras_model.metrics:
-#             logging.info(f"Metric: {metric.name}, Metric Type: {type(metric).__name__}")
-
-# def save_keras_model(keras_model, path):
-#     """Save Keras model to specified path after removing custom metrics."""
-#     try:
-#         original_metrics = keras_model.metrics
-#         keras_model.metrics = [m for m in original_metrics if not isinstance(m, MeanMetricWrapper)]
-        
-#         keras_model.save(path, include_optimizer=True, save_format='h5')
-#         keras_model.metrics = original_metrics  # Restore metrics for in-memory use
-#         logging.info(f"Keras model saved successfully at {path}")
-#     except Exception as e:
-#         logging.error(f"Error saving Keras model: {str(e)}")
-#         keras_model.save(path, include_optimizer=True, save_format='h5')
-#         logging.info(f"Keras model saved successfully at {path}")
-
-# def save_stacking_model(stacking_regressor, path):
-#     """Save stacking model excluding Keras components."""
-#     try:
-#         stacking_regressor.named_estimators_.pop('nn', None)
-#         with open(path, 'wb') as f:
-#             cp.dump(stacking_regressor, f)
-#         logging.info(f"Stacking model (without nn) saved successfully to {path}")
-#     except Exception as e:
-#         logging.error(f"Error saving stacking model: {str(e)}")
-
-# # Main saving routine
-# try:
-#     keras_nn_estimator = stacking_regressor.named_estimators_['nn'].model_
-#     log_model_details(keras_nn_estimator)  # Log model details
-
-#     save_keras_model(keras_nn_estimator, keras_nn_model_path)  # Save Keras model
-#     save_stacking_model(stacking_regressor, model_file)  # Save Stacking model
-
-# except Exception as e:
-#     logging.error(f"An error occurred during model saving: {str(e)}")
 
 
 

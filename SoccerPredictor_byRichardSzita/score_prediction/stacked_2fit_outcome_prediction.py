@@ -13,6 +13,8 @@ from keras.metrics import MeanMetricWrapper
 import pandas as pd
 manual_variable_initialization(True)
 
+Scaler_columns = ['running_id', 'home_encoded', 'away_encoded', 'venue_encoded', 'home_draw_rate', 'away_draw_rate', 'home_average_points', 'referee_foul_rate', 'referee_encoded', 'Home_saves_mean', 'Away_saves_mean', 'Home_fouls_mean', 'Away_fouls_mean', 'Home_possession_mean', 'away_possession_mean', 'Home_shot_on_target_mean', 'away_shot_on_target_mean', 'Home_offsides_mean', 'Away_offsides_mean', 'Home_passes_mean', 'Away_passes_mean', 'away_xG_rolling_rollingaverage', 'home_shot_on_target_rollingaverage', 'away_shot_on_target_rollingaverage', 'home_goal_rollingaverage', 'away_goal_rollingaverage', 'home_poisson_xG', 'away_poisson_xG', 'home_team_elo', 'away_team_elo']
+
 # Paths to the saved models and transformers
 model_dir = './models/'
 model_type = 'match_outcome'
@@ -124,8 +126,10 @@ custom_objects = {
     'WithinRangeMetric': WithinRangeMetric
 }
 prediction_data = pd.read_csv(new_prediction_path)
-prediction_data.drop(columns=['Date','Datum','Unnamed: 0','Unnamed: 0.1','away_goals','away_points_rolling_avg','away_win','draw','home_goals','home_points','home_advantage','home_points_rolling_avg','home_win','match_outcome'], inplace=True, errors='ignore')
-
+# prediction_data = prediction_data[Scaler_columns]
+prediction_data.drop(columns=['Unnamed: 0.1','Unnamed: 0','match_outcome', 'Datum','home_goals','away_goals',  
+                               'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match',
+                               'home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
 # Load the Keras neural network separately with custom objects
 keras_nn_model = load_model(keras_nn_model_path, custom_objects=custom_objects)
 # Reassign the custom metric
