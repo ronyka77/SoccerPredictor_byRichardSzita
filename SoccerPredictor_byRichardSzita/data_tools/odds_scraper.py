@@ -12,10 +12,16 @@ import pandas as pd
 from datetime import datetime, timedelta
 import random
 import time
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from util_tools.logging_config import LoggerSetup
 
-# Configure logging to save logs in a file named 'scraper.log' with timestamps and log levels
-log_file_path = './scraper.log'
-logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = LoggerSetup.setup_logger(
+    name='odds_scraper',
+    log_file='./data_tools/log/odds_scraper.log', 
+    level=logging.INFO
+)
 
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -52,8 +58,8 @@ LEAGUES = {
 }
 
 # Define years for historical data scraping
-YEARS = ["2020-2021", "2021-2022", "2022-2023", "2023-2024"]
-
+# YEARS = ["2020-2021", "2021-2022", "2022-2023", "2023-2024"] # Use this for all historical data
+YEARS = ["2023-2024"]
 # Define column names for the DataFrame where scraped data will be stored
 columns = ['Date', 'Time', 'Home', 'Away', 'Odd_Home', 'Odds_Draw', 'Odd_Away']
 
@@ -67,6 +73,12 @@ def generate_urls(leagues, years):
             "league": league
         })
         
+        # URL for future matches
+        urls.append({
+            "url": f"https://www.oddsportal.com/soccer/{country}/{league}/",
+            "league": league
+        })
+        
         # URLs for past seasons with specified years
         for year in years:
             urls.append({
@@ -77,30 +89,34 @@ def generate_urls(leagues, years):
     # Define a dictionary to organize special URLs by league
     special_urls_by_league = {
         "brazil": [
+            "https://www.oddsportal.com/football/brazil/serie-b/",
             "https://www.oddsportal.com/football/brazil/serie-b/results/",
-            "https://www.oddsportal.com/football/brazil/serie-b-2023/results/",
-            "https://www.oddsportal.com/football/brazil/serie-b-2022/results/",
-            "https://www.oddsportal.com/football/brazil/serie-b-2021/results/",
-            "https://www.oddsportal.com/football/brazil/serie-b-2020/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-b-2023/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-b-2022/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-b-2021/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-b-2020/results/",
+            "https://www.oddsportal.com/football/brazil/serie-a-betano/",
             "https://www.oddsportal.com/football/brazil/serie-a-betano/results/",
-            "https://www.oddsportal.com/football/brazil/serie-a-2023/results/",
-            "https://www.oddsportal.com/football/brazil/serie-a-2022/results/",
-            "https://www.oddsportal.com/football/brazil/serie-a-2021/results/",
-            "https://www.oddsportal.com/football/brazil/serie-a-2020/results/"
+            # "https://www.oddsportal.com/football/brazil/serie-a-2023/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-a-2022/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-a-2021/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-a-2020/results/"
         ],
         "argentina": [
+            "https://www.oddsportal.com/football/argentina/torneo-betano/",
             "https://www.oddsportal.com/football/argentina/torneo-betano/results/",
-            "https://www.oddsportal.com/football/argentina/liga-profesional-2023/results/",
-            "https://www.oddsportal.com/football/argentina/liga-profesional-2022/results/",
-            "https://www.oddsportal.com/football/argentina/liga-profesional-2021/results/",
-            "https://www.oddsportal.com/football/argentina/superliga-2019-2020/results/"
+            # "https://www.oddsportal.com/football/argentina/liga-profesional-2023/results/",
+            # "https://www.oddsportal.com/football/argentina/liga-profesional-2022/results/",
+            # "https://www.oddsportal.com/football/argentina/liga-profesional-2021/results/",
+            # "https://www.oddsportal.com/football/argentina/superliga-2019-2020/results/"
         ],
         "japan": [
+            "https://www.oddsportal.com/football/japan/j1-league/",
             "https://www.oddsportal.com/football/japan/j1-league/results/",
-            "https://www.oddsportal.com/football/japan/j1-league-2023/results/",
-            "https://www.oddsportal.com/football/japan/j1-league-2022/results/",
-            "https://www.oddsportal.com/football/japan/j1-league-2021/results/",
-            "https://www.oddsportal.com/football/japan/j1-league-2020/results/"
+            # "https://www.oddsportal.com/football/japan/j1-league-2023/results/",
+            # "https://www.oddsportal.com/football/japan/j1-league-2022/results/",
+            # "https://www.oddsportal.com/football/japan/j1-league-2021/results/",
+            # "https://www.oddsportal.com/football/japan/j1-league-2020/results/"
         ]
     }
 
@@ -109,7 +125,7 @@ def generate_urls(leagues, years):
         for url in urls_list:
             urls.append({"url": url, "league": league})
     
-    logging.info(f"urls: {urls}")
+    logger.info(f"urls: {urls}")
     return urls  # Return all generated URLs for scraping
 
 urls = generate_urls(LEAGUES, YEARS)  # Generate URLs using LEAGUES and YEARS
@@ -134,7 +150,7 @@ def approve_cookie():
         )
         cookie_button.click()  # Click the button to approve cookies
     except Exception as e:
-        logging.warning(f"Cookie approval failed: {e}")  # Log any issue with cookie handling
+        logger.warning(f"Cookie approval failed: {e}")  # Log any issue with cookie handling
 
 def get_pagination(url):
     """
@@ -166,22 +182,22 @@ def parse_date(event):
             for date_format in ("%d %B %Y", "%d %b %Y", "%d %m %Y"):
                 if "Yesterday" in date_part:  
                     datum = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-                    logging.info(f"Date found: {datum}")
+                    logger.info(f"Date found: {datum}")
                     return datum
                 elif "Today" in date_part:
                     datum = datetime.now().strftime("%Y-%m-%d")
-                    logging.info(f"Date found: {datum}")
+                    logger.info(f"Date found: {datum}")
                     return datum
                 else:
                     try:
                         datum = datetime.strptime(date_part, date_format).strftime("%Y-%m-%d")
-                        logging.info(f"Date found: {datum}")
+                        logger.info(f"Date found: {datum}")
                         return datum
                     except ValueError:
-                        logging.info(f"Wrong date format: {date_part}")
+                        logger.info(f"Wrong date format: {date_part}")
     except Exception as e:
-        logging.error(f"Failed to parse date: {e}")
-    # logging.warning(f"Date format not recognized for '{date_text}'. Skipping event.")
+        logger.error(f"Failed to parse date: {e}")
+    # logger.warning(f"Date format not recognized for '{date_text}'. Skipping event.")
     return None  # Return None if date parsing fails
 
 def parse_odds(event):
@@ -192,7 +208,7 @@ def parse_odds(event):
             odds = odds[1:]
         return odds
     except Exception as e:
-        logging.warning(f"Odds data is incomplete: {e}")
+        logger.warning(f"Odds data is incomplete: {e}")
         return None
 
 def process_event(event, league, actual_date):
@@ -234,43 +250,43 @@ def scrape_page(url, page, league, retries=3, delay=5):
             
             # Process each event row to extract date and odds information
             for event_element in event_elements:
-                # logging.info(f"Event number: {event_number}")
+                # logger.info(f"Event number: {event_number}")
                 event_html = event_element.get_attribute('outerHTML')  # Get HTML of each event row
-                event = BeautifulSoup(event_html, "lxml")  # Parse only this row’s HTML with BeautifulSoup
+                event = BeautifulSoup(event_html, "lxml")  # Parse only this row's HTML with BeautifulSoup
                 
                 # Parse date
                 date = parse_date(event)
                 if date:
                     actual_date = date  # Update actual date if found
                 if actual_date is None:
-                    logging.warning(f"Date format not recognized for '{date}'. Skipping event.")
+                    logger.warning(f"Date format not recognized for '{date}'. Skipping event.")
                     continue  # Skip this event if date parsing fails 
                 
                 event_data = process_event(event_element, league, actual_date)
                 if event_data:
                     data.append(event_data)
-                    # logging.info(f"Processed event: {event_data['unique_id']}")
+                    # logger.info(f"Processed event: {event_data['unique_id']}")
                 else:
-                    logging.info(f"Skipped event {event_number} due to parsing issues.")
+                    logger.info(f"Skipped event {event_number} due to parsing issues.")
 
                 # Increment event number after processing each event
                 event_number += 1
             
             # Return collected data if available
             if data:
-                logging.info(f"Data found for {str(len(data))} matches")
+                logger.info(f"Data found for {str(len(data))} matches")
                 return data
             else:
-                logging.warning(f"No data found on attempt {attempt + 1} for {url} page {page}")
+                logger.warning(f"No data found on attempt {attempt + 1} for {url} page {page}")
                 time.sleep(delay)  # Wait before retrying if data is missing
             
         except Exception as e:
-            logging.error(f"Error on {url} page {page} attempt {attempt + 1}: {e}")
+            logger.error(f"Error on {url} page {page} attempt {attempt + 1}: {e}")
             print(f"Error on {url} page {page} attempt {attempt + 1}: {e}")
             time.sleep(delay)  # Wait before retrying if an error occurs
     
     # Log if all retries failed and return empty data
-    logging.error(f"Failed to scrape data from {url} page {page} after {retries} attempts")
+    logger.error(f"Failed to scrape data from {url} page {page} after {retries} attempts")
     return []
 
 def validate_data(data):
@@ -294,9 +310,9 @@ def insert_to_mongodb(data):
             update_query = {"$set": record}  # Updates fields with new data if record exists
             collection.update_one(filter_query, update_query, upsert=True)
         
-        logging.info(f"Processed {len(data)} records with upsert (insert/update) into MongoDB")
+        logger.info(f"Processed {len(data)} records with upsert (insert/update) into MongoDB")
     else:
-        logging.warning("No data to insert.")
+        logger.warning("No data to insert.")
 
 def scrape_data():
     """Main function to iterate through URLs and scrape data from each available page, with validation and retries."""
@@ -312,10 +328,10 @@ def scrape_data():
                 if validate_data(event_data):
                     insert_to_mongodb(event_data)
                 else:
-                    logging.warning(f"Data validation failed. No data inserted into MongoDB. {event_data}")
-                logging.info(f"Scraped data from {url} page {page}")
+                    logger.warning(f"Data validation failed. No data inserted into MongoDB. {event_data}")
+                logger.info(f"Scraped data from {url} page {page}")
             else:
-                logging.warning(f"Skipping empty data for {url} page {page}")
+                logger.warning(f"Skipping empty data for {url} page {page}")
 
 # Run cookie approval and start data scraping process
 approve_cookie()

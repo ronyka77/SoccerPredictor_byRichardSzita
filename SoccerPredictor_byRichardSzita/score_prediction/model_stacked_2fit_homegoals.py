@@ -354,29 +354,33 @@ def train_model(base_data, data, model_type):
     # LightGBM - Known for handling imbalanced data well and good performance on sports predictions
     lgb_regressor_home = LGBMRegressor(
         n_estimators=500,
-        learning_rate=0.01,
+        learning_rate=0.05,
         max_depth=12,
         num_leaves=31,
-        random_state=42
+        random_state=42,
+        force_col_wise=True,
+        n_jobs=-1  # Use all available cores
     )
     
     # CatBoost - Handles categorical variables well and robust to overfitting
     catboost_regressor_home = CatBoostRegressor(
         iterations=500,
-        learning_rate=0.01,
+        learning_rate=0.05,
         depth=12,
         verbose=1,
-        random_state=42
+        random_state=42,
+        thread_count=-1  # Use all available cores
     )
     
     # XGBoost - Tuned for soccer prediction tasks
     xgb_regressor_home = XGBRegressor(
         n_estimators=500,
         max_depth=12,
-        learning_rate=0.01,
+        learning_rate=0.05,
         subsample=0.8,
         colsample_bytree=0.8,
-        random_state=42
+        random_state=42,
+        nthread=-1  # Use all available cores
     )
     
     # Neural Network with architecture suited for soccer prediction
@@ -394,11 +398,12 @@ def train_model(base_data, data, model_type):
     
     # Random Forest with parameters optimized for sports prediction
     rf_regressor_home = RandomForestRegressor(
-        n_estimators=1000,
+        n_estimators=500,
         max_depth=12,
         min_samples_split=10,
         min_samples_leaf=5,
-        random_state=42
+        random_state=42,
+        n_jobs=-1  # Use all available cores
     )
 
     # Create ensemble of models
