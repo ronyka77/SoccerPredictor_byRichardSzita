@@ -103,10 +103,6 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
                                'home_points_rolling_avg','away_points_rolling_avg','home_advantage',
                                'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
 
-# Import predicted scores
-new_real_scores = pd.read_excel(real_scores_path)
-new_real_scores.dropna(subset=['running_id','home_goals_prediction_rounded','away_goals_prediction_rounded','match_outcome_prediction_rounded','real_score'],inplace=True)
-logger.info(f"new real scores length: {len(new_real_scores)}")
 
 # Define the function for the custom metric
 def within_range_metric(y_true, y_pred):
@@ -263,30 +259,6 @@ def add_predicted_values(new_real_scores,data):
     # merged_data = merged_data[numeric_features]
     print('merge_df: ' + str(len(merged_data)))
     return merged_data
-
-def prepare_new_data(new_data, imputer, selector):
-    global selected_features
-    global numeric_features
-    
-    model_data = new_data.replace(',', '.', regex=True)
-    model_data = model_data.apply(pd.to_numeric, errors='coerce')
-    logger.info(f"Prediction Selected Features: {numeric_features}")
-    scaler_file = os.path.join(model_dir, 'scaler_' + model_type + '.pkl')
-    # numeric_features = new_data.select_dtypes(include=['float64', 'int64']).columns.tolist()
-    model_data = model_data[numeric_features]
-    scaler_loaded = joblib.load(scaler_file)
-    
-    # Apply imputation
-    model_data_imputed = imputer.transform(model_data)  # Use the imputer you saved during training
-   
-    # Apply scaling
-    model_data_scaled = scaler_loaded.transform(model_data_imputed)  # Use the scaler you saved during training
-    
-    # Apply feature selection (RFE)
-    model_data_selected = selector.transform(model_data_scaled)  # Use the RFE selector saved during training
-    
-    # logger.info(model_data_selected)
-    return pd.DataFrame(model_data_selected)
 
 def within_range(y_true, y_pred):
     # Calculate the absolute difference between the predicted and true values
@@ -517,22 +489,6 @@ def make_prediction(model_type, model, prediction_data, residual_model):
     prediction_data.to_excel(output_file, index=False)
     logger.info(f"Predictions saved to {output_file}")
 
-data_with_error = add_predicted_values(new_real_scores,new_prediction_data)
-data_with_error = data_with_error.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match_outcome', 'Datum','home_goals','away_goals',  
-                               'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match',
-                               'home_points_rolling_avg','away_points_rolling_avg','home_advantage',
-                               'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
-
-# logger.info(f"data_with error columns: {data_with_error.columns}")
-
-# Count NaN values in each column
-nan_counts = data_with_error.isna().sum()
-logger.info(nan_counts)
-# logger.info(nan_counts)
-
-data_with_error = data_with_error.dropna()
-logger.info(f"data_with_error length: {len(data_with_error)}")
-
 prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals', 'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
 prediction_df = prediction_df.replace(',', '.', regex=True)
 prediction_df = prediction_df.apply(pd.to_numeric, errors='coerce')
@@ -541,31 +497,13 @@ prediction_df.replace([np.inf, -np.inf], np.nan, inplace=True)
 logger.info(f"prediction_df length: {len(prediction_df)}")
 stacking_regressor = train_model(base_data, data, model_type)
 logger.info(f"Start {model_type} predictions")
-# logger.info(f"columns of Prediction_df: {prediction_df.columns}")
 
 # MAKE PREDICTIONS
 try:
-    if len(data_with_error)>0:
-        # Train a residual model for error
-        X_train_error = data_with_error.drop(columns=['real_away_goals','real_home_goals','real_outcome','home_error','away_error','outcome_error','home_goals_prediction_rounded','away_goals_prediction_rounded','match_outcome_prediction_rounded','Date'],errors='ignore')
-        y_train_home_error = data_with_error['home_error']
-        logger.info(f"Residual model train data selected")
-        residual_model = RandomForestRegressor()
-        # # Ensure feature names are preserved
-        scaler_file = os.path.join(model_dir, 'scaler_' + model_type + '.pkl')
-        scaler_loaded = joblib.load(scaler_file)
-        logger.info(f"Residual model scaler loaded")
-        X_new_scaled = scaler_loaded.transform(X_train_error)
-        residual_model.fit(X_new_scaled, y_train_home_error)
-        logger.info(f"Residual model successfully fitted")
-        
-        make_prediction(model_type,stacking_regressor,prediction_df, residual_model)
-    else: 
-        make_prediction(model_type,stacking_regressor,prediction_df, 0)
+    make_prediction(model_type,stacking_regressor,prediction_df, 0)   
         
 except Exception as e:
     logger.error(f"Error occurred while making prediction: {e}")
-    make_prediction(model_type,stacking_regressor,prediction_df, 0)
     pass
 
 # Initialize the wrappers

@@ -1,145 +1,155 @@
 import pandas as pd
 import os
-# Set directories and files
-model_dir = "./models/"
-os.makedirs(model_dir, exist_ok=True)
 
-# Load your feature-engineered data
-training_data_path = './data/model_data_training_newPoisson.xlsx'
-prediction_data_path = './data/model_data_prediction_newPoisson.xlsx'
-merged_data_path = './data/merged_data_prediction.csv'
-training_data = pd.read_excel(training_data_path)
-prediction_data = pd.read_excel(prediction_data_path)
-merged_data = pd.read_csv(merged_data_path)
+class ELOCalculator:
+    """
+    A utility class for calculating and adding ELO scores to soccer match data.
+    """
+    def __init__(self):
+        """Initialize the ELOCalculator with required paths and settings."""
+        # Set directories and files
+        self.model_dir = "./models/"
+        os.makedirs(self.model_dir, exist_ok=True)
+        
+        # Define data paths
+        self.training_data_path = './data/model_data_training_newPoisson.xlsx'
+        self.prediction_data_path = './data/model_data_prediction_newPoisson.xlsx'
+        self.merged_data_path = './data/merged_data_prediction.csv'
+        
+        # Define export paths
+        self.training_export_path = './data/model_data_training_newPoisson.xlsx'
+        self.prediction_export_path = './data/model_data_prediction_newPoisson.xlsx'
+        self.merged_export_path = './data/merged_data_prediction.csv'
+        
+        # ELO settings
+        self.INITIAL_ELO = 1500
+        self.K_FACTOR = 40  # K-Factor for ELO updates
+        self.elo_ratings = {}  # Dictionary to store ELO ratings
 
-training_data = training_data.sort_values(by='Datum')
-prediction_data = prediction_data.sort_values(by='Datum')
-merged_data = merged_data.sort_values(by='Date')
+    def calculate_expected_score(self, elo_a, elo_b):
+        """Calculate expected score for team A based on ELO ratings."""
+        return 1 / (1 + 10 ** ((elo_b - elo_a) / 400))
 
-# Initialize the ELO ratings for each team
-INITIAL_ELO = 1500
-K_FACTOR = 40  # K-Factor for ELO updates
+    def update_elo(self, elo_a, elo_b, score_a):
+        """Update ELO rating based on match result."""
+        expected_a = self.calculate_expected_score(elo_a, elo_b)
+        new_elo_a = elo_a + self.K_FACTOR * (score_a - expected_a)
+        return new_elo_a
 
-# Create a dictionary to store the ELO ratings for each team
-elo_ratings = {}
+    def add_elo_scores(self, matches):
+        """Add ELO scores to training and prediction data."""
+        # Initialize all teams with the initial ELO rating
+        for team in pd.concat([matches['home_encoded'], matches['away_encoded']]).unique():
+            self.elo_ratings[team] = self.INITIAL_ELO
 
-# Function to calculate the expected score for team A
-def calculate_expected_score(elo_a, elo_b):
-    return 1 / (1 + 10 ** ((elo_b - elo_a) / 400))
+        # Add new columns to store ELO ratings before the match
+        matches['home_team_elo'] = 0
+        matches['away_team_elo'] = 0
 
-# Function to update the ELO rating based on the match result
-def update_elo(elo_a, elo_b, score_a):
-    expected_a = calculate_expected_score(elo_a, elo_b)
-    new_elo_a = elo_a + K_FACTOR * (score_a - expected_a)
-    return new_elo_a
+        # Process each match and update ELO ratings
+        for index, row in matches.iterrows():
+            home_team = row['home_encoded']
+            away_team = row['away_encoded']
+            home_goals = row['home_goals']
+            away_goals = row['away_goals']
 
-# Example historical match data (home_team, away_team, home_goals, away_goals, match_date)
+            # Get current ELO ratings
+            home_elo = self.elo_ratings[home_team]
+            away_elo = self.elo_ratings[away_team]
 
-def add_elo_scores(matches):
-    # Initialize all teams with the initial ELO rating
-    for team in pd.concat([matches['home_encoded'], matches['away_encoded']]).unique():
-        elo_ratings[team] = INITIAL_ELO
+            # Store pre-match ELO ratings
+            matches.at[index, 'home_team_elo'] = home_elo
+            matches.at[index, 'away_team_elo'] = away_elo
 
-    # Add new columns to store ELO ratings before the match
-    matches['home_team_elo'] = 0
-    matches['away_team_elo'] = 0
+            # Determine match outcome
+            if home_goals > away_goals:
+                home_score, away_score = 1, 0
+            elif home_goals < away_goals:
+                home_score, away_score = 0, 1
+            else:
+                home_score = away_score = 0.5
 
-    # Process each match and update ELO ratings
-    for index, row in matches.iterrows():
-        home_team = row['home_encoded']
-        away_team = row['away_encoded']
-        home_goals = row['home_goals']
-        away_goals = row['away_goals']
+            # Update ELO ratings
+            new_home_elo = self.update_elo(home_elo, away_elo, home_score)
+            new_away_elo = self.update_elo(away_elo, home_elo, away_score)
 
-        # Get current ELO ratings for both teams before the match
-        home_elo = elo_ratings[home_team]
-        away_elo = elo_ratings[away_team]
+            # Save new ratings
+            self.elo_ratings[home_team] = new_home_elo
+            self.elo_ratings[away_team] = new_away_elo
 
-        # Store the ELO ratings before the match in the dataset
-        matches.at[index, 'home_team_elo'] = home_elo
-        matches.at[index, 'away_team_elo'] = away_elo
+        return matches
 
-        # Determine the outcome of the match
-        if home_goals > away_goals:
-            home_score = 1  # Home team wins
-            away_score = 0  # Away team loses
-        elif home_goals < away_goals:
-            home_score = 0  # Home team loses
-            away_score = 1  # Away team wins
-        else:
-            home_score = 0.5  # Draw
-            away_score = 0.5  # Draw
+    def add_elo_scores_to_merged(self, matches):
+        """Add ELO scores to merged data using Poisson xG."""
+        for index, row in matches.iterrows():
+            home_team = row['home_encoded']
+            away_team = row['away_encoded']
+            home_goals = row['home_poisson_xG']
+            away_goals = row['away_poisson_xG']
 
-        # Update ELO ratings based on the match result
-        new_home_elo = update_elo(home_elo, away_elo, home_score)
-        new_away_elo = update_elo(away_elo, home_elo, away_score)
+            # Get current ELO ratings
+            home_elo = row['home_team_elo']
+            away_elo = row['away_team_elo']
 
-        # Save the new ELO ratings for the next match
-        elo_ratings[home_team] = new_home_elo
-        elo_ratings[away_team] = new_away_elo
+            # Determine match outcome based on Poisson xG
+            if home_goals > away_goals:
+                home_score, away_score = 1, 0
+            elif home_goals < away_goals:
+                home_score, away_score = 0, 1
+            else:
+                home_score = away_score = 0.5
 
-        # Log the updated ratings for each team (optional)
-        # print(f"{home_team} ELO: {new_home_elo:.2f}, {away_team} ELO: {new_away_elo:.2f}")
+            # Update ELO ratings
+            new_home_elo = self.update_elo(home_elo, away_elo, home_score)
+            new_away_elo = self.update_elo(away_elo, home_elo, away_score)
 
-    # Final ELO ratings after processing all matches
-    print("\nFinal ELO Ratings:")
-    for team, rating in elo_ratings.items():
-        print(f"{team}: {rating:.2f}")
-    return matches
+            # Save new ratings
+            row['home_team_elo'] = new_home_elo
+            row['away_team_elo'] = new_away_elo
 
-def add_elo_scores_to_merged(matches):
-   
-    # Process each match and update ELO ratings
-    for index, row in matches.iterrows():
-        home_team = row['home_encoded']
-        away_team = row['away_encoded']
-        home_goals = row['home_poisson_xG']
-        away_goals = row['away_poisson_xG']
+        return matches
 
-        # Get current ELO ratings for both teams before the match
-        home_elo = row['home_team_elo']
-        away_elo = row['away_team_elo']
-
-        # Store the ELO ratings before the match in the dataset
-        # matches.at[index, 'home_team_elo'] = home_elo
-        # matches.at[index, 'away_team_elo'] = away_elo
-
-        # Determine the outcome of the match
-        if home_goals > away_goals:
-            home_score = 1  # Home team wins
-            away_score = 0  # Away team loses
-        elif home_goals < away_goals:
-            home_score = 0  # Home team loses
-            away_score = 1  # Away team wins
-        else:
-            home_score = 0.5  # Draw
-            away_score = 0.5  # Draw
-
-        # Update ELO ratings based on the match result
-        new_home_elo = update_elo(home_elo, away_elo, home_score)
-        new_away_elo = update_elo(away_elo, home_elo, away_score)
-
-        # Save the new ELO ratings for the next match
-        row['home_team_elo'] = new_home_elo
-        row['away_team_elo'] = new_away_elo
-
-        # Log the updated ratings for each team (optional)
-        # print(f"{home_team} ELO: {new_home_elo:.2f}, {away_team} ELO: {new_away_elo:.2f}")
-
-    # Final ELO ratings after processing all matches
-    print("\nFinal ELO Ratings:")
-    for team, rating in elo_ratings.items():
-        print(f"{team}: {rating:.2f}")
-    return matches
-
-training_data = add_elo_scores(training_data)
-prediction_data = add_elo_scores(prediction_data)
-merged_data = add_elo_scores_to_merged(merged_data)
-training_export_path = './data/model_data_training_newPoisson.xlsx'
-prediction_export_path = './data/model_data_prediction_newPoisson.xlsx'
-merged_export_path = './data/merged_data_prediction.csv'
-# View the dataset with ELO ratings
-print("\nExporting data:")
-training_data.to_excel(training_export_path)
-prediction_data.to_excel(prediction_export_path)
-merged_data.to_csv(merged_export_path)
+    def process_training_data(self):
+        """Process training data with ELO calculations."""
+        # Load and sort training data
+        training_data = pd.read_excel(self.training_data_path)
+        training_data = training_data.sort_values(by='Datum')
+        
+        # Calculate ELO scores
+        training_data = self.add_elo_scores(training_data)
+        
+        # Export results
+        print("\nExporting training data:")
+        training_data.to_excel(self.training_export_path)
+        
+    def process_prediction_data(self):
+        """Process prediction data with ELO calculations."""
+        # Load and sort prediction data
+        prediction_data = pd.read_excel(self.prediction_data_path)
+        prediction_data = prediction_data.sort_values(by='Datum')
+        
+        # Calculate ELO scores
+        prediction_data = self.add_elo_scores(prediction_data)
+        
+        # Export results
+        print("\nExporting prediction data:")
+        prediction_data.to_excel(self.prediction_export_path)
+        
+    def process_merged_data(self):
+        """Process merged data with ELO calculations."""
+        # Load and sort merged data
+        merged_data = pd.read_csv(self.merged_data_path)
+        merged_data = merged_data.sort_values(by='Date')
+        
+        # Calculate ELO scores
+        merged_data = self.add_elo_scores_to_merged(merged_data)
+        
+        # Export results
+        print("\nExporting merged data:")
+        merged_data.to_csv(self.merged_export_path)
+        
+if __name__ == "__main__":
+    calculator = ELOCalculator()
+    calculator.process_training_data()
+    calculator.process_prediction_data()
+    calculator.process_merged_data()

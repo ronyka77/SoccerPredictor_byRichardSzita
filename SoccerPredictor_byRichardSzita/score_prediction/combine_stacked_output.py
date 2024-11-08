@@ -16,6 +16,8 @@ logger = LoggerSetup.setup_logger(
 )
 
 
+# Initialize MongoDB client and get database connection
+db_client = MongoClient()
 
 # Set directories and files
 model_dir = "./models/"
@@ -26,15 +28,11 @@ column_order = ['running_id', 'Date', 'league', 'Home', 'Away', 'score_predictio
                 'match_outcome_prediction_rounded', 'home_goals_prediction_rounded',
                 'away_goals_prediction_rounded', 'home_goals_prediction',
                 'away_goals_prediction', 'match_outcome_prediction',
-                'home_poisson_xG', 'away_poisson_xG']
+                'home_poisson_xG', 'away_poisson_xG', 'Odd_Home', 'Odds_Draw', 'Odd_Away']
 
 
 def add_home_away_columns(existing_df):
     try:
-      
-        
-       
- 
         # Get the list of running_ids to filter in MongoDB
         running_ids = existing_df['running_id'].tolist()
         logger.info(f"Processing {len(running_ids)} running IDs")
@@ -42,8 +40,7 @@ def add_home_away_columns(existing_df):
         # Query MongoDB to get the matching documents
         query = {'running_id': {'$in': running_ids}}
         projection = {'_id': 0, 'running_id': 1, 'Home': 1, 'Away': 1, 'league': 1, 'Date': 1}
-        # Initialize MongoDB client and get database connection
-        db_client = MongoClient()
+
         with db_client.get_database() as db:
             mongo_data = pd.DataFrame(list(db.aggregated_data.find(query, projection)))
             logger.info(f"Retrieved {len(mongo_data)} documents from MongoDB")
@@ -94,6 +91,31 @@ try:
     stacked_merged_df['score_prediction'] = stacked_merged_df['home_goals_prediction_rounded'].astype(str) + '-' + stacked_merged_df['away_goals_prediction_rounded'].astype(str)
     logger.info("Successfully rounded all predictions")
 
+    # Get odds data from MongoDB
+    try:
+        # Create MongoDB query and projection for odds data
+        odds_query = {"running_id": {"$in": stacked_merged_df['running_id'].tolist()}}
+        odds_projection = {
+            "running_id": 1,
+            "Odd_Home": 1, 
+            "Odds_Draw": 1,
+            "Odd_Away": 1,
+            "_id": 0
+        }
+        
+        # Query MongoDB for odds data
+        with db_client.get_database() as db:
+            odds_data = pd.DataFrame(list(db.aggregated_data.find(odds_query, odds_projection)))
+            logger.info(f"Retrieved odds data for {len(odds_data)} matches from MongoDB")
+        
+        # Merge odds data with existing dataframe
+        stacked_merged_df = pd.merge(stacked_merged_df, odds_data, on='running_id', how='left')
+        logger.info("Successfully merged odds data into predictions dataframe")
+        
+    except Exception as e:
+        logger.error(f"Error retrieving odds data from MongoDB: {str(e)}")
+        raise
+    
     # Reorder columns and save
     stacked_merged_df = stacked_merged_df[column_order]
     output_path = './made_predictions/predictions_stacked_2fit_merged.xlsx'
