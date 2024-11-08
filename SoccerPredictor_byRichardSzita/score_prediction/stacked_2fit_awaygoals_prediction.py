@@ -168,7 +168,6 @@ def prepare_new_data(new_data, imputer, scaler, selector):
     model_data_selected = selector.transform(model_data_scaled)  # Use the saved selector
     return model_data_selected
 
-
 # Prepare the new data for prediction
 X_new_prepared = prepare_new_data(prediction_data, imputer, scaler, selector)
 
