@@ -223,43 +223,6 @@ def prepare_data(data, features, model_type):
 
     return pd.DataFrame(model_data_imputed, columns=features)
 
-# Merge base data with predicted values
-def add_predicted_values(new_real_scores,data):
-    # Split the column into two based on '-'
-    new_real_scores[['real_home_goals', 'real_away_goals']] = new_real_scores['real_score'].str.split('-', expand=True)
-    # logger.info(f"new_scores_df: {new_real_scores}")
-    new_real_scores.dropna(subset=['real_home_goals','real_away_goals'],inplace=True)
-    new_real_scores['real_away_goals'] = new_real_scores['real_away_goals'].astype(int)
-    new_real_scores['real_home_goals'] = new_real_scores['real_home_goals'].astype(int)
-    new_real_scores['running_id'] = new_real_scores['running_id'].astype(int)
-    # Calculate residuals (prediction errors)
-    new_real_scores['home_error'] = new_real_scores['real_home_goals'] - new_real_scores['home_goals_prediction_rounded']
-    new_real_scores['away_error'] = new_real_scores['real_away_goals'] - new_real_scores['away_goals_prediction_rounded']
-    new_real_scores['outcome_error'] = new_real_scores['real_outcome'] - new_real_scores['match_outcome_prediction_rounded']
-    # Calculate the mean squared error for home and away predictions
-    mse_home_prediction = mean_squared_error(new_real_scores['real_home_goals'], new_real_scores['home_goals_prediction_rounded'])
-    mse_away_prediction = mean_squared_error(new_real_scores['real_away_goals'], new_real_scores['away_goals_prediction_rounded'])
-    mse_outcome_prediction = mean_squared_error(new_real_scores['real_outcome'], new_real_scores['match_outcome_prediction_rounded'])
-
-    # Calculate R-squared score for home and away predictions
-    r2_home_prediction = r2_score(new_real_scores['real_home_goals'], new_real_scores['home_goals_prediction_rounded'])
-    r2_away_prediction = r2_score(new_real_scores['real_away_goals'], new_real_scores['away_goals_prediction_rounded'])
-    r2_outcome_prediction = r2_score(new_real_scores['real_outcome'], new_real_scores['match_outcome_prediction_rounded'])
-    
-    logger.info(f"Home MSE: {mse_home_prediction}, Away MSE: {mse_away_prediction}")
-    logger.info(f"Home R2: {r2_home_prediction}, Away R2: {r2_away_prediction}")
-    logger.info(f"Outcome MSE: {mse_outcome_prediction}, Outcome R2: {r2_outcome_prediction}")
-    
-    score_df = new_real_scores[['running_id','home_goals_prediction_rounded','away_goals_prediction_rounded','match_outcome_prediction_rounded','real_home_goals','real_away_goals','real_outcome','home_error','away_error','outcome_error']]
-    # logger.info(f"New score dataframe created with errors: {score_df.head(5)}")
-    # print('Score_df: ' + str(len(score_df)))
-    # Merge the predictions with the real scores
-    merged_data = pd.merge(data, score_df, how='right', on='running_id')
-    # numeric_features = merged_data.select_dtypes(include=['float64', 'int64']).columns.tolist()
-    # merged_data = merged_data[numeric_features]
-    print('merge_df: ' + str(len(merged_data)))
-    return merged_data
-
 def within_range(y_true, y_pred):
     # Calculate the absolute difference between the predicted and true values
     diff = K.abs(y_true - y_pred)
@@ -293,9 +256,6 @@ def create_neural_network(input_dim):
 def train_model(base_data, data, model_type):
     global selected_features
     global numeric_features
-    # # Count NaN values in each column
-    # nan_counts = data.isna().sum()
-    # print(nan_counts)
     # Select all numeric features
     numeric_features = data.select_dtypes(include=['float64', 'int64']).columns.tolist()
     logger.info(f"Numeric features: {numeric_features}")
@@ -344,10 +304,6 @@ def train_model(base_data, data, model_type):
     selected_features = list(X_train.columns[selector.support_])
     logger.info("Feature selection using RFE completed.")
     logger.info(f"Selected Features: {selected_features}")
-    
-    # Set early stopping and learning rate scheduler
-    # early_stopping = EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
-    # lr_scheduler = ReduceLROnPlateau(monitor='loss', factor=0.5, patience=10, min_lr=0.0001)
     
     # Define models for home goals prediction based on research for soccer prediction
     
@@ -453,7 +409,6 @@ def train_model(base_data, data, model_type):
 
 # Make new predictions
 def make_prediction(model_type, model, prediction_data, residual_model):
-    # MAKE NEW PREDICTION
     # Directory where the models are saved
     imputer_file = f'imputer_{model_type}.pkl'  # Imputer file from training
     # Load and apply the saved imputer from training
@@ -469,25 +424,13 @@ def make_prediction(model_type, model, prediction_data, residual_model):
         raise
     
     X_new_prepared = prepare_new_data(prediction_data, imputer, selector)
-    # logger.info(f"X_new_prepared: {X_new_prepared}")
+   
     # Predict the home goals using the original model
     prediction = model.predict(X_new_prepared)
     prediction_column_name= model_type + '_prediction'
     logger.info(f"{model_type} predictions: {prediction}")
     # Add predictions to the new data DataFrame
     prediction_data[prediction_column_name] = prediction
-    
-    if residual_model != 0:
-        try:    
-            # Predict the home error using the residual model
-            error_pred = residual_model.predict(X_new_prepared)
-            logger.info(f"{model_type} error predictions: {error_pred}")
-            # Final adjusted prediction for goals
-            prediction_with_error = prediction + error_pred
-            prediction_data[model_type + '_prediction_with_error'] = prediction_with_error
-        except Exception as e:
-            logger.info(f"residual model prediction error: {str(e)}")
-            pass
     
     # Save predictions to an Excel file
     output_file = f'./predictions_hybrid_2fit_{model_type}.xlsx'
