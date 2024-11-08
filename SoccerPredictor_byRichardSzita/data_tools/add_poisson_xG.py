@@ -73,9 +73,9 @@ def add_poisson(matches):
     return matches
 
 # Load your feature-engineered data
-training_data_path = './SoccerPredictor_byRichardSzita/data/model_data_training.csv'
-prediction_data_path = './SoccerPredictor_byRichardSzita/data/model_data_prediction.csv'
-merged_data_path = './SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv'
+training_data_path = './data/model_data_training.csv'
+prediction_data_path = './data/model_data_prediction.csv'
+merged_data_path = './data/merged_data_prediction.csv'
 training_data = pd.read_csv(training_data_path)
 prediction_data = pd.read_csv(prediction_data_path)
 merged_matches = pd.read_csv(merged_data_path)
@@ -93,9 +93,9 @@ merged_matches[cols_to_convert] = merged_matches[cols_to_convert].apply(pd.to_nu
 
 training_data = add_poisson(training_data)
 prediction_data = add_poisson_merged(prediction_data)
-training_export_path = './SoccerPredictor_byRichardSzita/data/model_data_training_newPoisson.xlsx'
-prediction_export_path = './SoccerPredictor_byRichardSzita/data/model_data_prediction_newPoisson.xlsx'
-merged_export_path = './SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv'
+training_export_path = './data/model_data_training_newPoisson.xlsx'
+prediction_export_path = './data/model_data_prediction_newPoisson.xlsx'
+merged_export_path = './data/merged_data_prediction.csv'
 # View the dataset with ELO ratings
 print("\nExporting data:")
 training_data.to_excel(training_export_path)

@@ -550,23 +550,21 @@ def add_rolling_columns(dataframe):
         .transform(lambda x: x.rank(method='dense', ascending=False))
 
     print("New features added and dataframeset saved!")
-
-    # Drop unnecessary columns
-    dataframe = dataframe.drop(columns=['_id_match','_id_odds','season', 'league',
-                              'Date', 'Day', 'match', 'Attendance', 'Match Report', 'Score', 'url', 'Time'], errors='ignore')
-    dataframe = dataframe.replace([np.inf, -np.inf], 0)
-
-    print("dataframe Cleaning successful...")
     return dataframe
     
 # Execute the function
 base_dataframe = load_and_prepare_data()
 
 cumsummed_dataframe = add_cumulative_sums(base_dataframe)
+    # Drop unnecessary columns
+cumsummed_dataframe = cumsummed_dataframe.drop(columns=['_id_match','_id_odds','season', 'league',
+                              'Date', 'Day', 'match', 'Attendance', 'Match Report', 'Score', 'url', 'Time'], errors='ignore')
+cumsummed_dataframe = cumsummed_dataframe.replace([np.inf, -np.inf], 0)
 
-rolling_dataframe = add_rolling_columns(cumsummed_dataframe)
-rolling_dataframe.to_excel('./SoccerPredictor_byRichardSzita/data/model_data_base.xlsx')
+print("dataframe Cleaning successful...")
 
+# rolling_dataframe = add_rolling_columns(cumsummed_dataframe)
+cumsummed_dataframe.to_excel('./SoccerPredictor_byRichardSzita/data/model_data_base.xlsx')
 
 print('data exported to xlsx...')
 

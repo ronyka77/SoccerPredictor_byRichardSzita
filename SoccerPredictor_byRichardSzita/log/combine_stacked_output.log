@@ -1,0 +1,53 @@
+2024-11-08 21:44:37,022 - combine_stacked_output - ERROR - Failed to connect to MongoDB: 'MongoClient' object has no attribute 'aggregated_data'
+2024-11-08 21:45:08,427 - combine_stacked_output - INFO - Successfully connected to MongoDB
+2024-11-08 21:45:08,427 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-08 21:45:12,145 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-08 21:45:12,145 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-08 21:45:12,159 - combine_stacked_output - ERROR - Error in add_home_away_columns: Cannot use MongoClient after close
+2024-11-08 21:45:12,161 - combine_stacked_output - ERROR - Error in main execution: name 'client' is not defined
+2024-11-08 21:45:39,077 - combine_stacked_output - INFO - Successfully connected to MongoDB
+2024-11-08 21:45:39,077 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-08 21:45:42,511 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-08 21:45:42,528 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-08 21:45:42,530 - combine_stacked_output - ERROR - Error in add_home_away_columns: Cannot use MongoClient after close
+2024-11-08 21:45:42,532 - combine_stacked_output - ERROR - Error in main execution: 'MongoClient' object has no attribute 'close'
+2024-11-08 21:46:29,279 - combine_stacked_output - INFO - Successfully connected to MongoDB
+2024-11-08 21:46:29,279 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-08 21:46:32,961 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-08 21:46:32,961 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-08 21:46:32,961 - combine_stacked_output - ERROR - Error in add_home_away_columns: Cannot use MongoClient after close
+2024-11-08 21:46:32,973 - combine_stacked_output - INFO - MongoDB connection closed
+2024-11-08 21:46:32,975 - combine_stacked_output - ERROR - Error in main execution: Cannot use MongoClient after close
+2024-11-08 21:47:09,576 - combine_stacked_output - INFO - Successfully connected to MongoDB
+2024-11-08 21:47:09,594 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-08 21:47:13,387 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-08 21:47:13,392 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-08 21:47:13,394 - combine_stacked_output - ERROR - Error in add_home_away_columns: Cannot use MongoClient after close
+2024-11-08 21:47:13,396 - combine_stacked_output - ERROR - Error in main execution: Cannot use MongoClient after close
+2024-11-08 21:48:18,177 - combine_stacked_output - ERROR - Failed to connect to MongoDB: '_GeneratorContextManager' object has no attribute 'aggregated_data'
+2024-11-08 21:49:58,136 - combine_stacked_output - INFO - Successfully connected to MongoDB
+2024-11-08 21:49:58,138 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-08 21:50:01,893 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-08 21:50:01,910 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-08 21:50:01,910 - combine_stacked_output - ERROR - Error in add_home_away_columns: Cannot use MongoClient after close
+2024-11-08 21:50:01,920 - combine_stacked_output - ERROR - Error in main execution: Cannot use MongoClient after close
+2024-11-08 21:50:15,344 - combine_stacked_output - INFO - Successfully connected to MongoDB
+2024-11-08 21:50:15,344 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-08 21:50:18,944 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-08 21:50:18,945 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-08 21:50:18,945 - combine_stacked_output - ERROR - Error in add_home_away_columns: Cannot use MongoClient after close
+2024-11-08 21:50:18,952 - combine_stacked_output - ERROR - Error in main execution: Cannot use MongoClient after close
+2024-11-08 21:52:36,310 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-08 21:52:39,794 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-08 21:52:39,827 - combine_stacked_output - INFO - Successfully connected to MongoDB
+2024-11-08 21:52:39,842 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-08 21:52:39,843 - combine_stacked_output - ERROR - Error in add_home_away_columns: Cannot use MongoClient after close
+2024-11-08 21:52:39,843 - combine_stacked_output - ERROR - Error in main execution: Cannot use MongoClient after close
+2024-11-08 21:55:17,320 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-08 21:55:20,836 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-08 21:55:20,845 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-08 21:55:21,421 - combine_stacked_output - INFO - Retrieved 3724 documents from MongoDB
+2024-11-08 21:55:21,429 - combine_stacked_output - INFO - Merged dataframe shape: (3724, 8)
+2024-11-08 21:55:21,432 - combine_stacked_output - INFO - Successfully merged all dataframes
+2024-11-08 21:55:21,446 - combine_stacked_output - INFO - Successfully rounded all predictions
+2024-11-08 21:55:22,215 - combine_stacked_output - INFO - Successfully saved merged predictions to ./made_predictions/predictions_stacked_2fit_merged.xlsx

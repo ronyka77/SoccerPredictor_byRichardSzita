@@ -68,7 +68,6 @@ column_order = [
     'home_team_elo',	'away_team_elo',
     'home_poisson_xG',	'away_poisson_xG',
     'referee_foul_rate', 'referee_encoded'
-
 ]
 
 # Load historical data from an Excel file
