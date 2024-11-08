@@ -1,6 +1,12 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
 import pandas as pd
 from mongo_add_id import mongo_add_running_id
+from typing import List, Dict
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # MongoDB setup
 client = MongoClient('192.168.0.77', 27017)
@@ -9,74 +15,136 @@ db = client.football_data
 # Collections
 matches_collection = db.fixtures
 stats_collection = db.match_stats
+aggregated_collection = db.aggregated_data
 
-# Function to aggregate data
-def aggregate_data():
-    # Fetch data from MongoDB collections
-    matches = list(matches_collection.find({}))
-    stats = list(stats_collection.find({}))
-
-    # Convert to DataFrame for easier manipulation
-    matches_df = pd.DataFrame(matches)
-    stats_df = pd.DataFrame(stats)
-
-    # Ensure the 'id' columns in both DataFrames are of the same type
-    matches_df['unique_id'] = matches_df['unique_id'].astype(str)
-    stats_df['unique_id'] = stats_df['unique_id'].astype(str)
-
-    # Merge matches with stats data
-    aggregated_df = pd.merge(matches_df, stats_df, how='left', on='unique_id', suffixes=('_match', '_stats'))
-
-    # Perform data cleaning (e.g., handling missing values)
-    aggregated_df.fillna(value={'stats_key': 'N/A'}, inplace=True)
-
-    # Remove duplicates (if any)
-    aggregated_df.drop_duplicates(subset=['unique_id'], inplace=True)
-
-    return aggregated_df
-# Function to calculate match outcome based on the score
-def calculate_outcome(score):
+# Create indexes for better query performance
+def ensure_indexes():
+    """Create necessary indexes if they don't exist"""
     try:
-        # Split the score (e.g., "2–1" to ["2", "1"])
-        home_goals, away_goals = map(int, score.split('–'))
-        # Determine the outcome based on the goals
-        if home_goals > away_goals:
-            return 1  # Home win
-        elif home_goals < away_goals:
-            return -1  # Away win
-        else:
-            return 0  # Draw
-        
-    except Exception:
-        return None
-    
-# Function to store aggregated data back in MongoDB
-def store_aggregated_data(aggregated_data):
-    aggregated_collection = db.aggregated_data
-    # Convert DataFrame back to dictionary
-    aggregated_data_dict = aggregated_data.to_dict('records')
-    # Insert or update the aggregated data in MongoDB
-    for record in aggregated_data_dict:
-        # Find the documents with a non-empty Score field
-        score = record['Score']
-        record['match_outcome'] = calculate_outcome(score)
+        matches_collection.create_index("unique_id")
+        stats_collection.create_index("unique_id") 
+        aggregated_collection.create_index("unique_id", unique=True)
+    except Exception as e:
+        logger.error(f"Error creating indexes: {e}")
 
-        match_id = record['unique_id']
-        if aggregated_collection.find_one({'unique_id': match_id}) is None:
-            aggregated_collection.insert_one(record)
-        else:
-            aggregated_collection.update_one(
-                {'unique_id': match_id},
-                {'$set': record}
+def aggregate_data():
+    """Aggregate data with optimized DataFrame operations"""
+    try:
+        # Fetch only necessary fields from MongoDB
+        projection = {"_id": 0}  # Exclude _id field, add other needed fields if necessary
+        
+        # Use generator expressions instead of list to reduce memory usage
+        matches_df = pd.DataFrame(matches_collection.find({}, projection))
+        stats_df = pd.DataFrame(stats_collection.find({}, projection))
+        
+        if matches_df.empty or stats_df.empty:
+            logger.warning("No data found in one or both collections")
+            return pd.DataFrame()
+
+        # Convert to string type only for unique_id column
+        matches_df['unique_id'] = matches_df['unique_id'].astype(str)
+        stats_df['unique_id'] = stats_df['unique_id'].astype(str)
+
+        # Optimize merge operation
+        aggregated_df = pd.merge(
+            matches_df, 
+            stats_df, 
+            how='left', 
+            on='unique_id', 
+            suffixes=('_match', '_stats')
+        )
+        
+        aggregated_df.drop_duplicates(subset=['unique_id'], inplace=True)
+
+        return aggregated_df
+    except Exception as e:
+        logger.error(f"Error in data aggregation: {e}")
+        return pd.DataFrame()
+
+def calculate_outcome(score: str) -> int:
+    """Calculate match outcome with error handling"""
+    if not isinstance(score, str):
+        return None
+        
+    try:
+        home_goals, away_goals = map(int, score.split('–'))
+        if home_goals > away_goals:
+            return 1
+        elif home_goals < away_goals:
+            return -1
+        return 0
+    except Exception as e:
+        # logger.error(f"Error calculating outcome for score {score}: {e}")
+        return None
+
+def store_aggregated_data(aggregated_data: pd.DataFrame, batch_size: int = 1000):
+    """Store aggregated data using bulk operations"""
+    if aggregated_data.empty:
+        logger.warning("No data to store")
+        return
+
+    try:
+        # Pre-calculate outcomes for all records
+        aggregated_data['match_outcome'] = aggregated_data['Score'].apply(calculate_outcome)
+        
+        # Convert to records and prepare bulk operations
+        records = aggregated_data.to_dict('records')
+        bulk_operations = []
+        
+        for record in records:
+            if 'unique_id' not in record:
+                logger.warning(f"Record missing unique_id, skipping: {record}")
+                continue
+                
+            bulk_operations.append(
+                UpdateOne(
+                    {'unique_id': record['unique_id']},
+                    {'$set': record},
+                    upsert=True
+                )
             )
-    print(f"Aggregated data stored/updated in MongoDB.")
+            
+            # Execute bulk operations in batches
+            if len(bulk_operations) >= batch_size:
+                try:
+                    aggregated_collection.bulk_write(bulk_operations, ordered=False)
+                    bulk_operations = []
+                except Exception as e:
+                    logger.error(f"Error in bulk write operation: {e}")
+
+        # Execute remaining operations
+        if bulk_operations:
+            try:
+                aggregated_collection.bulk_write(bulk_operations, ordered=False)
+            except Exception as e:
+                logger.error(f"Error in final bulk write operation: {e}")
+
+        logger.info("Aggregated data stored/updated in MongoDB")
+    except Exception as e:
+        logger.error(f"Error storing aggregated data: {e}")
 
 if __name__ == '__main__':
-    # Aggregate and clean the data
-    aggregated_data = aggregate_data()
-    print("Data aggregation done, start merge into database...")
-    # Store the aggregated data back into MongoDB
-    store_aggregated_data(aggregated_data)
-
-    print("Data aggregation and cleaning complete.")
-    mongo_add_running_id()
+    try:
+        # Ensure indexes exist
+        ensure_indexes()
+        
+        # Aggregate and clean the data
+        logger.info("Starting data aggregation...")
+        aggregated_data = aggregate_data()
+        
+        if not aggregated_data.empty:
+            logger.info("Data aggregation complete, starting database merge...")
+            # Store the aggregated data back into MongoDB
+            store_aggregated_data(aggregated_data)
+            
+            logger.info("Running ID addition...")
+            mongo_add_running_id()
+            
+            logger.info("Process completed successfully")
+        else:
+            logger.error("No data was aggregated, stopping process")
+            
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+    finally:
+        client.close()

@@ -9,8 +9,7 @@ collection = db.aggregated_data
 
 
 def add_home_away_columns(existing_df):
-   
-    
+
     # Get the list of running_ids to filter in MongoDB
     running_ids = existing_df['running_id'].tolist()
     
