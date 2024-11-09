@@ -198,7 +198,7 @@ class CustomStackingRegressor:
         with open(model_path, 'rb') as f:
             stacking_regressor = cp.load(f)
         
-        # Load the Keras model
+        # Load the Keras model with custom objects
         keras_model = load_model(keras_model_path, custom_objects=custom_objects)
         
         # Reassign Keras model to stacking regressor

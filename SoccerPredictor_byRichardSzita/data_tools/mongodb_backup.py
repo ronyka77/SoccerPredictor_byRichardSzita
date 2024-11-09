@@ -1,21 +1,28 @@
 import subprocess
-from pymongo import MongoClient
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from util_tools.database import MongoClient
 
-# MongoDB connection details
-mongodb_uri = "mongodb://192.168.0.77:27017"  # Replace with your MongoDB URI
-database_name = "football_data"               # Replace with your database name
+def ensure_backup_directory_exists(backup_path: str) -> None:
+    """Ensure the backup directory exists, create if not."""
+    if not os.path.exists(backup_path):
+        os.makedirs(backup_path)
 
-# Backup directory
-backup_dir = "./data/mongo_backup"  # Specify your backup folder path
+def backup_mongodb(backup_path: str) -> None:
+    """
+    Run the mongodump command to back up a MongoDB database.
 
-# Ensure backup directory exists
-if not os.path.exists(backup_dir):
-    os.makedirs(backup_dir)
-
-# Function to run the mongodump command from Python
-def backup_mongodb(uri, db_name, backup_path):
+    Args:
+        backup_path (str): Directory path to store the backup.
+    """
     try:
+        # Initialize MongoDB client to get URI and database name
+        client = MongoClient()
+        with client.get_database() as db:
+            uri = client.config.get('MongoDB', 'uri')
+            db_name = db.name
+
         # Full path to mongodump
         mongodump_path = r"C:\Program Files\MongoDB\Tools\100\bin\mongodump.exe"
         # Construct the mongodump command
@@ -27,16 +34,22 @@ def backup_mongodb(uri, db_name, backup_path):
         ]
 
         # Run the mongodump command using subprocess
-        result = subprocess.run(mongodump_cmd, capture_output=True)
+        result = subprocess.run(mongodump_cmd, capture_output=True, text=True)
 
         # Check for any errors in the backup process
         if result.returncode == 0:
             print(f"Backup successful! Backup stored in: {backup_path}")
         else:
-            print(f"Backup failed! Error: {result.stderr.decode()}")
+            print(f"Backup failed! Error: {result.stderr}")
 
     except Exception as e:
         print(f"An error occurred: {e}")
 
+# Backup directory
+backup_dir = "./data/mongo_backup"  # Specify your backup folder path
+
+# Ensure backup directory exists
+ensure_backup_directory_exists(backup_dir)
+
 # Call the backup function
-backup_mongodb(mongodb_uri, database_name, backup_dir)
+backup_mongodb(backup_dir)

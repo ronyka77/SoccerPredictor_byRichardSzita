@@ -161,6 +161,7 @@ def get_html_data(url, league, season, collection):
         except Exception as e:
             print(data)  # Print data if there's an error for debugging
             logging.error(f"Error processing {url}: {e}")  # Log any processing errors
+            continue
 
     print(f"Data successfully inserted for {league} {season}.")  # Print completion message for league/season
 

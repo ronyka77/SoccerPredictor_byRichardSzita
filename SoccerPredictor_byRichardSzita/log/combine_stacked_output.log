@@ -80,3 +80,13 @@
 2024-11-09 03:10:02,928 - combine_stacked_output - INFO - Retrieved odds data for 3724 matches from MongoDB
 2024-11-09 03:10:02,946 - combine_stacked_output - INFO - Successfully merged odds data into predictions dataframe
 2024-11-09 03:10:03,828 - combine_stacked_output - INFO - Successfully saved merged predictions to ./made_predictions/predictions_stacked_2fit_merged.xlsx
+2024-11-09 16:48:04,717 - combine_stacked_output - INFO - Model directory created/checked at ./models/
+2024-11-09 16:48:08,097 - combine_stacked_output - INFO - Successfully loaded all prediction files
+2024-11-09 16:48:08,112 - combine_stacked_output - INFO - Processing 3724 running IDs
+2024-11-09 16:48:08,648 - combine_stacked_output - INFO - Retrieved 3724 documents from MongoDB
+2024-11-09 16:48:08,648 - combine_stacked_output - INFO - Merged dataframe shape: (3724, 8)
+2024-11-09 16:48:08,648 - combine_stacked_output - INFO - Successfully merged all dataframes
+2024-11-09 16:48:08,664 - combine_stacked_output - INFO - Successfully rounded all predictions
+2024-11-09 16:48:08,769 - combine_stacked_output - INFO - Retrieved odds data for 3724 matches from MongoDB
+2024-11-09 16:48:08,775 - combine_stacked_output - INFO - Successfully merged odds data into predictions dataframe
+2024-11-09 16:48:09,700 - combine_stacked_output - INFO - Successfully saved merged predictions to ./made_predictions/predictions_stacked_2fit_merged.xlsx

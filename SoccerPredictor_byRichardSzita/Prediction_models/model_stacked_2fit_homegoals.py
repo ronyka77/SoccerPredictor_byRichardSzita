@@ -21,7 +21,7 @@ from xgboost import XGBRegressor
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.feature_selection import RFE
 from keras.models import Sequential, save_model, load_model
-from keras.layers import Dense, Dropout
+from keras.layers import Dense, Dropout, BatchNormalization, Activation
 from keras.optimizers import Adam
 from keras.regularizers import l2   
 from keras.callbacks import EarlyStopping, Callback
@@ -42,7 +42,7 @@ model_type='home_goals'
 
 # Set up logger with log file path
 logger = LoggerSetup.setup_logger(
-    name='stacked_homegoals_model',
+    name='stacked_awaygoals_model',
     log_file=f'./log/stacked_{model_type}_model.log',
     level=logging.INFO
 )
@@ -222,7 +222,13 @@ class LoggingEstimator(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X):
-        return self.estimator.predict(X)   
+        return self.estimator.predict(X)
+
+    @property
+    def model_(self):
+        # Access the underlying model if it exists
+        return getattr(self.estimator, 'model_', None)
+
 # Prepare data
 def prepare_data(data, features, model_type):
    
@@ -282,15 +288,35 @@ def within_range_evaluation(y_true, y_pred, tolerance=0.5):
 # Define the neural network architecture
 def create_neural_network(input_dim):
     model = Sequential()
-    model.add(Dense(128, input_dim=input_dim, activation='relu', kernel_regularizer=l2(0.001)))
+    
+    # First layer
+    model.add(Dense(128, input_dim=input_dim, kernel_regularizer=l2(0.001)))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
     model.add(Dropout(0.3))
-    model.add(Dense(64, activation='relu'))
+    
+    # Second layer
+    model.add(Dense(64))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
     model.add(Dropout(0.3))
-    model.add(Dense(32, activation='relu'))
-    model.add(Dense(1))  # Output layer
+    
+    # Third layer
+    model.add(Dense(32))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+    
+    # Output layer
+    model.add(Dense(1))
 
-    # Compile with MSE loss and Adam optimizer
-    model.compile(loss='mse', optimizer=Adam(), metrics=['mae', WithinRangeMetric])
+    optimizer = Adam(learning_rate=0.001)
+    model.compile(
+        loss='mse',
+        optimizer=optimizer,
+        metrics=['mae', WithinRangeMetric]
+    )
+    
     return model
 
 # Train the model
@@ -360,14 +386,14 @@ def train_model(base_data, data, model_type):
     )
     
     # CatBoost - Handles categorical variables well and robust to overfitting
-    catboost_regressor_home = CatBoostRegressor(
-        iterations=500,
-        learning_rate=0.05,
-        depth=12,
-        verbose=2,
-        random_state=42,
-        thread_count=-1  # Use all available cores
-    )
+    # catboost_regressor_home = CatBoostRegressor(
+    #     iterations=500,
+    #     learning_rate=0.05,
+    #     depth=12,
+    #     verbose=2,
+    #     random_state=42,
+    #     thread_count=-1  # Use all available cores
+    # )
     
     # XGBoost - Tuned for soccer prediction tasks
     xgb_regressor_home = XGBRegressor(
@@ -406,7 +432,7 @@ def train_model(base_data, data, model_type):
     # Wrap each estimator with the LoggingEstimator
     estimators_home = [
         ('lgb', LoggingEstimator(lgb_regressor_home, 'LightGBM', logger)),
-        ('catboost', LoggingEstimator(catboost_regressor_home, 'CatBoost', logger)),
+        # ('catboost', LoggingEstimator(catboost_regressor_home, 'CatBoost', logger)),
         ('xgb', LoggingEstimator(xgb_regressor_home, 'XGBoost', logger)),
         ('nn', LoggingEstimator(nn_regressor_home, 'Neural Network', logger)),
         ('rf', LoggingEstimator(rf_regressor_home, 'Random Forest', logger))
@@ -496,8 +522,16 @@ except Exception as e:
     pass
 
 # Initialize the wrappers
+try:
+    nn_model = stacking_regressor.named_estimators_['nn'].model_
+    if nn_model is None:
+        raise AttributeError("The underlying model is not accessible.")
+except AttributeError as e:
+    logger.error(f"Error occurred while accessing the model: {e}")
+    raise
+
 custom_model = CustomStackingRegressor(stacking_regressor, 
-                                       stacking_regressor.named_estimators_['nn'].model_,
+                                       nn_model,
                                        keras_nn_model_path)
 
 # Save the model (this will save both the Keras model and the rest of the stacking regressor)

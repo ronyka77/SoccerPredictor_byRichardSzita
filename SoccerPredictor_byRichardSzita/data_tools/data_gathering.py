@@ -16,7 +16,7 @@ def run_script(script_name):
     """Run a Python script and log the output."""
     try:
         # Construct full path to script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_dir = sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         script_path = os.path.join(script_dir, script_name)
         
         # Add debug logging
