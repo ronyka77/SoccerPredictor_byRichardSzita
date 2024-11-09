@@ -7,7 +7,7 @@ mongodb_uri = "mongodb://192.168.0.77:27017"  # Replace with your MongoDB URI
 database_name = "football_data"               # Replace with your database name
 
 # Backup directory
-backup_dir = "./SoccerPredictor_byRichardSzita/data/mongo_backup"  # Specify your backup folder path
+backup_dir = "./data/mongo_backup"  # Specify your backup folder path
 
 # Ensure backup directory exists
 if not os.path.exists(backup_dir):

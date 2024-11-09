@@ -17,7 +17,7 @@ import time  # For adding delays between actions
 import os 
 
 # Set up logging
-log_file_path = './SoccerPredictor_byRichardSzita/data_tools/log/fbref_get_data.log'
+log_file_path = './data_tools/log/fbref_get_data.log'
 os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
 logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

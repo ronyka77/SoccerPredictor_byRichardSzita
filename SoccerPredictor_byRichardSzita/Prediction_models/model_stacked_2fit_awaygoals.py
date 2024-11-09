@@ -222,7 +222,13 @@ class LoggingEstimator(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X):
-        return self.estimator.predict(X)   
+        return self.estimator.predict(X)
+
+    @property
+    def model_(self):
+        # Access the underlying model if it exists
+        return getattr(self.estimator, 'model_', None)
+
 # Prepare data
 def prepare_data(data, features, model_type):
    
@@ -518,6 +524,8 @@ except Exception as e:
 # Initialize the wrappers
 try:
     nn_model = stacking_regressor.named_estimators_['nn'].model_
+    if nn_model is None:
+        raise AttributeError("The underlying model is not accessible.")
 except AttributeError as e:
     logger.error(f"Error occurred while accessing the model: {e}")
     raise
