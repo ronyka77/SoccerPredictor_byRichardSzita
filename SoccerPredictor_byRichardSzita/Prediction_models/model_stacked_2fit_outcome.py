@@ -343,7 +343,7 @@ logger.info(f"Start {model_type} predictions")
 
 # MAKE PREDICTIONS
 try:
-    make_prediction(model_type,stacking_regressor,prediction_df)   
+    make_prediction(model_type, stacking_regressor, prediction_df, model_dir, logger, numeric_features)
         
 except Exception as e:
     logger.error(f"Error occurred while making prediction: {e}")
