@@ -308,12 +308,13 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
         ]
     )
     
-    # Random Forest with parameters optimized for sports prediction
+    # Improved Random Forest with potentially better parameters
     rf_regressor_home = RandomForestRegressor(
-        n_estimators=500,
-        max_depth=12,
-        min_samples_split=10,
-        min_samples_leaf=5,
+        n_estimators=1000,  # More trees
+        max_depth=None,     # Allow trees to grow deeper
+        min_samples_split=5,  # More flexibility in splitting
+        min_samples_leaf=2,   # Smaller leaf size
+        max_features='sqrt',  # Consider a subset of features at each split
         random_state=42,
         n_jobs=-1  # Use all available cores
     )
@@ -424,7 +425,7 @@ logger.info(f"Start {model_type} predictions")
 
 # MAKE PREDICTIONS
 try:
-    make_prediction(model_type,stacking_regressor,prediction_df)   
+    make_prediction(model_type, stacking_regressor, prediction_df, model_dir, logger, numeric_features)   
         
 except Exception as e:
     logger.error(f"Error occurred while making prediction: {e}")

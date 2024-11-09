@@ -211,21 +211,22 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     nn_regressor_home = KerasRegressor(
         model=create_neural_network,
         model__input_dim=X_train_selected.shape[1],
-        epochs=250,
-        batch_size=64,
+        epochs=150,
+        batch_size=128,
         verbose=1,
         callbacks=[
-            CustomReduceLROnPlateau(monitor='loss', factor=0.2, patience=15, min_lr=0.00001),
-            EarlyStopping(monitor='loss', patience=25, restore_best_weights=True)
+            CustomReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=0.00001),
+            EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         ]
     )
     
-    # Random Forest with parameters optimized for sports prediction
+    # Improved Random Forest with potentially better parameters
     rf_regressor_home = RandomForestRegressor(
-        n_estimators=500,
-        max_depth=12,
-        min_samples_split=10,
-        min_samples_leaf=5,
+        n_estimators=1000,  # More trees
+        max_depth=None,     # Allow trees to grow deeper
+        min_samples_split=5,  # More flexibility in splitting
+        min_samples_leaf=2,   # Smaller leaf size
+        max_features='sqrt',  # Consider a subset of features at each split
         random_state=42,
         n_jobs=-1  # Use all available cores
     )
@@ -276,7 +277,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     return stacking_regressor_home
 
 # Make new predictions
-def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame, model_dir: str, logger: logging.Logger, numeric_features: list):
+def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame, model_dir: str, logger: logging.Logger, numeric_features: list) -> None:
     """
     Make predictions using the trained model and save the results to an Excel file.
 
@@ -295,15 +296,15 @@ def make_prediction(model_type: str, model: StackingRegressor, prediction_data: 
     try:
         imputer = joblib.load(imputer_file)
         logger.info(f"Imputer loaded from {imputer_file}")
-    except FileNotFoundError:
-        logger.error(f"Imputer file not found at {imputer_file}")
+    except FileNotFoundError as e:
+        logger.error(f"Imputer file not found at {imputer_file}: {e}")
         raise
 
     try:
         selector = joblib.load(selector_file)
         logger.info(f"Selector loaded from {selector_file}")
-    except FileNotFoundError:
-        logger.error(f"Selector file not found at {selector_file}")
+    except FileNotFoundError as e:
+        logger.error(f"Selector file not found at {selector_file}: {e}")
         raise
 
     # Prepare new data for prediction
@@ -322,7 +323,17 @@ def make_prediction(model_type: str, model: StackingRegressor, prediction_data: 
     prediction_data.to_excel(output_file, index=False)
     logger.info(f"Predictions saved to {output_file}")
 
-prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals', 'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
+# Prepare prediction data
+prediction_df = new_prediction_data.drop(
+    columns=[
+        'Unnamed: 0.1', 'Unnamed: 0.2', 'Date', 'Unnamed: 0', 'match_outcome', 
+        'home_goals', 'away_goals', 'draw', 'away_win', 'home_win', 
+        'away_points', 'home_points', 'HomeTeam_last_away_match', 
+        'AwayTeam_last_home_match', 'home_points_rolling_avg', 
+        'away_points_rolling_avg', 'home_advantage'
+    ], 
+    errors='ignore'
+)
 prediction_df = prediction_df.replace(',', '.', regex=True)
 prediction_df = prediction_df.apply(pd.to_numeric, errors='coerce')
 prediction_df.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -333,7 +344,7 @@ logger.info(f"Start {model_type} predictions")
 
 # MAKE PREDICTIONS
 try:
-    make_prediction(model_type,stacking_regressor,prediction_df)   
+    make_prediction(model_type, stacking_regressor, prediction_df, model_dir, logger, numeric_features)   
         
 except Exception as e:
     logger.error(f"Error occurred while making prediction: {e}")
