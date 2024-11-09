@@ -1,8 +1,12 @@
 from pymongo import MongoClient, UpdateOne
 import pandas as pd
-from utils.mongo_add_id import mongo_add_running_id
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from typing import List, Dict
 import logging
+from util_tools.mongo_add_id import mongo_add_running_id
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

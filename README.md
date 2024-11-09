@@ -9,6 +9,7 @@ A comprehensive machine learning pipeline designed to predict football match out
 ## 🎯 System Overview
 
 The system consists of three powerful, integrated components:
+
 1. 📊 Data Collection & Processing - Automated scraping and preprocessing
 2. 🔧 Feature Engineering - Advanced statistical modeling
 3. 🤖 Prediction Models - State-of-the-art ML ensemble
@@ -16,6 +17,7 @@ The system consists of three powerful, integrated components:
 ## ✨ Features
 
 ### 📥 Data Collection & Storage
+
 - Automated scraping from multiple sources:
   - FBRef match data and statistics (comprehensive match-level data)
   - Team performance metrics (historical and real-time)
@@ -24,23 +26,34 @@ The system consists of three powerful, integrated components:
 - Backup system included with data validation
 
 ### 🛠️ Feature Engineering
+
 Two-tiered approach for maximum accuracy:
+
 1. Python-based processing:
    - Rolling averages calculation with configurable windows
+   - Cumulative statistics tracking:
+     - Season-to-date goal sums
+     - Running point totals
+     - Moving averages for key metrics
+     - Progressive performance indicators
    - Team form indicators using weighted metrics
    - ELO rating integration with dynamic K-factor
    - Expected goals (xG) modeling using Poisson regression
-   
+
 2. Power BI advanced processing:
    - Complex feature derivation with DAX
    - Interactive data visualization
    - Export capabilities for model training
 
 ### 🎯 Prediction Models
+
 State-of-the-art stacked ensemble combining:
+
+- LightGBM (gradient boosting)
+- CatBoost (gradient boosting)
 - XGBoost (gradient boosting)
 - Neural Networks (Keras with custom architecture)
-- Specialized regression techniques
+- Random Forest (ensemble learning)
 - Separate models optimized for:
   - Match outcomes (W/D/L)
   - Home goals prediction
@@ -50,7 +63,7 @@ State-of-the-art stacked ensemble combining:
 
 1. **Clone the Repository**:
 
-git clone https://github.com/ronyka77/Football_predictor_byRichardSzita.git
+git clone <https://github.com/ronyka77/Football_predictor_byRichardSzita.git>
 cd Football_predictor_byRichardSzita
 
 2. **Environment Setup**:
@@ -59,6 +72,7 @@ source venv/bin/activate # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 3. **MongoDB Setup**:
+
 - Install MongoDB Server from [official website](https://www.mongodb.com/try/download/community)
 - Create new database
 - Restore provided backup data
@@ -83,9 +97,8 @@ python ./data_tools/feature_engineering_for_predictions.py
 python ./data_tools/feature_engineering_for_model.py
 python ./data_tools/merge_data_for_prediction.py
 
+#### Power BI Processing for Training Data
 
-
-#### Power BI Processing
 1. Open files(model_data_pred.pbix and model_data_training.pbix) in `data_tools/PowerBI/`
 2. Refresh data
 3. Export to CSV:
@@ -96,7 +109,8 @@ Add Poisson_xG and ELO scores
 python ./data_tools/add_poisson_xG.py
 python ./data_tools/add_ELO_scores.py
 
-#### Power BI Processing
+#### Power BI Processing for Predictions
+
 1. Open merge_data_prediction.pbix in `data_tools/PowerBI/`
 2. Refresh data
 3. Export to CSV: `merged_data_prediction.csv`
@@ -106,6 +120,7 @@ python ./data_tools/add_poisson_xG.py
 python ./data_tools/add_ELO_scores.py
 
 ### 3. Model Training
+
 Run the following scripts in `score_prediction` folder:
 
 python model_stacked_2fit_outcome.py
@@ -113,6 +128,7 @@ python model_stacked_2fit_homegoals.py
 python model_stacked_2fit_awaygoals.py
 
 ### 4. Making Predictions
+
 Execute prediction scripts:
 
 python stacked_2fit_outcome_prediction.py
@@ -120,6 +136,7 @@ python stacked_2fit_homegoals_prediction.py
 python stacked_2fit_awaygoals_prediction.py
 
 ## 📁 Project Structure
+
 Football_predictor_byRichardSzita/
 ├── data_tools/
 │ ├── fbref_scraper.py
@@ -137,6 +154,7 @@ Football_predictor_byRichardSzita/
 ## 📄 Requirements
 
 Key dependencies:
+
 - pandas
 - numpy
 - scikit-learn
@@ -151,6 +169,7 @@ See `requirements.txt` for complete list.
 ## 📤 Output
 
 The system generates:
+
 - Predicted match outcomes
 - Goal predictions
 - Probability distributions
@@ -257,5 +276,5 @@ Contributions are welcome! Please fork the repository and submit pull requests w
 ## 📧 Contact Information
 
 For support or questions, please contact the project maintainers at:
-- Email: szitar.9@gmail.com
 
+- Email: <szitar.9@gmail.com>

@@ -17,18 +17,6 @@ logger = LoggerSetup.setup_logger(
     level=logging.INFO
 )
 
-# def load_config() -> dict:
-#     config = configparser.ConfigParser()
-#     config_loaded = config.read(CONFIG_PATH)
-#     if not config_loaded:
-#         raise FileNotFoundError(f"Could not find config file at {CONFIG_PATH}")
-#     print(f"Config file loaded from: {CONFIG_PATH}")
-#     return {
-#         'mongo_uri': config['MongoDB']['uri'],
-#         'db_name': config['MongoDB']['database'],
-#         'threshold': config['Matching']['threshold']
-#     }
-
 # Initialize MongoDB client
 db_client = MongoClient()
 
@@ -92,7 +80,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             standardized_match_id = standardize_name(match_id)
             
             # Debug matching process
-            logger.info(f"Processing match_id: {match_id}")
+            # logger.info(f"Processing match_id: {match_id}")
             
             # Standardize all odds IDs for comparison
             standardized_odds_ids = [standardize_name(uid) for uid in odds_unique_ids]
@@ -105,7 +93,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             )
             
             if result is None:
-                logger.info(f"No match found for ID: {match_id}")
+                # logger.info(f"No match found for ID: {match_id}")
                 merged_data.append(row.to_dict())
                 continue
                 

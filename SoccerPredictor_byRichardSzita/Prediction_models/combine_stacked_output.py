@@ -24,7 +24,7 @@ model_dir = "./models/"
 os.makedirs(model_dir, exist_ok=True)
 logger.info(f"Model directory created/checked at {model_dir}")
 
-column_order = ['running_id', 'Date', 'league', 'Home', 'Away', 'score_prediction', 
+column_order = ['running_id', 'Date', 'league', 'Home', 'Away', 'Prediction_models', 
                 'match_outcome_prediction_rounded', 'home_goals_prediction_rounded',
                 'away_goals_prediction_rounded', 'home_goals_prediction',
                 'away_goals_prediction', 'match_outcome_prediction',
@@ -88,7 +88,7 @@ try:
     stacked_merged_df['home_goals_prediction_rounded'] = stacked_merged_df['home_goals_prediction'].apply(round_half_up).astype(int)
     stacked_merged_df['away_goals_prediction_rounded'] = stacked_merged_df['away_goals_prediction'].apply(round_half_up).astype(int)
     stacked_merged_df['match_outcome_prediction_rounded'] = stacked_merged_df['match_outcome_prediction'].apply(round_half_up).astype(int)
-    stacked_merged_df['score_prediction'] = stacked_merged_df['home_goals_prediction_rounded'].astype(str) + '-' + stacked_merged_df['away_goals_prediction_rounded'].astype(str)
+    stacked_merged_df['Prediction_models'] = stacked_merged_df['home_goals_prediction_rounded'].astype(str) + '-' + stacked_merged_df['away_goals_prediction_rounded'].astype(str)
     logger.info("Successfully rounded all predictions")
 
     # Get odds data from MongoDB

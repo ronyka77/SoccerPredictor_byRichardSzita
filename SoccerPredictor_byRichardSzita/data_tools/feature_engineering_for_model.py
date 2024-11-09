@@ -564,7 +564,7 @@ cumsummed_dataframe = cumsummed_dataframe.replace([np.inf, -np.inf], 0)
 print("dataframe Cleaning successful...")
 
 # rolling_dataframe = add_rolling_columns(cumsummed_dataframe)
-cumsummed_dataframe.to_excel('./SoccerPredictor_byRichardSzita/data/model_data_base.xlsx')
+cumsummed_dataframe.to_excel('./data/model_data_base.xlsx')
 
 print('data exported to xlsx...')
 

@@ -6,7 +6,7 @@ import joblib
 import datetime
 
 # Set up logging
-log_file_path = './SoccerPredictor_byRichardSzita/data_tools/log/merged_data.log'
+log_file_path = './data_tools/log/merged_data.log'
 logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Define important features for the model
@@ -82,7 +82,7 @@ def load_historical_data(file_path):
     return historical_data
 
 # Define the cutoff date
-cutoff_date = datetime.date(2024, 10, 22)
+cutoff_date = datetime.date(2024, 10, 29)
 # Retrieve future match data from MongoDB and match team names with encoded values
 def get_future_matches(collection, historical_data):
     logging.info("Querying future matches from MongoDB...")
@@ -107,7 +107,7 @@ def get_future_matches(collection, historical_data):
     
     future_matches = future_matches.drop(columns=columns_to_drop, errors='ignore')
     logging.info("Dropped unnecessary columns.")
-    future_matches.to_excel('./SoccerPredictor_byRichardSzita/data_to_merge.xlsx')
+    future_matches.to_excel('./data/data_to_merge.xlsx')
     print('exported')
     # Merging team names with encoded values from historical data
     logging.info("Merging future matches with historical data for encoded team values...")
@@ -167,7 +167,7 @@ def main():
     db = client['football_data']
     collection = db['aggregated_data']
     
-    historical_data = load_historical_data("./SoccerPredictor_byRichardSzita/data/model_data_prediction_newPoisson.xlsx")
+    historical_data = load_historical_data("./data/model_data_prediction_newPoisson.xlsx")
     
     future_matches = get_future_matches(collection, historical_data)
     print(future_matches)

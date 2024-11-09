@@ -38,11 +38,11 @@ manual_variable_initialization(True)
 import logging
 from util_tools.logging_config import LoggerSetup
 
-model_type='away_goals'
+model_type='match_outcome'
 
 # Set up logger with log file path
 logger = LoggerSetup.setup_logger(
-    name='stacked_awaygoals_model',
+    name='stacked_outcome_model',
     log_file=f'./log/stacked_{model_type}_model.log',
     level=logging.INFO
 )
@@ -495,9 +495,15 @@ except Exception as e:
     logger.error(f"Error occurred while making prediction: {e}")
     pass
 
-# Initialize the wrappers
+try:
+    # Initialize the wrappers
+    nn_model = stacking_regressor.named_estimators_['nn'].model_
+except AttributeError as e:
+    logger.error(f"Error occurred while accessing the model: {e}")
+    raise
+
 custom_model = CustomStackingRegressor(stacking_regressor, 
-                                       stacking_regressor.named_estimators_['nn'].model_,
+                                       nn_model,
                                        keras_nn_model_path)
 
 # Save the model (this will save both the Keras model and the rest of the stacking regressor)
