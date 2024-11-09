@@ -36,6 +36,27 @@ def initialize_mongodb():
     client = MongoClient()  # Use the MongoClient from database.py
     return client.get_collection("odds_data")  # Return odds_data collection for storing scraped data
 
+
+def delete_future_odds():
+    """Delete odds data from MongoDB for dates after January 1st, 2024."""
+    try:
+        client = MongoClient()  # Use the MongoClient from database.py
+        collection = client.get_collection("odds_data")
+        
+        # Delete documents where date is after Jan 1, 2024
+        result = collection.delete_many({
+            "Date": {"$gt": "2024-01-01"}
+        })
+        
+        logger.info(f"Successfully deleted {result.deleted_count} documents with dates after 2024-01-01")
+        
+    except Exception as e:
+        logger.error(f"Error deleting future odds data: {e}")
+        raise
+
+# Execute the deletion
+delete_future_odds()
+
 # URL for the main site to scrape and constant league identifiers for URL generation
 MAIN_URL = "https://www.oddsportal.com/"
 
@@ -191,6 +212,10 @@ def parse_date(event):
             for date_format in ("%d %B %Y", "%d %b %Y", "%d %m %Y"):
                 if "Yesterday" in date_part:  
                     datum = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+                    logger.info(f"Date found: {datum}")
+                    return datum
+                elif "Tomorrow" in date_part:
+                    datum = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
                     logger.info(f"Date found: {datum}")
                     return datum
                 elif "Today" in date_part:

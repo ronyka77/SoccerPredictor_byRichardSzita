@@ -121,7 +121,7 @@ def generate_urls(leagues):
         "Netherlands": [
             "https://www.oddsportal.com/football/netherlands/eredivisie/",
             # "https://www.oddsportal.com/football/netherlands/eredivisie/results/",
-            # "https://www.oddsportal.com/football/netherlands/eredivisie-2020-2021/results/",
+            "https://www.oddsportal.com/football/netherlands/eredivisie-2020-2021/results/",
             # "https://www.oddsportal.com/football/netherlands/eredivisie-2021-2022/results/",
             # "https://www.oddsportal.com/football/netherlands/eredivisie-2022-2023/results/",
             # "https://www.oddsportal.com/football/netherlands/eredivisie-2023-2024/results/",
@@ -191,6 +191,10 @@ def parse_date(event):
             for date_format in ("%d %B %Y", "%d %b %Y", "%d %m %Y"):
                 if "Yesterday" in date_part:  
                     datum = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+                    logger.info(f"Date found: {datum}")
+                    return datum
+                elif "Tomorrow" in date_part:
+                    datum = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
                     logger.info(f"Date found: {datum}")
                     return datum
                 elif "Today" in date_part:

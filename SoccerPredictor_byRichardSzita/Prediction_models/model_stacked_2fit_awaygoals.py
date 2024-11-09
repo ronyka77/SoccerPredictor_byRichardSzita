@@ -105,6 +105,96 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
                                'home_points_rolling_avg','away_points_rolling_avg','home_advantage',
                                'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
 
+
+# Load previously predicted scores
+try:
+    real_scores = pd.read_excel(real_scores_path)
+    real_scores = real_scores[real_scores['Date'] < '2024-11-06']
+    logger.info(f"Previously predicted scores loaded from {real_scores_path} with shape: {real_scores.shape}")
+except Exception as e:
+    logger.error(f"Error loading previously predicted scores: {e}")
+    raise
+
+# Prepare real scores data for additional fit
+def prepare_real_scores_data(real_scores: pd.DataFrame, new_prediction_data: pd.DataFrame, model_type: str, original_features: list) -> pd.DataFrame:
+    """
+    Prepare the real scores data for additional model fitting by merging with new prediction data.
+
+    Args:
+        real_scores (pd.DataFrame): The DataFrame containing real scores.
+        new_prediction_data (pd.DataFrame): The DataFrame containing new prediction data with all features.
+        model_type (str): The type of model to train.
+        original_features (list): The list of original features used in the model.
+
+    Returns:
+        pd.DataFrame: The prepared feature data.
+    """
+    # Merge real scores with new prediction data on common keys
+    merged_data = pd.merge(
+        real_scores,
+        new_prediction_data,
+        on=['running_id'],  # Adjust these keys as necessary
+        how='left'
+    )
+    
+    # Ensure all original features are present
+    real_scores_data = merged_data.reindex(columns=original_features, fill_value=0)
+    
+    # Convert comma to dot for decimal conversion
+    real_scores_data = real_scores_data.replace(',', '.', regex=True)
+    real_scores_data = real_scores_data.apply(pd.to_numeric, errors='coerce')
+    real_scores_data.replace([np.inf, -np.inf], np.nan, inplace=True)
+    logger.info(f"Real scores data prepared for additional fit. Shape: {real_scores_data.shape}")
+    logger.debug(f"Real scores data columns: {real_scores_data.columns.tolist()}")
+    # logger.debug(f"Real scores data shape: {real_scores_data.shape}")
+    return real_scores_data
+
+# Prepare the real scores data
+real_scores_data = prepare_real_scores_data(real_scores, new_prediction_data, model_type, numeric_features)
+
+# Additional fit using real scores
+def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: pd.DataFrame, real_scores: pd.DataFrame, model_type: str, logger: logging.Logger):
+    """
+    Perform an additional fit using the real scores data, only for incorrect predictions.
+
+    Args:
+        model (StackingRegressor): The trained stacking regressor model.
+        real_scores_data (pd.DataFrame): The feature data for real scores.
+        real_scores (pd.DataFrame): The DataFrame containing real scores.
+        model_type (str): The type of model used for prediction.
+        logger (logging.Logger): Logger for logging information.
+    """
+    # Prepare the data
+    X_real = prepare_data(real_scores_data, numeric_features, model_type, model_dir, logger)
+    
+    # Use the actual real score as the target variable
+    y_real = real_scores['away_goals']  # Adjust this to the correct column name for real scores
+
+    # Predict using the current model
+    y_pred = model.predict(X_real)
+
+    # Identify incorrect predictions
+    incorrect_indices = y_pred != y_real
+
+    # Filter data for incorrect predictions
+    X_incorrect = X_real[incorrect_indices]
+    y_incorrect = y_real[incorrect_indices]
+
+    if len(X_incorrect) > 0:
+        # Scale the data
+        X_incorrect_scaled = scaler.transform(X_incorrect)
+
+        # Feature selection
+        X_incorrect_selected = selector.transform(X_incorrect_scaled)
+
+        # Fit the model with incorrect predictions
+        logger.info('Additional fit with real scores started for incorrect predictions')
+        model.fit(X_incorrect_selected, y_incorrect)
+        logger.info(f"Stacking model for {model_type} trained successfully with real scores for incorrect predictions.")
+    else:
+        logger.info("No incorrect predictions found; no additional fitting needed.")
+
+
 # Train the model
 def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, model_dir: str, logger: logging.Logger) -> StackingRegressor:
     """
@@ -154,7 +244,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
 
     # Feature Selection (RFE)
     logger.info("Feature Selection started.")
-    selector = RFE(estimator=RandomForestRegressor(), n_features_to_select=30)
+    selector = RFE(estimator=RandomForestRegressor(), n_features_to_select=40)
     X_train_selected = selector.fit_transform(X_train_scaled, y_train)
     
     # Save the RFE selector for future use
@@ -209,12 +299,12 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     nn_regressor_home = KerasRegressor(
         model=create_neural_network,
         model__input_dim=X_train_selected.shape[1],
-        epochs=250,
-        batch_size=64,
+        epochs=150,
+        batch_size=128,
         verbose=1,
         callbacks=[
-            CustomReduceLROnPlateau(monitor='loss', factor=0.2, patience=15, min_lr=0.00001),
-            EarlyStopping(monitor='loss', patience=25, restore_best_weights=True)
+            CustomReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=0.00001),
+            EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         ]
     )
     
@@ -271,10 +361,13 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     logger.info(f"{model_type} (2nd fit) Stacking Model MSE: {mse_home2}, R2: {r2_home2}, Stacking Model MAE: {mae_home2}, Stacking Model MAPE: {mape_home2}%")
     logger.info(f"{model_type} (2nd fit) Stacking Model Within Range (±0.5): {within_range_home2}%")
     
+    # Perform the additional fit
+    additional_fit_with_real_scores(stacking_regressor_home, real_scores_data, real_scores, model_type, logger)
+    
     return stacking_regressor_home
 
 # Make new predictions
-def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame):
+def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame, model_dir: str, logger: logging.Logger, numeric_features: list):
     """
     Make predictions using the trained model and save the results to an Excel file.
 
@@ -282,30 +375,39 @@ def make_prediction(model_type: str, model: StackingRegressor, prediction_data: 
         model_type (str): The type of model used for prediction.
         model (StackingRegressor): The trained stacking regressor model.
         prediction_data (pd.DataFrame): The data to make predictions on.
+        model_dir (str): Directory where the model artifacts are stored.
+        logger (logging.Logger): Logger for logging information.
+        numeric_features (list): List of numeric features used in the model.
     """
-    # Directory where the models are saved
-    imputer_file = f'imputer_{model_type}.pkl'  # Imputer file from training
     # Load and apply the saved imputer from training
-    imputer_path = os.path.join(model_dir, imputer_file)
-    selector_file = os.path.join(model_dir, 'rfe_'+ model_type +'_selector.pkl')
-    
-    selector = joblib.load(selector_file)
+    imputer_file = os.path.join(model_dir, f'imputer_{model_type}.pkl')
+    selector_file = os.path.join(model_dir, f'rfe_{model_type}_selector.pkl')
+
     try:
-        imputer = joblib.load(imputer_path)
-        logger.info(f"Imputer loaded from {imputer_path}")
+        imputer = joblib.load(imputer_file)
+        logger.info(f"Imputer loaded from {imputer_file}")
     except FileNotFoundError:
-        logger.error(f"Imputer file not found at {imputer_path}")
+        logger.error(f"Imputer file not found at {imputer_file}")
         raise
-    
-    X_new_prepared = prepare_new_data(prediction_data, imputer, selector)
-   
+
+    try:
+        selector = joblib.load(selector_file)
+        logger.info(f"Selector loaded from {selector_file}")
+    except FileNotFoundError:
+        logger.error(f"Selector file not found at {selector_file}")
+        raise
+
+    # Prepare new data for prediction
+    X_new_prepared = prepare_new_data(prediction_data, imputer, selector, model_type, model_dir, logger, numeric_features)
+
     # Predict the home goals using the original model
     prediction = model.predict(X_new_prepared)
-    prediction_column_name= model_type + '_prediction'
+    prediction_column_name = f'{model_type}_prediction'
     logger.info(f"{model_type} predictions: {prediction}")
+
     # Add predictions to the new data DataFrame
     prediction_data[prediction_column_name] = prediction
-    
+
     # Save predictions to an Excel file
     output_file = f'./predictions_hybrid_2fit_{model_type}.xlsx'
     prediction_data.to_excel(output_file, index=False)

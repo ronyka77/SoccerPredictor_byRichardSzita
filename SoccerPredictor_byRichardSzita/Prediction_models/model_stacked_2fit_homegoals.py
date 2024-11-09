@@ -42,6 +42,8 @@ from util_tools.model_functions import create_neural_network, prepare_data, prep
 
 model_type='home_goals'
 
+
+
 # Set up logger with log file path
 logger = LoggerSetup.setup_logger(
     name=f'stacked_{model_type}_model',
@@ -274,7 +276,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     return stacking_regressor_home
 
 # Make new predictions
-def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame):
+def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame, model_dir: str, logger: logging.Logger, numeric_features: list):
     """
     Make predictions using the trained model and save the results to an Excel file.
 
@@ -282,30 +284,39 @@ def make_prediction(model_type: str, model: StackingRegressor, prediction_data: 
         model_type (str): The type of model used for prediction.
         model (StackingRegressor): The trained stacking regressor model.
         prediction_data (pd.DataFrame): The data to make predictions on.
+        model_dir (str): Directory where the model artifacts are stored.
+        logger (logging.Logger): Logger for logging information.
+        numeric_features (list): List of numeric features used in the model.
     """
-    # Directory where the models are saved
-    imputer_file = f'imputer_{model_type}.pkl'  # Imputer file from training
     # Load and apply the saved imputer from training
-    imputer_path = os.path.join(model_dir, imputer_file)
-    selector_file = os.path.join(model_dir, 'rfe_'+ model_type +'_selector.pkl')
-    
-    selector = joblib.load(selector_file)
+    imputer_file = os.path.join(model_dir, f'imputer_{model_type}.pkl')
+    selector_file = os.path.join(model_dir, f'rfe_{model_type}_selector.pkl')
+
     try:
-        imputer = joblib.load(imputer_path)
-        logger.info(f"Imputer loaded from {imputer_path}")
+        imputer = joblib.load(imputer_file)
+        logger.info(f"Imputer loaded from {imputer_file}")
     except FileNotFoundError:
-        logger.error(f"Imputer file not found at {imputer_path}")
+        logger.error(f"Imputer file not found at {imputer_file}")
         raise
-    
-    X_new_prepared = prepare_new_data(prediction_data, imputer, selector)
-   
+
+    try:
+        selector = joblib.load(selector_file)
+        logger.info(f"Selector loaded from {selector_file}")
+    except FileNotFoundError:
+        logger.error(f"Selector file not found at {selector_file}")
+        raise
+
+    # Prepare new data for prediction
+    X_new_prepared = prepare_new_data(prediction_data, imputer, selector, model_type, model_dir, logger, numeric_features)
+
     # Predict the home goals using the original model
     prediction = model.predict(X_new_prepared)
-    prediction_column_name= model_type + '_prediction'
+    prediction_column_name = f'{model_type}_prediction'
     logger.info(f"{model_type} predictions: {prediction}")
+
     # Add predictions to the new data DataFrame
     prediction_data[prediction_column_name] = prediction
-    
+
     # Save predictions to an Excel file
     output_file = f'./predictions_hybrid_2fit_{model_type}.xlsx'
     prediction_data.to_excel(output_file, index=False)

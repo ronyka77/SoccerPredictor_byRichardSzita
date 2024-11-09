@@ -274,7 +274,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     return stacking_regressor_home
 
 # Make new predictions
-def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame):
+def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame, model_dir: str, logger, numeric_features: list):
     """
     Make predictions using the trained model and save the results to an Excel file.
 
@@ -282,14 +282,23 @@ def make_prediction(model_type: str, model: StackingRegressor, prediction_data: 
         model_type (str): The type of model used for prediction.
         model (StackingRegressor): The trained stacking regressor model.
         prediction_data (pd.DataFrame): The data to make predictions on.
+        model_dir (str): The directory where model files are stored.
+        logger: Logger object for logging information.
+        numeric_features (list): List of numeric features for data preparation.
     """
     # Directory where the models are saved
     imputer_file = f'imputer_{model_type}.pkl'  # Imputer file from training
     # Load and apply the saved imputer from training
     imputer_path = os.path.join(model_dir, imputer_file)
-    selector_file = os.path.join(model_dir, 'rfe_'+ model_type +'_selector.pkl')
+    selector_file = os.path.join(model_dir, f'rfe_{model_type}_selector.pkl')
     
-    selector = joblib.load(selector_file)
+    try:
+        selector = joblib.load(selector_file)
+        logger.info(f"Selector loaded from {selector_file}")
+    except FileNotFoundError:
+        logger.error(f"Selector file not found at {selector_file}")
+        raise
+
     try:
         imputer = joblib.load(imputer_path)
         logger.info(f"Imputer loaded from {imputer_path}")
@@ -297,19 +306,31 @@ def make_prediction(model_type: str, model: StackingRegressor, prediction_data: 
         logger.error(f"Imputer file not found at {imputer_path}")
         raise
     
-    X_new_prepared = prepare_new_data(prediction_data, imputer, selector)
+    try:
+        X_new_prepared = prepare_new_data(prediction_data, model_type, model_dir, logger, numeric_features)
+    except Exception as e:
+        logger.error(f"Error in preparing new data: {e}")
+        raise
    
     # Predict the home goals using the original model
-    prediction = model.predict(X_new_prepared)
-    prediction_column_name= model_type + '_prediction'
-    logger.info(f"{model_type} predictions: {prediction}")
-    # Add predictions to the new data DataFrame
-    prediction_data[prediction_column_name] = prediction
+    try:
+        prediction = model.predict(X_new_prepared)
+        prediction_column_name = f"{model_type}_prediction"
+        logger.info(f"{model_type} predictions: {prediction}")
+        # Add predictions to the new data DataFrame
+        prediction_data[prediction_column_name] = prediction
+    except Exception as e:
+        logger.error(f"Error during prediction: {e}")
+        raise
     
     # Save predictions to an Excel file
     output_file = f'./predictions_hybrid_2fit_{model_type}.xlsx'
-    prediction_data.to_excel(output_file, index=False)
-    logger.info(f"Predictions saved to {output_file}")
+    try:
+        prediction_data.to_excel(output_file, index=False)
+        logger.info(f"Predictions saved to {output_file}")
+    except Exception as e:
+        logger.error(f"Error saving predictions to Excel: {e}")
+        raise
 
 prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals', 'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
 prediction_df = prediction_df.replace(',', '.', regex=True)
