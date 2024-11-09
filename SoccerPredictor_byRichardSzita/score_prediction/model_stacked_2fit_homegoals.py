@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+import time
 import tempfile
 import shutil
 from copy import deepcopy
@@ -16,6 +16,7 @@ from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
+from sklearn.base import BaseEstimator, RegressorMixin
 from xgboost import XGBRegressor
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.feature_selection import RFE
@@ -205,7 +206,23 @@ class CustomStackingRegressor:
         
         # Return the wrapped object
         return cls(stacking_regressor, keras_model, keras_model_path)
-   
+
+class LoggingEstimator(BaseEstimator, RegressorMixin):
+    def __init__(self, estimator, name, logger):
+        self.estimator = estimator
+        self.name = name
+        self.logger = logger
+
+    def fit(self, X, y):
+        self.logger.info(f"Fitting {self.name} started.")
+        start_time = time.time()
+        self.estimator.fit(X, y)
+        end_time = time.time()
+        self.logger.info(f"Fitting {self.name} completed in {end_time - start_time:.2f} seconds.")
+        return self
+
+    def predict(self, X):
+        return self.estimator.predict(X)   
 # Prepare data
 def prepare_data(data, features, model_type):
    
@@ -222,6 +239,30 @@ def prepare_data(data, features, model_type):
     logger.info(f"Imputer saved to {imputer_file}")
 
     return pd.DataFrame(model_data_imputed, columns=features)
+
+def prepare_new_data(new_data, imputer, selector):
+    global selected_features
+    global numeric_features
+    
+    model_data = new_data.replace(',', '.', regex=True)
+    model_data = model_data.apply(pd.to_numeric, errors='coerce')
+    logger.info(f"Prediction Selected Features: {numeric_features}")
+    scaler_file = os.path.join(model_dir, 'scaler_' + model_type + '.pkl')
+    # numeric_features = new_data.select_dtypes(include=['float64', 'int64']).columns.tolist()
+    model_data = model_data[numeric_features]
+    scaler_loaded = joblib.load(scaler_file)
+    
+    # Apply imputation
+    model_data_imputed = imputer.transform(model_data)  # Use the imputer you saved during training
+   
+    # Apply scaling
+    model_data_scaled = scaler_loaded.transform(model_data_imputed)  # Use the scaler you saved during training
+    
+    # Apply feature selection (RFE)
+    model_data_selected = selector.transform(model_data_scaled)  # Use the RFE selector saved during training
+    
+    # logger.info(model_data_selected)
+    return pd.DataFrame(model_data_selected)
 
 def within_range(y_true, y_pred):
     # Calculate the absolute difference between the predicted and true values
@@ -323,7 +364,7 @@ def train_model(base_data, data, model_type):
         iterations=500,
         learning_rate=0.05,
         depth=12,
-        verbose=1,
+        verbose=2,
         random_state=42,
         thread_count=-1  # Use all available cores
     )
@@ -362,13 +403,13 @@ def train_model(base_data, data, model_type):
         n_jobs=-1  # Use all available cores
     )
 
-    # Create ensemble of models
+    # Wrap each estimator with the LoggingEstimator
     estimators_home = [
-        ('lgb', lgb_regressor_home),
-        ('catboost', catboost_regressor_home),
-        ('xgb', xgb_regressor_home),
-        ('nn', nn_regressor_home),
-        ('rf', rf_regressor_home)
+        ('lgb', LoggingEstimator(lgb_regressor_home, 'LightGBM', logger)),
+        ('catboost', LoggingEstimator(catboost_regressor_home, 'CatBoost', logger)),
+        ('xgb', LoggingEstimator(xgb_regressor_home, 'XGBoost', logger)),
+        ('nn', LoggingEstimator(nn_regressor_home, 'Neural Network', logger)),
+        ('rf', LoggingEstimator(rf_regressor_home, 'Random Forest', logger))
     ]
     
     logger.info('First fit started')

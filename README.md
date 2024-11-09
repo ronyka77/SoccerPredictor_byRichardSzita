@@ -70,6 +70,8 @@ pip install -r requirements.txt
 Run in sequence:
 python ./data_tools/fbref_get_data.py
 python ./data_tools/fbref_scraper.py
+python ./data_tools/odds_scraper.py
+python ./data_tools/merge_odds.py
 python ./data_tools/aggregation.py
 
 ### 2. Feature Engineering
@@ -77,16 +79,31 @@ python ./data_tools/aggregation.py
 #### Python Processing
 
 Add additional features
-python ./data_tools/add_ELO_scores.py
-python ./data_tools/add_poisson_xG.py
+python ./data_tools/feature_engineering_for_predictions.py
+python ./data_tools/feature_engineering_for_model.py
 python ./data_tools/merge_data_for_prediction.py
 
+
+
 #### Power BI Processing
-1. Open files in `data_tools/PowerBI/`
+1. Open files(model_data_pred.pbix and model_data_training.pbix) in `data_tools/PowerBI/`
 2. Refresh data
 3. Export to CSV:
-   - Training: `model_data_training_newPoisson.csv`
-   - Prediction: `model_data_prediction_newPoisson.csv`
+   - Training: `model_data_training.csv`
+   - Prediction: `model_data_prediction.csv`
+
+Add Poisson_xG and ELO scores
+python ./data_tools/add_poisson_xG.py
+python ./data_tools/add_ELO_scores.py
+
+#### Power BI Processing
+1. Open merge_data_prediction.pbix in `data_tools/PowerBI/`
+2. Refresh data
+3. Export to CSV: `merged_data_prediction.csv`
+
+Refresh Poisson_xG and ELO scores
+python ./data_tools/add_poisson_xG.py
+python ./data_tools/add_ELO_scores.py
 
 ### 3. Model Training
 Run the following scripts in `score_prediction` folder:

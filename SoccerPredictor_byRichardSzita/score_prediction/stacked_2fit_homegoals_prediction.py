@@ -21,7 +21,7 @@ keras_nn_model_path = os.path.join(model_dir, 'nn_regressor_' + model_type + '_s
 imputer_file = os.path.join(model_dir, 'imputer_' + model_type + '.pkl')
 scaler_file = os.path.join(model_dir, 'scaler_' + model_type + '.pkl')
 selector_file = os.path.join(model_dir, 'rfe_' + model_type + '_selector.pkl')
-new_prediction_path = './SoccerPredictor_byRichardSzita/data/merged_data_prediction.csv'
+new_prediction_path = './data/merged_data_prediction.csv'
 
 # Ensure custom objects have the proper config methods
 class CustomReduceLROnPlateau(Callback):
@@ -124,7 +124,7 @@ custom_objects = {
     'WithinRangeMetric': WithinRangeMetric
 }
 prediction_data = pd.read_csv(new_prediction_path)
-prediction_data.drop(columns=['Date','Datum','Unnamed: 0','Unnamed: 0.1','away_goals','away_points_rolling_avg','away_win','draw','home_goals','home_points','home_advantage','home_points_rolling_avg','home_win','match_outcome'], inplace=True, errors='ignore')
+prediction_data.drop(columns=['Date','Datum','Unnamed: 0','Unnamed: 0.1','Unnamed: 0.2','away_goals','away_points_rolling_avg','away_win','draw','home_goals','home_points','home_advantage','home_points_rolling_avg','home_win','match_outcome'], inplace=True, errors='ignore')
 # # Load the model
 # loaded_model = CustomStackingRegressor.load(
 #     model_file, 

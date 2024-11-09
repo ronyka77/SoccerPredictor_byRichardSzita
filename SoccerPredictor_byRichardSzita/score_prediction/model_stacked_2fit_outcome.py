@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+import time
 import tempfile
 import shutil
 from copy import deepcopy
@@ -16,6 +16,7 @@ from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
+from sklearn.base import BaseEstimator, RegressorMixin
 from xgboost import XGBRegressor
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.feature_selection import RFE
@@ -30,6 +31,8 @@ import h5py
 from keras.backend import manual_variable_initialization 
 import cloudpickle as cp
 import dill
+from lightgbm import LGBMRegressor 
+from catboost import CatBoostRegressor
 manual_variable_initialization(True)
 # Import utilities
 import logging
@@ -39,7 +42,7 @@ model_type='match_outcome'
 
 # Set up logger with log file path
 logger = LoggerSetup.setup_logger(
-    name='stacked_homegoals_model',
+    name='stacked_outcome_model',
     log_file=f'./log/stacked_{model_type}_model.log',
     level=logging.INFO
 )
@@ -101,10 +104,6 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
                                'home_points_rolling_avg','away_points_rolling_avg','home_advantage',
                                'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
 
-# Import predicted scores
-new_real_scores = pd.read_excel(real_scores_path)
-new_real_scores.dropna(subset=['running_id','home_goals_prediction_rounded','away_goals_prediction_rounded','match_outcome_prediction_rounded','real_score'],inplace=True)
-logger.info(f"new real scores length: {len(new_real_scores)}")
 
 # Define the function for the custom metric
 def within_range_metric(y_true, y_pred):
@@ -207,7 +206,23 @@ class CustomStackingRegressor:
         
         # Return the wrapped object
         return cls(stacking_regressor, keras_model, keras_model_path)
-   
+
+class LoggingEstimator(BaseEstimator, RegressorMixin):
+    def __init__(self, estimator, name, logger):
+        self.estimator = estimator
+        self.name = name
+        self.logger = logger
+
+    def fit(self, X, y):
+        self.logger.info(f"Fitting {self.name} started.")
+        start_time = time.time()
+        self.estimator.fit(X, y)
+        end_time = time.time()
+        self.logger.info(f"Fitting {self.name} completed in {end_time - start_time:.2f} seconds.")
+        return self
+
+    def predict(self, X):
+        return self.estimator.predict(X)   
 # Prepare data
 def prepare_data(data, features, model_type):
    
@@ -224,43 +239,6 @@ def prepare_data(data, features, model_type):
     logger.info(f"Imputer saved to {imputer_file}")
 
     return pd.DataFrame(model_data_imputed, columns=features)
-
-# Merge base data with predicted values
-def add_predicted_values(new_real_scores,data):
-    # Split the column into two based on '-'
-    new_real_scores[['real_home_goals', 'real_away_goals']] = new_real_scores['real_score'].str.split('-', expand=True)
-    # logger.info(f"new_scores_df: {new_real_scores}")
-    new_real_scores.dropna(subset=['real_home_goals','real_away_goals'],inplace=True)
-    new_real_scores['real_away_goals'] = new_real_scores['real_away_goals'].astype(int)
-    new_real_scores['real_home_goals'] = new_real_scores['real_home_goals'].astype(int)
-    new_real_scores['running_id'] = new_real_scores['running_id'].astype(int)
-    # Calculate residuals (prediction errors)
-    new_real_scores['home_error'] = new_real_scores['real_home_goals'] - new_real_scores['home_goals_prediction_rounded']
-    new_real_scores['away_error'] = new_real_scores['real_away_goals'] - new_real_scores['away_goals_prediction_rounded']
-    new_real_scores['outcome_error'] = new_real_scores['real_outcome'] - new_real_scores['match_outcome_prediction_rounded']
-    # Calculate the mean squared error for home and away predictions
-    mse_home_prediction = mean_squared_error(new_real_scores['real_home_goals'], new_real_scores['home_goals_prediction_rounded'])
-    mse_away_prediction = mean_squared_error(new_real_scores['real_away_goals'], new_real_scores['away_goals_prediction_rounded'])
-    mse_outcome_prediction = mean_squared_error(new_real_scores['real_outcome'], new_real_scores['match_outcome_prediction_rounded'])
-
-    # Calculate R-squared score for home and away predictions
-    r2_home_prediction = r2_score(new_real_scores['real_home_goals'], new_real_scores['home_goals_prediction_rounded'])
-    r2_away_prediction = r2_score(new_real_scores['real_away_goals'], new_real_scores['away_goals_prediction_rounded'])
-    r2_outcome_prediction = r2_score(new_real_scores['real_outcome'], new_real_scores['match_outcome_prediction_rounded'])
-    
-    logger.info(f"Home MSE: {mse_home_prediction}, Away MSE: {mse_away_prediction}")
-    logger.info(f"Home R2: {r2_home_prediction}, Away R2: {r2_away_prediction}")
-    logger.info(f"Outcome MSE: {mse_outcome_prediction}, Outcome R2: {r2_outcome_prediction}")
-    
-    score_df = new_real_scores[['running_id','home_goals_prediction_rounded','away_goals_prediction_rounded','match_outcome_prediction_rounded','real_home_goals','real_away_goals','real_outcome','home_error','away_error','outcome_error']]
-    # logger.info(f"New score dataframe created with errors: {score_df.head(5)}")
-    # print('Score_df: ' + str(len(score_df)))
-    # Merge the predictions with the real scores
-    merged_data = pd.merge(data, score_df, how='right', on='running_id')
-    # numeric_features = merged_data.select_dtypes(include=['float64', 'int64']).columns.tolist()
-    # merged_data = merged_data[numeric_features]
-    print('merge_df: ' + str(len(merged_data)))
-    return merged_data
 
 def prepare_new_data(new_data, imputer, selector):
     global selected_features
@@ -319,9 +297,6 @@ def create_neural_network(input_dim):
 def train_model(base_data, data, model_type):
     global selected_features
     global numeric_features
-    # # Count NaN values in each column
-    # nan_counts = data.isna().sum()
-    # print(nan_counts)
     # Select all numeric features
     numeric_features = data.select_dtypes(include=['float64', 'int64']).columns.tolist()
     logger.info(f"Numeric features: {numeric_features}")
@@ -371,33 +346,70 @@ def train_model(base_data, data, model_type):
     logger.info("Feature selection using RFE completed.")
     logger.info(f"Selected Features: {selected_features}")
     
-    # Set early stopping and learning rate scheduler
-    # early_stopping = EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
-    # lr_scheduler = ReduceLROnPlateau(monitor='loss', factor=0.5, patience=10, min_lr=0.0001)
+    # Define models for home goals prediction based on research for soccer prediction
     
-    # Define models for home goals prediction
-    rf_regressor_home = RandomForestRegressor(n_estimators=200, random_state=42)
-    svr_regressor_home = SVR(kernel='rbf')
+    # LightGBM - Known for handling imbalanced data well and good performance on sports predictions
+    lgb_regressor_home = LGBMRegressor(
+        n_estimators=500,
+        learning_rate=0.05,
+        max_depth=12,
+        num_leaves=31,
+        random_state=42,
+        force_col_wise=True,
+        n_jobs=-1  # Use all available cores
+    )
+    
+    # CatBoost - Handles categorical variables well and robust to overfitting
+    catboost_regressor_home = CatBoostRegressor(
+        iterations=500,
+        learning_rate=0.05,
+        depth=12,
+        verbose=2,
+        random_state=42,
+        thread_count=-1  # Use all available cores
+    )
+    
+    # XGBoost - Tuned for soccer prediction tasks
+    xgb_regressor_home = XGBRegressor(
+        n_estimators=500,
+        max_depth=12,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42,
+        nthread=-1  # Use all available cores
+    )
+    
+    # Neural Network with architecture suited for soccer prediction
     nn_regressor_home = KerasRegressor(
         model=create_neural_network,
         model__input_dim=X_train_selected.shape[1],
-        epochs=100,  # Set higher epochs but use early stopping
-        batch_size=32,
+        epochs=250,
+        batch_size=64,
         verbose=1,
-        callbacks=[CustomReduceLROnPlateau(monitor='loss', factor=0.5, patience=10, min_lr=0.0001)]  # LR Scheduler
+        callbacks=[
+            CustomReduceLROnPlateau(monitor='loss', factor=0.2, patience=15, min_lr=0.00001),
+            EarlyStopping(monitor='loss', patience=25, restore_best_weights=True)
+        ]
     )
-    xgb_regressor_home = XGBRegressor()
+    
+    # Random Forest with parameters optimized for sports prediction
+    rf_regressor_home = RandomForestRegressor(
+        n_estimators=500,
+        max_depth=12,
+        min_samples_split=10,
+        min_samples_leaf=5,
+        random_state=42,
+        n_jobs=-1  # Use all available cores
+    )
 
-    # Define the SVM regressor
-    svm_regressor_home = SVR(kernel='rbf', C=1.0, epsilon=0.1)
-
-    # Add to the list of estimators
+    # Wrap each estimator with the LoggingEstimator
     estimators_home = [
-        ('rf', rf_regressor_home),
-        ('svr', svr_regressor_home),
-        ('nn', nn_regressor_home),
-        ('xgb', xgb_regressor_home),
-        ('svm', svm_regressor_home)
+        ('lgb', LoggingEstimator(lgb_regressor_home, 'LightGBM', logger)),
+        ('catboost', LoggingEstimator(catboost_regressor_home, 'CatBoost', logger)),
+        ('xgb', LoggingEstimator(xgb_regressor_home, 'XGBoost', logger)),
+        ('nn', LoggingEstimator(nn_regressor_home, 'Neural Network', logger)),
+        ('rf', LoggingEstimator(rf_regressor_home, 'Random Forest', logger))
     ]
     
     logger.info('First fit started')
@@ -438,7 +450,6 @@ def train_model(base_data, data, model_type):
 
 # Make new predictions
 def make_prediction(model_type, model, prediction_data, residual_model):
-    # MAKE NEW PREDICTION
     # Directory where the models are saved
     imputer_file = f'imputer_{model_type}.pkl'  # Imputer file from training
     # Load and apply the saved imputer from training
@@ -454,7 +465,7 @@ def make_prediction(model_type, model, prediction_data, residual_model):
         raise
     
     X_new_prepared = prepare_new_data(prediction_data, imputer, selector)
-    # logger.info(f"X_new_prepared: {X_new_prepared}")
+   
     # Predict the home goals using the original model
     prediction = model.predict(X_new_prepared)
     prediction_column_name= model_type + '_prediction'
@@ -462,38 +473,10 @@ def make_prediction(model_type, model, prediction_data, residual_model):
     # Add predictions to the new data DataFrame
     prediction_data[prediction_column_name] = prediction
     
-    if residual_model != 0:
-        try:    
-            # Predict the home error using the residual model
-            error_pred = residual_model.predict(X_new_prepared)
-            logger.info(f"{model_type} error predictions: {error_pred}")
-            # Final adjusted prediction for goals
-            prediction_with_error = prediction + error_pred
-            prediction_data[model_type + '_prediction_with_error'] = prediction_with_error
-        except Exception as e:
-            logger.info(f"residual model prediction error: {str(e)}")
-            pass
-    
     # Save predictions to an Excel file
     output_file = f'./predictions_hybrid_2fit_{model_type}.xlsx'
     prediction_data.to_excel(output_file, index=False)
     logger.info(f"Predictions saved to {output_file}")
-
-data_with_error = add_predicted_values(new_real_scores,new_prediction_data)
-data_with_error = data_with_error.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match_outcome', 'Datum','home_goals','away_goals',  
-                               'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match',
-                               'home_points_rolling_avg','away_points_rolling_avg','home_advantage',
-                               'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
-
-# logger.info(f"data_with error columns: {data_with_error.columns}")
-
-# Count NaN values in each column
-nan_counts = data_with_error.isna().sum()
-logger.info(nan_counts)
-# logger.info(nan_counts)
-
-data_with_error = data_with_error.dropna()
-logger.info(f"data_with_error length: {len(data_with_error)}")
 
 prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals', 'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
 prediction_df = prediction_df.replace(',', '.', regex=True)
@@ -503,31 +486,13 @@ prediction_df.replace([np.inf, -np.inf], np.nan, inplace=True)
 logger.info(f"prediction_df length: {len(prediction_df)}")
 stacking_regressor = train_model(base_data, data, model_type)
 logger.info(f"Start {model_type} predictions")
-# logger.info(f"columns of Prediction_df: {prediction_df.columns}")
 
 # MAKE PREDICTIONS
 try:
-    if len(data_with_error)>0:
-        # Train a residual model for error
-        X_train_error = data_with_error.drop(columns=['real_away_goals','real_home_goals','real_outcome','home_error','away_error','outcome_error','home_goals_prediction_rounded','away_goals_prediction_rounded','match_outcome_prediction_rounded','Date'],errors='ignore')
-        y_train_home_error = data_with_error['home_error']
-        logger.info(f"Residual model train data selected")
-        residual_model = RandomForestRegressor()
-        # # Ensure feature names are preserved
-        scaler_file = os.path.join(model_dir, 'scaler_' + model_type + '.pkl')
-        scaler_loaded = joblib.load(scaler_file)
-        logger.info(f"Residual model scaler loaded")
-        X_new_scaled = scaler_loaded.transform(X_train_error)
-        residual_model.fit(X_new_scaled, y_train_home_error)
-        logger.info(f"Residual model successfully fitted")
-        
-        make_prediction(model_type,stacking_regressor,prediction_df, residual_model)
-    else: 
-        make_prediction(model_type,stacking_regressor,prediction_df, 0)
+    make_prediction(model_type,stacking_regressor,prediction_df, 0)   
         
 except Exception as e:
     logger.error(f"Error occurred while making prediction: {e}")
-    make_prediction(model_type,stacking_regressor,prediction_df, 0)
     pass
 
 # Initialize the wrappers

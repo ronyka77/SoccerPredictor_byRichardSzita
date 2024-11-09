@@ -17,17 +17,17 @@ logger = LoggerSetup.setup_logger(
     level=logging.INFO
 )
 
-def load_config() -> dict:
-    config = configparser.ConfigParser()
-    config_loaded = config.read(CONFIG_PATH)
-    if not config_loaded:
-        raise FileNotFoundError(f"Could not find config file at {CONFIG_PATH}")
-    print(f"Config file loaded from: {CONFIG_PATH}")
-    return {
-        'mongo_uri': config['MongoDB']['uri'],
-        'db_name': config['MongoDB']['database'],
-        'threshold': config['Matching']['threshold']
-    }
+# def load_config() -> dict:
+#     config = configparser.ConfigParser()
+#     config_loaded = config.read(CONFIG_PATH)
+#     if not config_loaded:
+#         raise FileNotFoundError(f"Could not find config file at {CONFIG_PATH}")
+#     print(f"Config file loaded from: {CONFIG_PATH}")
+#     return {
+#         'mongo_uri': config['MongoDB']['uri'],
+#         'db_name': config['MongoDB']['database'],
+#         'threshold': config['Matching']['threshold']
+#     }
 
 # Initialize MongoDB client
 db_client = MongoClient()
@@ -71,8 +71,11 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
     # Standardize team names by removing common abbreviations and special characters
     def standardize_name(name: str) -> str:
         replacements = {
-            "'": "",        # Remove apostrophes
-            "Nott'ham Forest": "Nottingham" # Expand Nott' to Nottingham
+            "Nott'ham Forest": "Nottingham", 
+            "B. Monchengladbach": "Gladbach",
+            "Paris S-G": "PSG",
+            "Leeds United": "Leeds",
+            "Athletic Club": "Athletic Bilbao"
         }
         name = str(name).strip()
         for old, new in replacements.items():
@@ -89,7 +92,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             standardized_match_id = standardize_name(match_id)
             
             # Debug matching process
-            logger.debug(f"Processing match_id: {match_id}")
+            logger.info(f"Processing match_id: {match_id}")
             
             # Standardize all odds IDs for comparison
             standardized_odds_ids = [standardize_name(uid) for uid in odds_unique_ids]
@@ -102,7 +105,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             )
             
             if result is None:
-                logger.debug(f"No match found for ID: {match_id}")
+                logger.info(f"No match found for ID: {match_id}")
                 merged_data.append(row.to_dict())
                 continue
                 
@@ -114,7 +117,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             if score >= threshold:
                 odds_row = odds_data_df[odds_data_df['unique_id'] == original_odds_id].iloc[0]
                 merged_data.append({**row.to_dict(), **odds_row.to_dict()})
-                logger.debug(f"Merged: {match_id} with {original_odds_id} (Score: {score})")
+                logger.info(f"Merged: {match_id} with {original_odds_id} (Score: {score})")
             else:
                 merged_data.append(row.to_dict())
                 # Store unmatched pair with score
@@ -138,8 +141,10 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
         export_path = 'unmatched_ids.xlsx'
         unmatched_df.to_excel(export_path, index=False)
         logger.info(f"Exported {len(unmatched_pairs)} unmatched ID pairs to {export_path}")
-        
-    return pd.DataFrame(merged_data)
+    
+    merged_df = pd.DataFrame(merged_data)
+    merged_df.to_excel('merge_odds_data.xlsx', index=False)
+    return merged_df
 
 # Function to store aggregated data back in MongoDB
 def store_aggregated_data(aggregated_data: pd.DataFrame, batch_size: int = 1000) -> None:

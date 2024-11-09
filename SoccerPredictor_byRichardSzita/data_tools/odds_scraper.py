@@ -54,7 +54,8 @@ LEAGUES = {
     "ligue-2": "france",
     "premier-league": "england",
     "championship": "england",
-    "league-one": "england"
+    "league-one": "england",
+    "eredivisie":"netherlands"
 }
 
 # Define years for historical data scraping
@@ -117,7 +118,14 @@ def generate_urls(leagues, years):
             # "https://www.oddsportal.com/football/japan/j1-league-2022/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2021/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2020/results/"
+        ],
+        "Netherlands": [
+            "https://www.oddsportal.com/football/netherlands/eredivisie-2020-2021/results/",
+            "https://www.oddsportal.com/football/netherlands/eredivisie-2021-2022/results/",
+            "https://www.oddsportal.com/football/netherlands/eredivisie-2022-2023/results/",
+            "https://www.oddsportal.com/football/netherlands/eredivisie-2023-2024/results/",
         ]
+        
     }
 
     # Loop through the dictionary and append each URL with its league to `urls`
