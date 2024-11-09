@@ -59,19 +59,19 @@ LEAGUES = {
 
 # Define years for historical data scraping
 # YEARS = ["2020-2021", "2021-2022", "2022-2023", "2023-2024"] # Use this for all historical data
-YEARS = ["2023-2024"]
+# YEARS = ["2023-2024"]
 # Define column names for the DataFrame where scraped data will be stored
 columns = ['Date', 'Time', 'Home', 'Away', 'Odd_Home', 'Odds_Draw', 'Odd_Away']
 
-def generate_urls(leagues, years):
+def generate_urls(leagues):
     """Generate URLs for both current and historical seasons based on league structure."""
     urls = []
     for league, country in leagues.items():
         # URL for the current active season (without a specific year)
-        urls.append({
-            "url": f"https://www.oddsportal.com/soccer/{country}/{league}/results/",
-            "league": league
-        })
+        # urls.append({
+        #     "url": f"https://www.oddsportal.com/soccer/{country}/{league}/results/",
+        #     "league": league
+        # })
         
         # URL for future matches
         urls.append({
@@ -80,23 +80,23 @@ def generate_urls(leagues, years):
         })
         
         # URLs for past seasons with specified years
-        for year in years:
-            urls.append({
-                "url": f"https://www.oddsportal.com/soccer/{country}/{league}-{year}/results/",
-                "league": league
-            })
+        # for year in years:
+        #     urls.append({
+        #         "url": f"https://www.oddsportal.com/soccer/{country}/{league}-{year}/results/",
+        #         "league": league
+        #     })
     
     # Define a dictionary to organize special URLs by league
     special_urls_by_league = {
         "brazil": [
             "https://www.oddsportal.com/football/brazil/serie-b/",
-            "https://www.oddsportal.com/football/brazil/serie-b/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-b/results/",
             # "https://www.oddsportal.com/football/brazil/serie-b-2023/results/",
             # "https://www.oddsportal.com/football/brazil/serie-b-2022/results/",
             # "https://www.oddsportal.com/football/brazil/serie-b-2021/results/",
             # "https://www.oddsportal.com/football/brazil/serie-b-2020/results/",
             "https://www.oddsportal.com/football/brazil/serie-a-betano/",
-            "https://www.oddsportal.com/football/brazil/serie-a-betano/results/",
+            # "https://www.oddsportal.com/football/brazil/serie-a-betano/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2023/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2022/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2021/results/",
@@ -104,7 +104,7 @@ def generate_urls(leagues, years):
         ],
         "argentina": [
             "https://www.oddsportal.com/football/argentina/torneo-betano/",
-            "https://www.oddsportal.com/football/argentina/torneo-betano/results/",
+            # "https://www.oddsportal.com/football/argentina/torneo-betano/results/",
             # "https://www.oddsportal.com/football/argentina/liga-profesional-2023/results/",
             # "https://www.oddsportal.com/football/argentina/liga-profesional-2022/results/",
             # "https://www.oddsportal.com/football/argentina/liga-profesional-2021/results/",
@@ -112,15 +112,15 @@ def generate_urls(leagues, years):
         ],
         "japan": [
             "https://www.oddsportal.com/football/japan/j1-league/",
-            "https://www.oddsportal.com/football/japan/j1-league/results/",
+            # "https://www.oddsportal.com/football/japan/j1-league/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2023/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2022/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2021/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2020/results/"
         ],
         "Netherlands": [
-            "https://www.oddsportal.com/football/netherlands/eredivisie/",  
-            "https://www.oddsportal.com/football/netherlands/eredivisie/results/",
+            "https://www.oddsportal.com/football/netherlands/eredivisie/",
+            # "https://www.oddsportal.com/football/netherlands/eredivisie/results/",
             # "https://www.oddsportal.com/football/netherlands/eredivisie-2020-2021/results/",
             # "https://www.oddsportal.com/football/netherlands/eredivisie-2021-2022/results/",
             # "https://www.oddsportal.com/football/netherlands/eredivisie-2022-2023/results/",
@@ -137,7 +137,7 @@ def generate_urls(leagues, years):
     logger.info(f"urls: {urls}")
     return urls  # Return all generated URLs for scraping
 
-urls = generate_urls(LEAGUES, YEARS)  # Generate URLs using LEAGUES and YEARS
+urls = generate_urls(LEAGUES)  # Generate URLs using LEAGUES and YEARS
 
 def initialize_driver():
     """Initialize the Chrome WebDriver with custom options, including a random user agent and headless mode."""

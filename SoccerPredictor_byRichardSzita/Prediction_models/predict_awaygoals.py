@@ -7,7 +7,8 @@ import numpy as np
 import joblib
 from keras.models import load_model
 from util_tools.logging_config import LoggerSetup
-from model_stacked_2fit_awaygoals import CustomStackingRegressor, prepare_new_data, WithinRangeMetric
+from util_tools.model_classes import CustomStackingRegressor, CustomReduceLROnPlateau, WithinRangeMetric, LoggingEstimator
+from util_tools.model_functions import create_neural_network, prepare_data, prepare_new_data
 
 # Set up logger
 logger = LoggerSetup.setup_logger(
@@ -62,16 +63,16 @@ except FileNotFoundError as e:
     raise
 
 logger.info("Preparing new data for prediction.")
-X_new_prepared = prepare_new_data(new_data, imputer, selector)
+X_new_prepared = prepare_new_data(new_data, imputer, selector, model_type, model_dir, logger)
 logger.info(f"New data prepared with shape: {X_new_prepared.shape}")
 
 # Make predictions
 logger.info("Making predictions with the loaded model.")
-predictions = custom_model.stacking_regressor.predict(X_new_prepared)
+predictions = custom_model.predict(X_new_prepared)
 logger.info(f"Predictions made: {predictions}")
 
 # Save predictions to a file
-output_file = f'./predictions_{model_type}_new.xlsx'
+output_file = f'./made_predictions/predictions_{model_type}_new.xlsx'
 logger.info(f"Saving predictions to {output_file}.")
 pd.DataFrame(predictions, columns=[f'{model_type}_prediction']).to_excel(output_file, index=False)
 logger.info(f"Predictions saved to {output_file}")

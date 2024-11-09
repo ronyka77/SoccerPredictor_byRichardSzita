@@ -37,6 +37,8 @@ manual_variable_initialization(True)
 # Import utilities
 import logging
 from util_tools.logging_config import LoggerSetup
+from util_tools.model_classes import CustomStackingRegressor, CustomReduceLROnPlateau, WithinRangeMetric, LoggingEstimator
+from util_tools.model_functions import create_neural_network, prepare_data, prepare_new_data, within_range_evaluation
 
 model_type='home_goals'
 
@@ -46,7 +48,6 @@ logger = LoggerSetup.setup_logger(
     log_file=f'./log/stacked_{model_type}_model.log',
     level=logging.INFO
 )
-
 # Create temp directory and ensure it exists
 os.makedirs('./temp', exist_ok=True)
 tempdir = tempfile.mkdtemp(dir='./temp')
@@ -104,250 +105,28 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
                                'home_points_rolling_avg','away_points_rolling_avg','home_advantage',
                                'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
 
-
-# Define the WithinRangeMetric class
-class WithinRangeMetric(Metric):
-    def __init__(self, name='within_range_metric', **kwargs):
-        super(WithinRangeMetric, self).__init__(name=name, **kwargs)
-        self.true_positives = self.add_weight(name='tp', initializer='zeros')
-        self.total = self.add_weight(name='total', initializer='zeros')
-
-    def update_state(self, y_true, y_pred, sample_weight=None):
-        # Ensure both y_true and y_pred are of the same type
-        y_true = K.cast(y_true, K.floatx())
-        y_pred = K.cast(y_pred, K.floatx())
-        
-        diff = K.abs(y_true - y_pred)
-        within_range = K.less_equal(diff, 0.5)
-        self.true_positives.assign_add(K.sum(K.cast(within_range, K.floatx())))
-        self.total.assign_add(K.cast(K.shape(y_true)[0], K.floatx()))
-
-    def result(self):
-        return self.true_positives / self.total
-
-    def reset_states(self):
-        self.true_positives.assign(0)
-        self.total.assign(0)
-
-    def get_config(self):
-        config = super(WithinRangeMetric, self).get_config()
-        return config
-
-    @classmethod
-    def from_config(cls, config):
-        return cls(**config)
-
-class CustomReduceLROnPlateau(Callback):
-    def __init__(self, monitor='loss', factor=0.5, patience=10, verbose=0, min_lr=0.0001):
-        super(CustomReduceLROnPlateau, self).__init__()
-        self.monitor = monitor
-        self.factor = factor
-        self.patience = patience
-        self.verbose = verbose
-        self.min_lr = min_lr
-
-        self.best = None
-        self.cooldown_counter = 0  # Cooldown counter
-        self.wait = 0  # Wait counter
-        self.monitor_op = None
-
-        # Set the comparison operation for monitoring loss
-        self.monitor_op = lambda a, b: np.less(a, b)
-        self.best = np.Inf  # Initialize with the worst possible value for loss (Inf)
-
-    def on_epoch_end(self, epoch, logs=None):
-        logs = logs or {}
-        current = logs.get(self.monitor)
-
-        if current is None:
-            print(f"Warning: CustomReduceLROnPlateau requires {self.monitor} to be available!")
-            return
-
-        if self.monitor_op(current, self.best):
-            self.best = current
-            self.wait = 0
-        else:
-            self.wait += 1
-            if self.wait >= self.patience:
-                old_lr = float(K.get_value(self.model.optimizer.lr))
-                if old_lr > self.min_lr:
-                    new_lr = old_lr * self.factor
-                    new_lr = max(new_lr, self.min_lr)
-                    K.set_value(self.model.optimizer.lr, new_lr)
-                    if self.verbose > 0:
-                        print(f'\nEpoch {epoch + 1}: ReduceLROnPlateau reducing learning rate to {new_lr}.')
-                self.wait = 0
-
-    def get_config(self):
-        config = {
-            'monitor': self.monitor,
-            'factor': self.factor,
-            'patience': self.patience,
-            'verbose': self.verbose,
-            'min_lr': self.min_lr,
-        }
-        return config
-
-    @classmethod
-    def from_config(cls, config):
-        return cls(**config)
-
-class CustomStackingRegressor:
-    def __init__(self, stacking_regressor, keras_model, keras_model_path):
-        self.stacking_regressor = stacking_regressor
-        self.keras_model = keras_model
-        self.keras_model_path = keras_model_path
-    
-    def save(self, model_path):
-        # Save Keras model separately
-        self.keras_model.save(self.keras_model_path, include_optimizer=True)
-        
-        # Remove Keras model from stacking regressor for pickling
-        self.stacking_regressor.named_estimators_.pop('nn', None)
-        
-        # Save the rest of the stacking regressor
-        with open(model_path, 'wb') as f:
-            cp.dump(self.stacking_regressor, f)
-        
-        # Reassign Keras model for in-memory use
-        self.stacking_regressor.named_estimators_['nn'] = self.keras_model
-    
-    @classmethod
-    def load(cls, model_path, keras_model_path, custom_objects=None):
-        # Load the stacking regressor
-        with open(model_path, 'rb') as f:
-            stacking_regressor = cp.load(f)
-        
-        # Load the Keras model with custom objects
-        keras_model = load_model(keras_model_path, custom_objects=custom_objects)
-        
-        # Reassign Keras model to stacking regressor
-        stacking_regressor.named_estimators_['nn'] = keras_model
-        
-        # Return the wrapped object
-        return cls(stacking_regressor, keras_model, keras_model_path)
-
-class LoggingEstimator(BaseEstimator, RegressorMixin):
-    def __init__(self, estimator, name, logger):
-        self.estimator = estimator
-        self.name = name
-        self.logger = logger
-
-    def fit(self, X, y):
-        self.logger.info(f"Fitting {self.name} started.")
-        start_time = time.time()
-        self.estimator.fit(X, y)
-        end_time = time.time()
-        self.logger.info(f"Fitting {self.name} completed in {end_time - start_time:.2f} seconds.")
-        return self
-
-    def predict(self, X):
-        return self.estimator.predict(X)
-
-    @property
-    def model_(self):
-        # Access the underlying model if it exists
-        return getattr(self.estimator, 'model_', None)
-
-# Prepare data
-def prepare_data(data, features, model_type):
-   
-    model_data = data.replace(',', '.', regex=True)
-    model_data = model_data.apply(pd.to_numeric, errors='coerce')
-    model_data = model_data[features]
-    
-    # Apply Iterative Imputation
-    imputer = IterativeImputer(random_state=42)
-    model_data_imputed = imputer.fit_transform(model_data)
-    # Save the imputer
-    imputer_file = os.path.join(model_dir, 'imputer_'+ model_type + '.pkl')
-    joblib.dump(imputer, imputer_file)
-    logger.info(f"Imputer saved to {imputer_file}")
-
-    return pd.DataFrame(model_data_imputed, columns=features)
-
-def prepare_new_data(new_data, imputer, selector):
-    global selected_features
-    global numeric_features
-    
-    model_data = new_data.replace(',', '.', regex=True)
-    model_data = model_data.apply(pd.to_numeric, errors='coerce')
-    logger.info(f"Prediction Selected Features: {numeric_features}")
-    scaler_file = os.path.join(model_dir, 'scaler_' + model_type + '.pkl')
-    # numeric_features = new_data.select_dtypes(include=['float64', 'int64']).columns.tolist()
-    model_data = model_data[numeric_features]
-    scaler_loaded = joblib.load(scaler_file)
-    
-    # Apply imputation
-    model_data_imputed = imputer.transform(model_data)  # Use the imputer you saved during training
-   
-    # Apply scaling
-    model_data_scaled = scaler_loaded.transform(model_data_imputed)  # Use the scaler you saved during training
-    
-    # Apply feature selection (RFE)
-    model_data_selected = selector.transform(model_data_scaled)  # Use the RFE selector saved during training
-    
-    # logger.info(model_data_selected)
-    return pd.DataFrame(model_data_selected)
-
-def within_range(y_true, y_pred):
-    # Calculate the absolute difference between the predicted and true values
-    diff = K.abs(y_true - y_pred)
-    
-    # Check if the difference is less than or equal to 0.3
-    within_range = K.less_equal(diff, 0.5)
-    
-    # Calculate the mean of the boolean values (i.e., percentage of correct predictions)
-    return K.mean(K.cast(within_range, K.floatx()))
-
-def within_range_evaluation(y_true, y_pred, tolerance=0.5):
-    """Calculate the percentage of predictions within the given tolerance range."""
-    within_range_count = np.sum(np.abs(y_true - y_pred) <= tolerance)
-    return within_range_count / len(y_true)
-
-# Define the neural network architecture
-def create_neural_network(input_dim):
-    model = Sequential()
-    
-    # First layer
-    model.add(Dense(128, input_dim=input_dim, kernel_regularizer=l2(0.001)))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.3))
-    
-    # Second layer
-    model.add(Dense(64))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.3))
-    
-    # Third layer
-    model.add(Dense(32))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.2))
-    
-    # Output layer
-    model.add(Dense(1))
-
-    optimizer = Adam(learning_rate=0.001)
-    model.compile(
-        loss='mse',
-        optimizer=optimizer,
-        metrics=['mae', WithinRangeMetric()]
-    )
-    
-    return model
-
 # Train the model
-def train_model(base_data, data, model_type):
+def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, model_dir: str, logger: logging.Logger) -> StackingRegressor:
+    """
+    Train a stacking regressor model with dual fitting approach.
+
+    Args:
+        base_data (pd.DataFrame): The base data containing target variable.
+        data (pd.DataFrame): The feature data.
+        model_type (str): The type of model to train.
+        model_dir (str): Directory to save model artifacts.
+        logger (logging.Logger): Logger for logging information.
+
+    Returns:
+        StackingRegressor: The trained stacking regressor model.
+    """
     global selected_features
     global numeric_features
     # Select all numeric features
     numeric_features = data.select_dtypes(include=['float64', 'int64']).columns.tolist()
     logger.info(f"Numeric features: {numeric_features}")
 
-    X = prepare_data(data, numeric_features, model_type)
+    X = prepare_data(data, numeric_features, model_type, model_dir, logger)
     y = base_data[model_type]  # Target variable
     logger.info(f"Data prepared for modeling. Feature shape: {X.shape}, Target shape: {y.shape}")
 
@@ -471,7 +250,7 @@ def train_model(base_data, data, model_type):
     r2_home = r2_score(y_test, y_pred_home)
     mae_home = mean_absolute_error(y_test, y_pred_home)
     mape_home = np.mean(np.abs((y_test - y_pred_home) / y_test)) * 100
-    within_range_home = within_range_evaluation(y_test, y_pred_home, tolerance=0.5) * 100  # Convert to percentage
+    within_range_home = within_range_evaluation(y_test, y_pred_home, tolerance=0.5)  # Convert to percentage
 
     logger.info(f"{model_type} (1st fit) Stacking Model MSE: {mse_home}, R2: {r2_home}, Stacking Model MAE: {mae_home}, Stacking Model MAPE: {mape_home}%")
     logger.info(f"{model_type} (1st fit) Stacking Model Within Range (±0.5): {within_range_home}%")
@@ -487,7 +266,7 @@ def train_model(base_data, data, model_type):
     r2_home2 = r2_score(y_test2, y_pred_home2)
     mae_home2 = mean_absolute_error(y_test2, y_pred_home2)
     mape_home2 = np.mean(np.abs((y_test2 - y_pred_home2) / y_test2)) * 100
-    within_range_home2 = within_range_evaluation(y_test2, y_pred_home2, tolerance=0.5) * 100  # Convert to percentage
+    within_range_home2 = within_range_evaluation(y_test2, y_pred_home2, tolerance=0.5)  # Convert to percentage
 
     logger.info(f"{model_type} (2nd fit) Stacking Model MSE: {mse_home2}, R2: {r2_home2}, Stacking Model MAE: {mae_home2}, Stacking Model MAPE: {mape_home2}%")
     logger.info(f"{model_type} (2nd fit) Stacking Model Within Range (±0.5): {within_range_home2}%")
@@ -495,7 +274,15 @@ def train_model(base_data, data, model_type):
     return stacking_regressor_home
 
 # Make new predictions
-def make_prediction(model_type, model, prediction_data, residual_model):
+def make_prediction(model_type: str, model: StackingRegressor, prediction_data: pd.DataFrame):
+    """
+    Make predictions using the trained model and save the results to an Excel file.
+
+    Args:
+        model_type (str): The type of model used for prediction.
+        model (StackingRegressor): The trained stacking regressor model.
+        prediction_data (pd.DataFrame): The data to make predictions on.
+    """
     # Directory where the models are saved
     imputer_file = f'imputer_{model_type}.pkl'  # Imputer file from training
     # Load and apply the saved imputer from training
@@ -530,12 +317,12 @@ prediction_df = prediction_df.apply(pd.to_numeric, errors='coerce')
 prediction_df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 logger.info(f"prediction_df length: {len(prediction_df)}")
-stacking_regressor = train_model(base_data, data, model_type)
+stacking_regressor = train_model(base_data, data, model_type, model_dir, logger)
 logger.info(f"Start {model_type} predictions")
 
 # MAKE PREDICTIONS
 try:
-    make_prediction(model_type,stacking_regressor,prediction_df, 0)   
+    make_prediction(model_type,stacking_regressor,prediction_df)   
         
 except Exception as e:
     logger.error(f"Error occurred while making prediction: {e}")
