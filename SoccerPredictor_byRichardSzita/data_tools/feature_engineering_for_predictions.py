@@ -1,15 +1,18 @@
 import re
 import pandas as pd
-from pymongo import MongoClient
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 from joblib import Parallel, delayed
 import multiprocessing as mp
 import dask.dataframe as dd
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from util_tools.database import MongoClient  # Import MongoClient from database.py
 
-client = MongoClient('192.168.0.77', 27017)
-db = client['football_data']
-collection = db['aggregated_data']
+client = MongoClient()
+with client.get_database() as db:
+    collection = db['aggregated_data']
 
 le = LabelEncoder()
 

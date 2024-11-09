@@ -26,7 +26,7 @@ from keras.optimizers import Adam
 from keras.regularizers import l2   
 from keras.callbacks import EarlyStopping, Callback
 import keras.backend as K
-from keras.metrics import MeanMetricWrapper
+from keras.metrics import Metric
 import h5py
 from keras.backend import manual_variable_initialization 
 import cloudpickle as cp
@@ -42,7 +42,7 @@ model_type='home_goals'
 
 # Set up logger with log file path
 logger = LoggerSetup.setup_logger(
-    name='stacked_awaygoals_model',
+    name=f'stacked_{model_type}_model',
     log_file=f'./log/stacked_{model_type}_model.log',
     level=logging.INFO
 )
@@ -105,17 +105,37 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
                                'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
 
 
-# Define the function for the custom metric
-def within_range_metric(y_true, y_pred):
-    # Calculate the absolute difference between true and predicted values
-    diff = K.abs(y_true - y_pred)
-    # Check if the difference is less than or equal to 0.5
-    within_range = K.less_equal(diff, 0.5)
-    # Return the mean value (percentage of correct predictions within range)
-    return K.mean(K.cast(within_range, K.floatx()))
+# Define the WithinRangeMetric class
+class WithinRangeMetric(Metric):
+    def __init__(self, name='within_range_metric', **kwargs):
+        super(WithinRangeMetric, self).__init__(name=name, **kwargs)
+        self.true_positives = self.add_weight(name='tp', initializer='zeros')
+        self.total = self.add_weight(name='total', initializer='zeros')
 
-# Wrap it using MeanMetricWrapper to be used as a Keras metric
-WithinRangeMetric = MeanMetricWrapper(fn=within_range_metric, name='within_range_metric')
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        # Ensure both y_true and y_pred are of the same type
+        y_true = K.cast(y_true, K.floatx())
+        y_pred = K.cast(y_pred, K.floatx())
+        
+        diff = K.abs(y_true - y_pred)
+        within_range = K.less_equal(diff, 0.5)
+        self.true_positives.assign_add(K.sum(K.cast(within_range, K.floatx())))
+        self.total.assign_add(K.cast(K.shape(y_true)[0], K.floatx()))
+
+    def result(self):
+        return self.true_positives / self.total
+
+    def reset_states(self):
+        self.true_positives.assign(0)
+        self.total.assign(0)
+
+    def get_config(self):
+        config = super(WithinRangeMetric, self).get_config()
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
 
 class CustomReduceLROnPlateau(Callback):
     def __init__(self, monitor='loss', factor=0.5, patience=10, verbose=0, min_lr=0.0001):
@@ -198,7 +218,7 @@ class CustomStackingRegressor:
         with open(model_path, 'rb') as f:
             stacking_regressor = cp.load(f)
         
-        # Load the Keras model
+        # Load the Keras model with custom objects
         keras_model = load_model(keras_model_path, custom_objects=custom_objects)
         
         # Reassign Keras model to stacking regressor
@@ -314,7 +334,7 @@ def create_neural_network(input_dim):
     model.compile(
         loss='mse',
         optimizer=optimizer,
-        metrics=['mae', WithinRangeMetric]
+        metrics=['mae', WithinRangeMetric()]
     )
     
     return model

@@ -48,6 +48,19 @@ class MongoClient:
             
         return config
     
+    def connect(self):
+        """Establish a connection to the MongoDB client."""
+        if not self._client:
+            self._client = PyMongoClient(self.config.get('MongoDB', 'uri'))
+            logging.debug("MongoDB client connected.")
+
+    def close(self):
+        """Close the MongoDB client connection."""
+        if self._client:
+            self._client.close()
+            self._client = None
+            logging.debug("MongoDB client connection closed.")
+    
     @contextmanager
     def get_database(self) -> Generator[Database, None, None]:
         """Context manager for database connections
@@ -59,16 +72,11 @@ class MongoClient:
             ConnectionError: If connection to database fails
         """
         try:
-            if not self._client:
-                self._client = PyMongoClient(self.config.get('MongoDB', 'uri'))
+            self.connect()
             yield self._client[self.config.get('MongoDB', 'database')]
         except Exception as e:
             logging.error(f"Database connection error: {str(e)}")
             raise ConnectionError(f"Failed to connect to database: {str(e)}")
-        finally:
-            if self._client:
-                self._client.close()
-                self._client = None
 
     def get_collection(self, collection_name: str) -> Collection:
         """Get a specific collection with error handling

@@ -6,7 +6,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
-from pymongo import MongoClient
 import logging
 import pandas as pd
 from datetime import datetime, timedelta
@@ -16,6 +15,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from util_tools.logging_config import LoggerSetup
+from util_tools.database import MongoClient  # Import MongoClient from database.py
 
 logger = LoggerSetup.setup_logger(
     name='odds_scraper',
@@ -33,9 +33,8 @@ user_agents = [
 
 def initialize_mongodb():
     """Initialize MongoDB client and return a collection."""
-    client = MongoClient("mongodb://192.168.0.77:27017/")  # Connect to MongoDB server
-    db = client["football_data"]  # Use football_data database
-    return db["odds_data"]  # Return odds_data collection for storing scraped data
+    client = MongoClient()  # Use the MongoClient from database.py
+    return client.get_collection("odds_data")  # Return odds_data collection for storing scraped data
 
 # URL for the main site to scrape and constant league identifiers for URL generation
 MAIN_URL = "https://www.oddsportal.com/"

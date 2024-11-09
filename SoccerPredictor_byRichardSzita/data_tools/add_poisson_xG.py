@@ -136,7 +136,7 @@ class PoissonXGCalculator:
         # Convert object columns to numeric
         cols_to_convert = self.merged_matches.select_dtypes(include=['object']).columns
         self.merged_matches[cols_to_convert] = self.merged_matches[cols_to_convert].apply(pd.to_numeric, errors='coerce')
-
+        print(training_data.columns)
         # Calculate Poisson xG
         training_data = self.add_poisson(training_data)
         prediction_data = self.add_poisson_merged(prediction_data)

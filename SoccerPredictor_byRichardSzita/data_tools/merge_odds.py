@@ -31,7 +31,7 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     try:
         with db_client.get_database() as db:
-            match_stats_df = pd.DataFrame(list(db.fixtures.find()))
+            match_stats_df = pd.DataFrame(list(db.fixtures.find({"Odd_Home": {"$exists": False}})))
             odds_data_df = pd.DataFrame(list(db.odds_data.find()))
             return match_stats_df, odds_data_df
     except Exception as e:
@@ -39,7 +39,7 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
         raise ConnectionError("Failed to connect to MongoDB")
 
 def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, threshold: int = 90) -> Optional[pd.DataFrame]:
-    """Merge match_stats and odds_data DataFrames based on fuzzy matching of unique_id."""
+    """Merge match_stats and odds_data DataFrames based on fuzzy matching of unique_id and matching date."""
     # Validate input
     if match_stats_df is None or odds_data_df is None:
         logger.error("One or both DataFrames are None")
@@ -76,6 +76,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
     for idx, row in match_stats_df.iterrows():
         try:
             match_id = str(row['unique_id'])
+            match_date = row['Date']
             # Standardize the match ID before comparison
             standardized_match_id = standardize_name(match_id)
             
@@ -104,8 +105,12 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             
             if score >= threshold:
                 odds_row = odds_data_df[odds_data_df['unique_id'] == original_odds_id].iloc[0]
-                merged_data.append({**row.to_dict(), **odds_row.to_dict()})
-                logger.info(f"Merged: {match_id} with {original_odds_id} (Score: {score})")
+                if odds_row['Date'] == match_date:
+                    merged_data.append({**row.to_dict(), **odds_row.to_dict()})
+                    logger.info(f"Merged: {match_id} with {original_odds_id} (Score: {score})")
+                else:
+                    logger.info(f"Date mismatch for ID: {match_id} and {original_odds_id}")
+                    merged_data.append(row.to_dict())
             else:
                 merged_data.append(row.to_dict())
                 # Store unmatched pair with score
