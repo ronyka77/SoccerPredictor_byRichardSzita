@@ -105,18 +105,19 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
                                'home_points_rolling_avg','away_points_rolling_avg','home_advantage',
                                'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
 
-
 # Load previously predicted scores
 try:
     real_scores = pd.read_excel(real_scores_path)
     real_scores = real_scores[real_scores['Date'] < '2024-11-06']
     logger.info(f"Previously predicted scores loaded from {real_scores_path} with shape: {real_scores.shape}")
+    # print(real_scores.head())
+   
 except Exception as e:
     logger.error(f"Error loading previously predicted scores: {e}")
     raise
 
 # Prepare real scores data for additional fit
-def prepare_real_scores_data(real_scores: pd.DataFrame, new_prediction_data: pd.DataFrame, model_type: str, original_features: list) -> pd.DataFrame:
+def prepare_real_scores_data(real_scores: pd.DataFrame, new_prediction_data: pd.DataFrame, base_data: pd.DataFrame, model_type: str, original_features: list) -> pd.DataFrame:
     """
     Prepare the real scores data for additional model fitting by merging with new prediction data.
 
@@ -129,31 +130,38 @@ def prepare_real_scores_data(real_scores: pd.DataFrame, new_prediction_data: pd.
     Returns:
         pd.DataFrame: The prepared feature data.
     """
+    
+    df_for_merge = new_prediction_data.drop(columns=['home_points','HomeTeam_last_away_match','AwayTeam_last_home_match',
+                                                    'home_poisson_xG','away_poisson_xG',
+                                                    'Odd_Home','Odds_Draw','Odd_Away','Unnamed: 0.1', 'Unnamed: 0','Date'], errors='ignore')
     # Merge real scores with new prediction data on common keys
     merged_data = pd.merge(
         real_scores,
-        new_prediction_data,
+        df_for_merge,
         on=['running_id'],  # Adjust these keys as necessary
         how='left'
     )
-    
+    merged_data[model_type] = merged_data['real_score'].str[0]
+    logger.info(f"merged data columns: {merged_data.columns.to_list()}")
     # Ensure all original features are present
-    real_scores_data = merged_data.reindex(columns=original_features, fill_value=0)
+    # real_scores_data = merged_data.reindex(columns=original_features, fill_value=0)
     
     # Convert comma to dot for decimal conversion
-    real_scores_data = real_scores_data.replace(',', '.', regex=True)
+    real_scores_data = merged_data.replace(',', '.', regex=True)
     real_scores_data = real_scores_data.apply(pd.to_numeric, errors='coerce')
     real_scores_data.replace([np.inf, -np.inf], np.nan, inplace=True)
     logger.info(f"Real scores data prepared for additional fit. Shape: {real_scores_data.shape}")
     logger.debug(f"Real scores data columns: {real_scores_data.columns.tolist()}")
+    print(real_scores_data.head())
+    real_scores_data.to_excel('./real_scores_data.xlsx', index=False)
     # logger.debug(f"Real scores data shape: {real_scores_data.shape}")
     return real_scores_data
 
 # Prepare the real scores data
-real_scores_data = prepare_real_scores_data(real_scores, new_prediction_data, model_type, selected_features)
+real_scores_data = prepare_real_scores_data(real_scores, new_prediction_data, base_data, model_type, selected_features)
 
 # Additional fit using real scores
-def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: pd.DataFrame, real_scores: pd.DataFrame, model_type: str, logger: logging.Logger):
+def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: pd.DataFrame, model_type: str, logger: logging.Logger):
     """
     Perform an additional fit using the real scores data, only for incorrect predictions.
 
@@ -168,10 +176,10 @@ def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: 
     X_real = prepare_data(real_scores_data, selected_features, model_type, model_dir, logger)
     
     # Use the actual real score as the target variable
-    y_real = real_scores['away_goals']  # Adjust this to the correct column name for real scores
+    y_real = real_scores_data[model_type]  # Adjust this to the correct column name for real scores
 
     # Predict using the current model
-    y_pred = model.predict(X_test_real)
+    y_pred = model.predict(X_real)
 
     # Identify incorrect predictions
     incorrect_indices = y_pred != y_real
@@ -343,10 +351,13 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
         ('rf', LoggingEstimator(rf_regressor_home, 'Random Forest', logger))
     ]
     
-    logger.info('First fit started')
+    
     stacking_regressor_home = StackingRegressor(estimators=estimators_home, final_estimator=Ridge())
     
-    # Dual fitting approach - Perform two separate fits
+   
+    
+    # Perform two separate fits
+    logger.info('First fit started')
     stacking_regressor_home.fit(X_train_selected, y_train)
     logger.info(f"Stacking model for {model_type} trained successfully on first split.")
     
@@ -377,8 +388,13 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     logger.info(f"{model_type} (2nd fit) Stacking Model MSE: {mse_home2}, R2: {r2_home2}, Stacking Model MAE: {mae_home2}, Stacking Model MAPE: {mape_home2}%")
     logger.info(f"{model_type} (2nd fit) Stacking Model Within Range (±0.5): {within_range_home2}%")
     
-    # Perform the additional fit
-    additional_fit_with_real_scores(stacking_regressor_home, real_scores_data, real_scores, model_type, logger)
+    try:
+        # Perform the real scores fit
+        logger.info('fit with real scores started')
+        additional_fit_with_real_scores(stacking_regressor_home, real_scores_data, model_type, logger)
+    except Exception as e:
+        logger.error(f"Error occurred while performing additional fit with real scores: {e}")
+        raise
     
     return stacking_regressor_home
 

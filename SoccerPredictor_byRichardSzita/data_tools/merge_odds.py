@@ -50,6 +50,8 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
         with db_client.get_database() as db:
             match_stats_df = pd.DataFrame(list(db.fixtures.find({"Odd_Home": {"$exists": False}})))
             odds_data_df = pd.DataFrame(list(db.odds_data.find()))
+            # match_stats_df.to_excel('match_stats_data.xlsx', index=False)
+            odds_data_df.to_excel('odds_data.xlsx', index=False)
             return match_stats_df, odds_data_df
     except Exception as e:
         logger.error(f"Failed to load data: {str(e)}")
@@ -86,7 +88,9 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             "FC Barcelona": "Barcelona",
             "FC Bayern": "Bayern Munich",
             "FC Internazionale": "Inter Milan",
-            "FC Porto": "Porto"
+            "FC Porto": "Porto",
+            "Luton Town": "Luton",
+            "Newcastle Utd": "Newcastle"
         }
         name = str(name).strip()
         for old, new in replacements.items():

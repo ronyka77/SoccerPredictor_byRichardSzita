@@ -83,15 +83,15 @@ pip install -r requirements.txt
 
 Run in sequence:
 
-python ./data_tools/fbref_get_data.py
+   python ./data_tools/fbref_get_data.py
 
-python ./data_tools/fbref_scraper.py
+   python ./data_tools/fbref_scraper.py
 
-python ./data_tools/odds_scraper.py
+   python ./data_tools/odds_scraper.py
 
-python ./data_tools/merge_odds.py
+   python ./data_tools/merge_odds.py
 
-python ./data_tools/aggregation.py
+   python ./data_tools/aggregation.py
 
 ### 2. Feature Engineering
 
@@ -99,11 +99,11 @@ python ./data_tools/aggregation.py
 
 Add additional features
 
-python ./data_tools/feature_engineering_for_predictions.py
+   python ./data_tools/feature_engineering_for_predictions.py
 
-python ./data_tools/feature_engineering_for_model.py
+   python ./data_tools/feature_engineering_for_model.py
 
-python ./data_tools/merge_data_for_prediction.py
+   python ./data_tools/merge_data_for_prediction.py
 
 #### Power BI Processing for Training Data
 
@@ -115,9 +115,9 @@ python ./data_tools/merge_data_for_prediction.py
 
 Add Poisson_xG and ELO scores
 
-python ./data_tools/add_poisson_xG.py
+   python ./data_tools/add_poisson_xG.py
 
-python ./data_tools/add_ELO_scores.py
+   python ./data_tools/add_ELO_scores.py
 
 #### Power BI Processing for Predictions
 
@@ -127,77 +127,55 @@ python ./data_tools/add_ELO_scores.py
 
 Refresh Poisson_xG and ELO scores
 
-python ./data_tools/add_poisson_xG.py
+   python ./data_tools/add_poisson_xG.py
 
-python ./data_tools/add_ELO_scores.py
+   python ./data_tools/add_ELO_scores.py
 
 ### 3. Model Training
 
 Run the following scripts in `score_prediction` folder:
 
-python model_stacked_2fit_outcome.py
+   python model_stacked_2fit_outcome.py
 
-python model_stacked_2fit_homegoals.py
+   python model_stacked_2fit_homegoals.py
 
-python model_stacked_2fit_awaygoals.py
+   python model_stacked_2fit_awaygoals.py
 
 ### 4. Making Predictions
 
 Execute prediction scripts:
 
-python predict_match_outcome.py
+   python predict_match_outcome.py
 
-python predict_home_goals.py
+   python predict_home_goals.py
 
-python predict_away_goals.py
+   python predict_away_goals.py
 
 ## 📁 Project Structure
 
 Football_predictor_byRichardSzita/
 ├── data_tools/
-|
-│ ├── fbref_scraper.py
-|
-│ ├── fbref_get_data.py
-|
-│ ├── aggregation.py
-|
-│ ├── add_ELO_scores.py
-|
-│ ├── add_poisson_xG.py
-|
-│ ├── merge_data_for_prediction.py
-|
-│ ├── merge_odds.py
-|
-│ ├── feature_engineering_for_model.py
-|
-│ ├── feature_engineering_for_predictions.py
-|
-│ └── PowerBI/
-|
-│ ├── model_data_pred.pbix
-|
-│ ├── model_data_training.pbix
-|
-│ ├── merge_data_prediction.pbix
-|
-│ ├── score_prediction/
-|
-│ ├── model_stacked_2fit_outcome.py
-|
-│ ├── model_stacked_2fit_homegoals.py
-|
-│ ├── model_stacked_2fit_awaygoals.py
-|
-│ ├── predict_match_outcome.py
-|
-│ ├── predict_home_goals.py
-|
-│ └── predict_away_goals.py
-|
+│   ├── fbref_scraper.py
+│   ├── fbref_get_data.py
+│   ├── aggregation.py
+│   ├── add_ELO_scores.py
+│   ├── add_poisson_xG.py
+│   ├── merge_data_for_prediction.py
+│   ├── merge_odds.py
+│   ├── feature_engineering_for_model.py
+│   ├── feature_engineering_for_predictions.py
+│   └── PowerBI/
+│       ├── model_data_pred.pbix
+│       ├── model_data_training.pbix
+│       ├── merge_data_prediction.pbix
+│       └── score_prediction/
+│           ├── model_stacked_2fit_outcome.py
+│           ├── model_stacked_2fit_homegoals.py
+│           ├── model_stacked_2fit_awaygoals.py
+│           ├── predict_match_outcome.py
+│           ├── predict_home_goals.py
+│           └── predict_away_goals.py
 ├── requirements.txt
-|
 └── README.md
 
 ## 📄 Requirements
