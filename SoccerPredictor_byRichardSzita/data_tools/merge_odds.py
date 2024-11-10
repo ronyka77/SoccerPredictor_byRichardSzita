@@ -10,6 +10,7 @@ from typing import Tuple, Optional
 import configparser
 from util_tools.database import MongoClient
 from util_tools.logging_config import LoggerSetup
+from pymongo import UpdateOne
 
 logger = LoggerSetup.setup_logger(
     name='merge_odds',
@@ -75,11 +76,17 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
     # Standardize team names by removing common abbreviations and special characters
     def standardize_name(name: str) -> str:
         replacements = {
+            "ã": "a",
             "Nott'ham Forest": "Nottingham", 
             "B. Monchengladbach": "Gladbach",
             "Paris S-G": "PSG",
             "Leeds United": "Leeds",
-            "Athletic Club": "Athletic Bilbao"
+            "Athletic Club": "Athletic Bilbao",
+            "Athletico Paranaense": "Athletico-PR",
+            "FC Barcelona": "Barcelona",
+            "FC Bayern": "Bayern Munich",
+            "FC Internazionale": "Inter Milan",
+            "FC Porto": "Porto"
         }
         name = str(name).strip()
         for old, new in replacements.items():
@@ -95,10 +102,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             match_date = row['Date']
             # Standardize the match ID before comparison
             standardized_match_id = standardize_name(match_id)
-            
-            # Debug matching process
-            # logger.info(f"Processing match_id: {match_id}")
-            
+
             # Standardize all odds IDs for comparison
             standardized_odds_ids = [standardize_name(uid) for uid in odds_unique_ids]
             
@@ -110,7 +114,6 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             )
             
             if result is None:
-                # logger.info(f"No match found for ID: {match_id}")
                 merged_data.append(row.to_dict())
                 continue
                 
@@ -121,7 +124,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             
             if score >= threshold:
                 odds_row = odds_data_df[odds_data_df['unique_id'] == original_odds_id].iloc[0]
-                if odds_row['Date'] == match_date:
+                if odds_row['Date'] == match_date or abs((pd.to_datetime(odds_row['Date']) - pd.to_datetime(match_date)).days) == 1:
                     merged_data.append({**row.to_dict(), **odds_row.to_dict()})
                     logger.info(f"Merged: {match_id} with {original_odds_id} (Score: {score})")
                 else:
@@ -170,14 +173,13 @@ def store_aggregated_data(aggregated_data: pd.DataFrame, batch_size: int = 1000)
             
             for i in range(0, len(records), batch_size):
                 batch = records[i:i + batch_size]
+                # Fixed: Correct format for bulk write operations
                 operations = [
-                    {
-                        'update_one': {
-                            'filter': {'unique_id': record['unique_id']},
-                            'update': {'$set': record},
-                            'upsert': True
-                        }
-                    }
+                    UpdateOne(
+                        {'unique_id': record['unique_id']},
+                        {'$set': record},
+                        upsert=True
+                    )
                     for record in batch
                 ]
                 try:

@@ -209,21 +209,22 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     nn_regressor_home = KerasRegressor(
         model=create_neural_network,
         model__input_dim=X_train_selected.shape[1],
-        epochs=250,
-        batch_size=64,
+        epochs=150,
+        batch_size=128,
         verbose=1,
         callbacks=[
             CustomReduceLROnPlateau(monitor='loss', factor=0.2, patience=15, min_lr=0.00001),
-            EarlyStopping(monitor='loss', patience=25, restore_best_weights=True)
+            EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
         ]
     )
     
-    # Random Forest with parameters optimized for sports prediction
+    # Improved Random Forest with potentially better parameters
     rf_regressor_home = RandomForestRegressor(
-        n_estimators=500,
-        max_depth=12,
-        min_samples_split=10,
-        min_samples_leaf=5,
+        n_estimators=1000,  # More trees
+        max_depth=None,     # Allow trees to grow deeper
+        min_samples_split=5,  # More flexibility in splitting
+        min_samples_leaf=2,   # Smaller leaf size
+        max_features='sqrt',  # Consider a subset of features at each split
         random_state=42,
         n_jobs=-1  # Use all available cores
     )

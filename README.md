@@ -1,4 +1,4 @@
-# Football Predictor by Richard Szita
+# Soccer Predictor by Richard Szita
 
 ![Football Analytics](https://img.shields.io/badge/Football-Analytics-blue)
 ![Python](https://img.shields.io/badge/Python-3.8+-green)
@@ -74,18 +74,23 @@ pip install -r requirements.txt
 3. **MongoDB Setup**:
 
 - Install MongoDB Server from [official website](https://www.mongodb.com/try/download/community)
-- Create new database
-- Restore provided backup data
+- Create new database called "football_data"
+- Restore provided backup data (data/mongodb_backup/football_data)
 
 ## 🚀 Usage Guide
 
 ### 1. Data Collection
 
 Run in sequence:
+
 python ./data_tools/fbref_get_data.py
+
 python ./data_tools/fbref_scraper.py
+
 python ./data_tools/odds_scraper.py
+
 python ./data_tools/merge_odds.py
+
 python ./data_tools/aggregation.py
 
 ### 2. Feature Engineering
@@ -93,8 +98,11 @@ python ./data_tools/aggregation.py
 #### Python Processing
 
 Add additional features
+
 python ./data_tools/feature_engineering_for_predictions.py
+
 python ./data_tools/feature_engineering_for_model.py
+
 python ./data_tools/merge_data_for_prediction.py
 
 #### Power BI Processing for Training Data
@@ -106,7 +114,9 @@ python ./data_tools/merge_data_for_prediction.py
    - Prediction: `model_data_prediction.csv`
 
 Add Poisson_xG and ELO scores
+
 python ./data_tools/add_poisson_xG.py
+
 python ./data_tools/add_ELO_scores.py
 
 #### Power BI Processing for Predictions
@@ -116,7 +126,9 @@ python ./data_tools/add_ELO_scores.py
 3. Export to CSV: `merged_data_prediction.csv`
 
 Refresh Poisson_xG and ELO scores
+
 python ./data_tools/add_poisson_xG.py
+
 python ./data_tools/add_ELO_scores.py
 
 ### 3. Model Training
@@ -124,31 +136,68 @@ python ./data_tools/add_ELO_scores.py
 Run the following scripts in `score_prediction` folder:
 
 python model_stacked_2fit_outcome.py
+
 python model_stacked_2fit_homegoals.py
+
 python model_stacked_2fit_awaygoals.py
 
 ### 4. Making Predictions
 
 Execute prediction scripts:
 
-python stacked_2fit_outcome_prediction.py
-python stacked_2fit_homegoals_prediction.py
-python stacked_2fit_awaygoals_prediction.py
+python predict_match_outcome.py
+
+python predict_home_goals.py
+
+python predict_away_goals.py
 
 ## 📁 Project Structure
 
 Football_predictor_byRichardSzita/
 ├── data_tools/
+|
 │ ├── fbref_scraper.py
+|
 │ ├── fbref_get_data.py
+|
 │ ├── aggregation.py
+|
 │ ├── add_ELO_scores.py
+|
 │ ├── add_poisson_xG.py
+|
+│ ├── merge_data_for_prediction.py
+|
+│ ├── merge_odds.py
+|
+│ ├── feature_engineering_for_model.py
+|
+│ ├── feature_engineering_for_predictions.py
+|
 │ └── PowerBI/
-├── score_prediction/
-│ ├── model_stacked_2fit_.py
-│ └── stacked_2fit__prediction.py
+|
+│ ├── model_data_pred.pbix
+|
+│ ├── model_data_training.pbix
+|
+│ ├── merge_data_prediction.pbix
+|
+│ ├── score_prediction/
+|
+│ ├── model_stacked_2fit_outcome.py
+|
+│ ├── model_stacked_2fit_homegoals.py
+|
+│ ├── model_stacked_2fit_awaygoals.py
+|
+│ ├── predict_match_outcome.py
+|
+│ ├── predict_home_goals.py
+|
+│ └── predict_away_goals.py
+|
 ├── requirements.txt
+|
 └── README.md
 
 ## 📄 Requirements

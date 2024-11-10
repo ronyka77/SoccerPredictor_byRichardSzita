@@ -215,8 +215,8 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
         batch_size=128,
         verbose=1,
         callbacks=[
-            CustomReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=0.00001),
-            EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+            CustomReduceLROnPlateau(monitor='loss', factor=0.2, patience=15, min_lr=0.00001),
+            EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
         ]
     )
     

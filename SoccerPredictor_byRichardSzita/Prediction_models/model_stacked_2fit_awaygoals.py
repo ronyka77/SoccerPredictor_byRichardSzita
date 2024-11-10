@@ -150,7 +150,7 @@ def prepare_real_scores_data(real_scores: pd.DataFrame, new_prediction_data: pd.
     return real_scores_data
 
 # Prepare the real scores data
-real_scores_data = prepare_real_scores_data(real_scores, new_prediction_data, model_type, numeric_features)
+real_scores_data = prepare_real_scores_data(real_scores, new_prediction_data, model_type, selected_features)
 
 # Additional fit using real scores
 def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: pd.DataFrame, real_scores: pd.DataFrame, model_type: str, logger: logging.Logger):
@@ -165,13 +165,13 @@ def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: 
         logger (logging.Logger): Logger for logging information.
     """
     # Prepare the data
-    X_real = prepare_data(real_scores_data, numeric_features, model_type, model_dir, logger)
+    X_real = prepare_data(real_scores_data, selected_features, model_type, model_dir, logger)
     
     # Use the actual real score as the target variable
     y_real = real_scores['away_goals']  # Adjust this to the correct column name for real scores
 
     # Predict using the current model
-    y_pred = model.predict(X_real)
+    y_pred = model.predict(X_test_real)
 
     # Identify incorrect predictions
     incorrect_indices = y_pred != y_real
@@ -194,6 +194,28 @@ def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: 
     else:
         logger.info("No incorrect predictions found; no additional fitting needed.")
 
+def perform_feature_selection(X_train_scaled: np.ndarray, y_train: pd.Series, model_dir: str, model_type: str, logger: logging.Logger) -> RFE:
+    """
+    Perform feature selection using Recursive Feature Elimination (RFE) with a RandomForestRegressor.
+
+    Args:
+        y_train (pd.Series): Training target variable.
+        model_dir (str): Directory to save model artifacts.
+        model_type (str): The type of model to train.
+        logger (logging.Logger): Logger for logging information.
+
+    Returns:
+        RFE: The fitted RFE selector.
+    """
+    logger.info("Feature Selection started.")
+    selector = RFE(estimator=RandomForestRegressor(), n_features_to_select=40)
+    selector.fit(X_train_scaled, y_train)
+    # Save the RFE selector for future use
+    selector_file = os.path.join(model_dir, 'rfe_' + model_type + '_selector.pkl')
+    joblib.dump(selector, selector_file)
+    logger.info(f"RFE selector saved to {selector_file}")
+    
+    return selector
 
 # Train the model
 def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, model_dir: str, logger: logging.Logger) -> StackingRegressor:
@@ -242,16 +264,9 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     X_test2_scaled = scaler.transform(X_test2)
     logger.info("Data scaling completed.")
 
-    # Feature Selection (RFE)
-    logger.info("Feature Selection started.")
-    selector = RFE(estimator=RandomForestRegressor(), n_features_to_select=40)
-    X_train_selected = selector.fit_transform(X_train_scaled, y_train)
-    
-    # Save the RFE selector for future use
-    selector_file = os.path.join(model_dir, 'rfe_' + model_type + '_selector.pkl')
-    joblib.dump(selector, selector_file)
-    logger.info(f"RFE selector saved to {selector_file}")
-    
+    selector = perform_feature_selection(X_train_scaled, y_train, model_dir, model_type, logger)
+
+    X_train_selected = selector.transform(X_train_scaled)
     X_test_selected = selector.transform(X_test_scaled)
     X_train2_selected = selector.transform(X_train2_scaled)
     X_test2_selected = selector.transform(X_test2_scaled)
@@ -303,8 +318,8 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
         batch_size=128,
         verbose=1,
         callbacks=[
-            CustomReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=0.00001),
-            EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+            CustomReduceLROnPlateau(monitor='loss', factor=0.2, patience=15, min_lr=0.00001),
+            EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
         ]
     )
     
