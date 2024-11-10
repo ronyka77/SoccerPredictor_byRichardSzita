@@ -154,6 +154,7 @@ Execute prediction scripts:
 ## 📁 Project Structure
 
 Football_predictor_byRichardSzita/
+
 ├── data_tools/
 │   ├── fbref_scraper.py
 │   ├── fbref_get_data.py
