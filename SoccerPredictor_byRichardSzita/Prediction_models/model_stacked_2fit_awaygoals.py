@@ -172,8 +172,28 @@ def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: 
         model_type (str): The type of model used for prediction.
         logger (logging.Logger): Logger for logging information.
     """
+        # Load and apply the saved imputer from training
+    imputer_file = os.path.join(model_dir, f'imputer_{model_type}.pkl')
+    selector_file = os.path.join(model_dir, f'rfe_{model_type}_selector.pkl')
+
+    try:
+        imputer = joblib.load(imputer_file)
+        logger.info(f"Imputer loaded from {imputer_file}")
+    except FileNotFoundError:
+        logger.error(f"Imputer file not found at {imputer_file}")
+        raise
+
+    try:
+        selector = joblib.load(selector_file)
+        logger.info(f"Selector loaded from {selector_file}")
+    except FileNotFoundError:
+        logger.error(f"Selector file not found at {selector_file}")
+        raise
+    scaler_file = os.path.join(model_dir, f'scaler_{model_type}.pkl')
+
+    scaler_loaded = joblib.load(scaler_file)
     # Prepare the data
-    X_real = prepare_data(real_scores_data, selected_features, model_type, model_dir, logger)
+    X_real = prepare_new_data(real_scores_data, imputer, selector, model_type, model_dir, logger, selected_features)
     
     # Use the actual real score as the target variable
     y_real = real_scores_data[model_type]  # Adjust this to the correct column name for real scores
@@ -190,7 +210,7 @@ def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: 
 
     if len(X_incorrect) > 0:
         # Scale the data
-        X_incorrect_scaled = scaler.transform(X_incorrect)
+        X_incorrect_scaled = scaler_loaded.transform(X_incorrect)
 
         # Feature selection
         X_incorrect_selected = selector.transform(X_incorrect_scaled)
