@@ -171,15 +171,14 @@ def main():
     client = MongoClient('192.168.0.77', 27017)  # Connect to MongoDB server
     db = client['football_data']  # Database for storing football data
     collection = db['fixtures']  # Collection for fixtures
-    # Delete matches after September 1st, 2024 and matches with null dates
+    # Delete matches with null dates
     try:
         result = collection.delete_many({
             "$or": [
-                {"Date": {"$gt": "2024-09-01"}},
                 {"Date": None}
             ]
         })
-        logging.info(f"Successfully deleted {result.deleted_count} matches that were either after 2024-09-01 or had null dates")
+        logging.info(f"Successfully deleted {result.deleted_count} matches that had null dates")
     except Exception as e:
         logging.error(f"Error deleting future/null date matches: {e}")
         raise

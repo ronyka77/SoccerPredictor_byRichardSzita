@@ -564,7 +564,7 @@ base_dataframe = load_and_prepare_data()
 cumsummed_dataframe = add_cumulative_sums(base_dataframe)
 # Drop unnecessary columns
 cumsummed_dataframe = cumsummed_dataframe.drop(columns=['_id_match','_id_odds','season', 'league',
-                            'Date', 'Day',  'match', 'Attendance', 'Match Report', 'Score', 'url', 'Time'], errors='ignore')
+                            'Date', 'Day', 'match', 'Match Report', 'Score', 'url', 'Time'], errors='ignore')
 cumsummed_dataframe = cumsummed_dataframe.replace([np.inf, -np.inf], 0)
 
 print("dataframe Cleaning successful...")

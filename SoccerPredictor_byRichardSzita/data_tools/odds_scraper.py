@@ -54,8 +54,8 @@ def delete_future_odds():
         logger.error(f"Error deleting future odds data: {e}")
         raise
 
-# Execute the deletion
-delete_future_odds()
+# Execute the deletion 
+# delete_future_odds() #Execute this when you want to delete this year odds data
 
 # URL for the main site to scrape and constant league identifiers for URL generation
 MAIN_URL = "https://www.oddsportal.com/"

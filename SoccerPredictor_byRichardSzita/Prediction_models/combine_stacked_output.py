@@ -28,7 +28,7 @@ column_order = ['running_id', 'Date', 'league', 'Home', 'Away', 'Prediction_mode
                 'match_outcome_prediction_rounded', 'home_goals_prediction_rounded',
                 'away_goals_prediction_rounded', 'home_goals_prediction',
                 'away_goals_prediction', 'match_outcome_prediction',
-                'home_poisson_xG', 'away_poisson_xG', 'Odd_Home', 'Odds_Draw', 'Odd_Away']
+                'home_poisson_xG', 'away_poisson_xG'] #, 'Odd_Home', 'Odds_Draw', 'Odd_Away'
 
 
 def add_home_away_columns(existing_df):

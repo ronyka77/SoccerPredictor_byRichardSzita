@@ -15,7 +15,7 @@ from scikeras.wrappers import KerasRegressor  # Ensure compatibility with Keras
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer
+from sklearn.impute import KNNImputer
 from sklearn.base import BaseEstimator, RegressorMixin
 from xgboost import XGBRegressor
 from sklearn.linear_model import LinearRegression, Ridge
@@ -90,12 +90,14 @@ logger.info(f"Data loaded from {base_data_path} with shape: {base_data.shape}")
 
 # Load data for prediction
 new_prediction_data = pd.read_csv(new_prediction_path)
+new_prediction_data.replace([np.inf, -np.inf], np.nan, inplace=True)
 logger.info(f"Data loaded from {new_prediction_path} with shape: {new_prediction_data.shape}")
 logger.info(f"Data loaded with {len(new_prediction_data)} rows")
 
 # Filter data to only include away_goals from 0 to 5
 base_data = base_data[(base_data['home_goals'] >= 0) & (base_data['home_goals'] <= 6) & (base_data['away_goals'] >= 0) & (base_data['away_goals'] <= 6) ]
 base_data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
+base_data.replace([np.inf, -np.inf], np.nan, inplace=True)
 base_data = base_data.dropna()
 logger.info(f"Data filtered to only include away_goals from 0 to 6. rows: {len(base_data)} Filtered data shape: {base_data.shape}")
 
@@ -109,6 +111,8 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
 try:
     real_scores = pd.read_excel(real_scores_path)
     real_scores = real_scores[real_scores['Date'] < '2024-11-06']
+    real_scores = real_scores.dropna(subset=['real_score'])
+    real_scores.replace([np.inf, -np.inf], np.nan, inplace=True)
     logger.info(f"Previously predicted scores loaded from {real_scores_path} with shape: {real_scores.shape}")
     # print(real_scores.head())
    
@@ -141,10 +145,11 @@ def prepare_real_scores_data(real_scores: pd.DataFrame, new_prediction_data: pd.
         on=['running_id'],  # Adjust these keys as necessary
         how='left'
     )
-    merged_data[model_type] = merged_data['real_score'].str[0]
+    merged_data[model_type] = merged_data['real_score'].str[2]
+  
+    merged_data = merged_data.dropna(subset=[model_type])
+    
     logger.info(f"merged data columns: {merged_data.columns.to_list()}")
-    # Ensure all original features are present
-    # real_scores_data = merged_data.reindex(columns=original_features, fill_value=0)
     
     # Convert comma to dot for decimal conversion
     real_scores_data = merged_data.replace(',', '.', regex=True)
@@ -172,34 +177,35 @@ def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: 
         model_type (str): The type of model used for prediction.
         logger (logging.Logger): Logger for logging information.
     """
+    try:
         # Load and apply the saved imputer from training
-    imputer_file = os.path.join(model_dir, f'imputer_{model_type}.pkl')
-    selector_file = os.path.join(model_dir, f'rfe_{model_type}_selector.pkl')
-
-    try:
-        imputer = joblib.load(imputer_file)
-        logger.info(f"Imputer loaded from {imputer_file}")
-    except FileNotFoundError:
-        logger.error(f"Imputer file not found at {imputer_file}")
-        raise
-
-    try:
+        selector_file = os.path.join(model_dir, f'rfe_{model_type}_selector.pkl')
         selector = joblib.load(selector_file)
         logger.info(f"Selector loaded from {selector_file}")
     except FileNotFoundError:
         logger.error(f"Selector file not found at {selector_file}")
         raise
-    scaler_file = os.path.join(model_dir, f'scaler_{model_type}.pkl')
-
-    scaler_loaded = joblib.load(scaler_file)
+    try:
+        # Load and apply the saved scaler from training
+        scaler_file = os.path.join(model_dir, f'scaler_{model_type}.pkl')
+        scaler_loaded = joblib.load(scaler_file)
+    except FileNotFoundError:
+        logger.error(f"Scaler file not found at {scaler_file}")
+        raise
+    
     # Prepare the data
-    X_real = prepare_new_data(real_scores_data, imputer, selector, model_type, model_dir, logger, selected_features)
+    X_real = prepare_data(real_scores_data, numeric_features, model_type, model_dir, logger)
+    # Scale the data
+    X_real_scaled = scaler_loaded.transform(X_real)
+
+    # Feature selection
+    X_real_selected = selector.transform(X_real_scaled)
     
     # Use the actual real score as the target variable
     y_real = real_scores_data[model_type]  # Adjust this to the correct column name for real scores
 
     # Predict using the current model
-    y_pred = model.predict(X_real)
+    y_pred = model.predict(X_real_selected)
 
     # Identify incorrect predictions
     incorrect_indices = y_pred != y_real

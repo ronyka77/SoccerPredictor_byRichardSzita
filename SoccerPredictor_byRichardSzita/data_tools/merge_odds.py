@@ -26,9 +26,9 @@ def drop_odds_columns():
     """Drop Odd_Home, Odd_Away, and Odd_Draw columns from the aggregated_data collection in MongoDB."""
     try:
         with db_client.get_database() as db:
-            result = db.aggregated_data.update_many(
+            result = db.fixtures.update_many(
                 {},
-                {"$unset": {"Odd_Home": "", "Odd_Away": "", "Odd_Draw": ""}}
+                {"$unset": {"Odd_Home": "", "Odd_Away": "", "Odds_Draw": ""}}
             )
             logger.info(f"Successfully dropped columns from {result.modified_count} documents.")
     except Exception as e:
@@ -172,8 +172,8 @@ def store_aggregated_data(aggregated_data: pd.DataFrame, batch_size: int = 1000)
     """
     try:
         with db_client.get_database() as db:
-            aggregated_collection = db.fixtures
-            records = aggregated_data.to_dict('records')
+            fixtures_collection = db.fixtures
+            records = fixtures_collection.to_dict('records')
             
             for i in range(0, len(records), batch_size):
                 batch = records[i:i + batch_size]
@@ -187,7 +187,7 @@ def store_aggregated_data(aggregated_data: pd.DataFrame, batch_size: int = 1000)
                     for record in batch
                 ]
                 try:
-                    aggregated_collection.bulk_write(operations, ordered=False)
+                    fixtures_collection.bulk_write(operations, ordered=False)
                     logger.info(f"Processed batch {i//batch_size + 1}")
                 except Exception as e:
                     logger.error(f"Error in batch {i//batch_size + 1}: {str(e)}")
@@ -227,24 +227,24 @@ def main():
             logger.error(f"Column 'Odd_Home' not found. Available columns: {merged_df.columns.tolist()}")
             return
             
-        filtered_df = merged_df[merged_df['Odd_Home'].notna()]
-        # Export rows where Odd_Home is NA to Excel for analysis
+        # Filter out rows where 'Odd_Home' is not null
+        filtered_df = merged_df.dropna(subset=['Odd_Home'])
+
+        # Export rows with missing 'Odd_Home' values to an Excel file for further analysis
         na_odds_df = merged_df[merged_df['Odd_Home'].isna()]
         if not na_odds_df.empty:
             na_odds_df.to_excel('missing_odds_data.xlsx', index=False)
             logger.info(f"Exported {len(na_odds_df)} rows with missing odds data to missing_odds_data.xlsx")
-        # Safe column dropping
+
+        # Drop specified columns if they exist in the DataFrame
         columns_to_drop = ['League', '_id']
-        existing_columns = [col for col in columns_to_drop if col in filtered_df.columns]
-        if existing_columns:
-            filtered_df.drop(columns=existing_columns, inplace=True)
-        
-        if filtered_df is not None and not filtered_df.empty:
+        filtered_df.drop(columns=[col for col in columns_to_drop if col in filtered_df.columns], inplace=True)
+
+        # Check if the filtered DataFrame is not empty before proceeding
+        if not filtered_df.empty:
             logger.info(f"Final filtered DataFrame shape: {filtered_df.shape}")
-            # print("Columns in filtered DataFrame:", filtered_df.columns.tolist())
             store_aggregated_data(filtered_df)
             logger.info("Data merged and stored successfully.")
-            # print(filtered_df.head())
         else:
             logger.error("No data after filtering")
             

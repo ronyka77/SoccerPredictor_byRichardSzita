@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import joblib
 from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer
+from sklearn.impute import KNNImputer
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization, Activation
 from keras.optimizers import Adam
@@ -30,10 +30,11 @@ def prepare_data(data: pd.DataFrame, features: list, model_type: str, model_dir:
     """
     model_data = data.replace(',', '.', regex=True)
     model_data = model_data.apply(pd.to_numeric, errors='coerce')
+    model_data.replace([np.inf, -np.inf], np.nan, inplace=True)
     model_data = model_data[features]
 
     # Apply Iterative Imputation
-    imputer = IterativeImputer(random_state=42)
+    imputer = KNNImputer(n_neighbors=10, weights='uniform')
     model_data_imputed = imputer.fit_transform(model_data)
 
     # Save the imputer
