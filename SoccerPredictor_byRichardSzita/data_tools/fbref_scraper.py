@@ -122,7 +122,8 @@ def get_match_data():
     # Query fixtures collection for matches not in match_stats and have a score
     unmatched_fixtures = fixtures_collection.find({
         'unique_id': {'$nin': match_stats_ids},  # Exclude IDs already in match_stats
-        'Score': {'$ne': ''}  # Include only matches with a score
+        'Score': {'$ne': ''},  # Include only matches with a score
+        'Match Report': {'$ne': ''}  # Include only matches with a non-blank URL
     })
     return unmatched_fixtures  # Return the cursor to the matching documents
 
@@ -136,16 +137,20 @@ def main():
         
         try:
             # Fetch and structure the match data
-            match_data = fetch_match_data(url, unique_id)
-
-            # Insert the structured data into MongoDB
-            insert_into_mongo(match_data)
-            time.sleep(5)  # Delay between each match fetch
+            # print(url)
+            if url == "" or url == "nan" or url == "None" or url == None:
+                print("No URL found")
+                continue
+            else:
+                match_data = fetch_match_data(url, unique_id)
+                # Insert the structured data into MongoDB
+                insert_into_mongo(match_data)
+                time.sleep(5)  # Delay between each match fetch
         except Exception as e:
             # Handle request overload error
             print("Too many requests, sleeping for 10 seconds..." + str(e))
-            print(unique_id + url)
-            time.sleep(10)  # Wait before retrying
+            print(str(unique_id) + str(url))  # Convert both to strings
+            time.sleep(5)  # Wait before retrying
             continue
 
 # Run the main function if the script is executed directly

@@ -5,7 +5,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd
 from rapidfuzz import fuzz, process  # Use process for matching
 import logging
-import os
 from typing import Tuple, Optional
 import configparser
 from util_tools.database import MongoClient
@@ -22,7 +21,7 @@ logger = LoggerSetup.setup_logger(
 db_client = MongoClient()
 
 # Function to drop Odd_Home, Odd_Away, and Odd_Draw columns from the aggregated_data collection in MongoDB
-def drop_odds_columns():
+def drop_odds_columns() -> None:
     """Drop Odd_Home, Odd_Away, and Odd_Draw columns from the aggregated_data collection in MongoDB."""
     try:
         with db_client.get_database() as db:
@@ -50,12 +49,33 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
         with db_client.get_database() as db:
             match_stats_df = pd.DataFrame(list(db.fixtures.find({"Odd_Home": {"$exists": False}})))
             odds_data_df = pd.DataFrame(list(db.odds_data.find()))
-            # match_stats_df.to_excel('match_stats_data.xlsx', index=False)
             odds_data_df.to_excel('odds_data.xlsx', index=False)
             return match_stats_df, odds_data_df
     except Exception as e:
         logger.error(f"Failed to load data: {str(e)}")
         raise ConnectionError("Failed to connect to MongoDB")
+
+def standardize_name(name: str) -> str:
+    """Standardize team names by removing common abbreviations and special characters."""
+    replacements = {
+        "ã": "a",
+        "Nott'ham Forest": "Nottingham", 
+        "B. Monchengladbach": "Gladbach",
+        "Paris S-G": "PSG",
+        "Leeds United": "Leeds",
+        "Athletic Club": "Athletic Bilbao",
+        "Athletico Paranaense": "Athletico-PR",
+        "FC Barcelona": "Barcelona",
+        "FC Bayern": "Bayern Munich",
+        "FC Internazionale": "Inter Milan",
+        "FC Porto": "Porto",
+        "Luton Town": "Luton",
+        "Newcastle Utd": "Newcastle"
+    }
+    name = str(name).strip()
+    for old, new in replacements.items():
+        name = name.replace(old, new)
+    return name.strip()
 
 def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, threshold: int = 90) -> Optional[pd.DataFrame]:
     """Merge match_stats and odds_data DataFrames based on fuzzy matching of unique_id and matching date."""
@@ -74,28 +94,6 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
 
     # Convert unique_ids to list and ensure they're strings
     odds_unique_ids = [str(uid) for uid in odds_data_df['unique_id'].tolist()]
-    
-    # Standardize team names by removing common abbreviations and special characters
-    def standardize_name(name: str) -> str:
-        replacements = {
-            "ã": "a",
-            "Nott'ham Forest": "Nottingham", 
-            "B. Monchengladbach": "Gladbach",
-            "Paris S-G": "PSG",
-            "Leeds United": "Leeds",
-            "Athletic Club": "Athletic Bilbao",
-            "Athletico Paranaense": "Athletico-PR",
-            "FC Barcelona": "Barcelona",
-            "FC Bayern": "Bayern Munich",
-            "FC Internazionale": "Inter Milan",
-            "FC Porto": "Porto",
-            "Luton Town": "Luton",
-            "Newcastle Utd": "Newcastle"
-        }
-        name = str(name).strip()
-        for old, new in replacements.items():
-            name = name.replace(old, new)
-        return name.strip()
     
     merged_data = []
     unmatched_pairs = []  # List to store unmatched ID pairs
@@ -128,7 +126,7 @@ def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, thresh
             
             if score >= threshold:
                 odds_row = odds_data_df[odds_data_df['unique_id'] == original_odds_id].iloc[0]
-                if odds_row['Date'] == match_date or abs((pd.to_datetime(odds_row['Date']) - pd.to_datetime(match_date)).days) == 1:
+                if odds_row['Date'] == match_date or abs((pd.to_datetime(odds_row['Date']) - pd.to_datetime(match_date)).days) <= 1:
                     merged_data.append({**row.to_dict(), **odds_row.to_dict()})
                     logger.info(f"Merged: {match_id} with {original_odds_id} (Score: {score})")
                 else:
@@ -171,8 +169,7 @@ def store_aggregated_data(aggregated_data: pd.DataFrame, batch_size: int = 1000)
         batch_size (int, optional): Size of each batch. Defaults to 1000.
     """
     try:
-        with db_client.get_database() as db:
-            fixtures_collection = db.fixtures
+        with db_client.get_collection('fixtures') as fixtures_collection:
             records = fixtures_collection.to_dict('records')
             
             for i in range(0, len(records), batch_size):
@@ -194,13 +191,13 @@ def store_aggregated_data(aggregated_data: pd.DataFrame, batch_size: int = 1000)
     except Exception as e:
         logger.error(f"Error connecting to database: {str(e)}")
 
-def main():
+def main() -> None:
     try:
         # Add collection verification
         with db_client.get_database() as db:
-            print("Available collections:", db.list_collection_names())
-            print("Fixtures count:", db.fixtures.count_documents({}))
-            print("Odds data count:", db.odds_data.count_documents({}))
+            logger.info(f"Available collections: {db.list_collection_names()}")
+            logger.info(f"Fixtures count: {db.fixtures.count_documents({})}")
+            logger.info(f"Odds data count: {db.odds_data.count_documents({})}")
 
         # Load data
         match_stats_df, odds_data_df = load_data()

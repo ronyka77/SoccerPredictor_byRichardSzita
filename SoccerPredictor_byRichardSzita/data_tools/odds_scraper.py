@@ -75,11 +75,15 @@ LEAGUES = {
     "premier-league": "england",
     "championship": "england",
     "league-one": "england",
-    "eredivisie":"netherlands"
+    "eredivisie":"netherlands",
+    "eerste-divisie":"netherlands",
+    "primeira-liga":"portugal",
+    "allsvenskan":"sweden",
+    "ekstraklasa":"poland"
 }
 
 # Define years for historical data scraping
-# YEARS = ["2020-2021", "2021-2022", "2022-2023", "2023-2024"] # Use this for all historical data
+# YEARS = ["2020-2021", "2021-2022", "2022-2023", "2023-2024"] # Use this for all historical data scraping
 YEARS = ["2023-2024"]
 # Define column names for the DataFrame where scraped data will be stored
 columns = ['Date', 'Time', 'Home', 'Away', 'Odd_Home', 'Odds_Draw', 'Odd_Away']
@@ -101,24 +105,19 @@ def generate_urls(leagues, years):
         })
         
         # URLs for past seasons with specified years
-        for year in years:
-            urls.append({
-                "url": f"https://www.oddsportal.com/soccer/{country}/{league}-{year}/results/",
-                "league": league
-            })
+        # for year in years:
+        #     urls.append({
+        #         "url": f"https://www.oddsportal.com/soccer/{country}/{league}-{year}/results/",
+        #         "league": league
+        #     })
     
     # Define a dictionary to organize special URLs by league
     special_urls_by_league = {
         "brazil": [
             "https://www.oddsportal.com/football/brazil/serie-b/",
             "https://www.oddsportal.com/football/brazil/serie-b/results/",
-            # "https://www.oddsportal.com/football/brazil/serie-b-2023/results/",
-            # "https://www.oddsportal.com/football/brazil/serie-b-2022/results/",
-            # "https://www.oddsportal.com/football/brazil/serie-b-2021/results/",
-            # "https://www.oddsportal.com/football/brazil/serie-b-2020/results/",
             "https://www.oddsportal.com/football/brazil/serie-a-betano/",
             "https://www.oddsportal.com/football/brazil/serie-a-betano/results/",
-            # "https://www.oddsportal.com/football/brazil/serie-a-2023/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2022/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2021/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2020/results/"
@@ -139,14 +138,31 @@ def generate_urls(leagues, years):
             # "https://www.oddsportal.com/football/japan/j1-league-2021/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2020/results/"
         ],
-        "Netherlands": [
-            "https://www.oddsportal.com/football/netherlands/eredivisie/",  
-            "https://www.oddsportal.com/football/netherlands/eredivisie/results/",
-            # "https://www.oddsportal.com/football/netherlands/eredivisie-2020-2021/results/",
-            # "https://www.oddsportal.com/football/netherlands/eredivisie-2021-2022/results/",
-            # "https://www.oddsportal.com/football/netherlands/eredivisie-2022-2023/results/",
-            # "https://www.oddsportal.com/football/netherlands/eredivisie-2023-2024/results/",
-        ]
+        # "netherlands": [
+        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2023/results/",
+        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2022/results/",
+        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2021/results/",
+        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2020/results/"
+        # ],
+        # "sweden": [
+        #     "https://www.oddsportal.com/football/sweden/allsvenskan-2023/results/",
+        #     "https://www.oddsportal.com/football/sweden/allsvenskan-2022/results/",
+        #     "https://www.oddsportal.com/football/sweden/allsvenskan-2021/results/",
+        #     "https://www.oddsportal.com/football/sweden/allsvenskan-2020/results/"
+        # ],
+        # "portugal": [
+        #     "https://www.oddsportal.com/football/portugal/primeira-liga-2023-2024/results/",
+        #     "https://www.oddsportal.com/football/portugal/primeira-liga-2022-2023/results/",
+        #     "https://www.oddsportal.com/football/portugal/primeira-liga-2021-2022/results/",
+        #     "https://www.oddsportal.com/football/portugal/primeira-liga-2020-2021/results/"
+        # ],
+        # "poland": [
+        #     "https://www.oddsportal.com/football/poland/ekstraklasa-2023-2024/results/",
+        #     "https://www.oddsportal.com/football/poland/ekstraklasa-2022-2023/results/",
+        #     "https://www.oddsportal.com/football/poland/ekstraklasa-2021-2022/results/",
+        #     "https://www.oddsportal.com/football/poland/ekstraklasa-2020-2021/results/"
+        # ]
+        
         
     }
 
@@ -159,13 +175,22 @@ def generate_urls(leagues, years):
     return urls  # Return all generated URLs for scraping
 
 urls = generate_urls(LEAGUES, YEARS)  # Generate URLs using LEAGUES and YEARS
+def initialize_driver() -> webdriver.Chrome:
+    """
+    Initialize the Chrome WebDriver with custom options, including a random user agent and headless mode.
 
-def initialize_driver():
-    """Initialize the Chrome WebDriver with custom options, including a random user agent and headless mode."""
+    Returns:
+        webdriver.Chrome: An instance of the Chrome WebDriver with specified options.
+    """
     chrome_options = Options()
     chrome_options.add_argument(f"user-agent={random.choice(user_agents)}")  # Random user agent
     chrome_options.add_argument("--headless")  # Run in headless mode for faster scraping without a visible browser
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    try:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        return driver
+    except OSError as e:
+        logger.error(f"Failed to initialize the WebDriver: {e}")
+        raise
 
 # Instantiate the WebDriver for use in scraping
 driver = initialize_driver()

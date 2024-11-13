@@ -163,7 +163,7 @@ def prepare_real_scores_data(real_scores: pd.DataFrame, new_prediction_data: pd.
     return real_scores_data
 
 # Prepare the real scores data
-real_scores_data = prepare_real_scores_data(real_scores, new_prediction_data, base_data, model_type, selected_features)
+# real_scores_data = prepare_real_scores_data(real_scores, new_prediction_data, base_data, model_type, selected_features)
 
 # Additional fit using real scores
 def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: pd.DataFrame, model_type: str, logger: logging.Logger):
@@ -377,10 +377,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
         ('rf', LoggingEstimator(rf_regressor_home, 'Random Forest', logger))
     ]
     
-    
     stacking_regressor_home = StackingRegressor(estimators=estimators_home, final_estimator=Ridge())
-    
-   
     
     # Perform two separate fits
     logger.info('First fit started')
@@ -414,13 +411,13 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     logger.info(f"{model_type} (2nd fit) Stacking Model MSE: {mse_home2}, R2: {r2_home2}, Stacking Model MAE: {mae_home2}, Stacking Model MAPE: {mape_home2}%")
     logger.info(f"{model_type} (2nd fit) Stacking Model Within Range (±0.5): {within_range_home2}%")
     
-    try:
-        # Perform the real scores fit
-        logger.info('fit with real scores started')
-        additional_fit_with_real_scores(stacking_regressor_home, real_scores_data, model_type, logger)
-    except Exception as e:
-        logger.error(f"Error occurred while performing additional fit with real scores: {e}")
-        raise
+    # try:
+    #     # Perform the real scores fit
+    #     logger.info('fit with real scores started')
+    #     additional_fit_with_real_scores(stacking_regressor_home, real_scores_data, model_type, logger)
+    # except Exception as e:
+    #     logger.error(f"Error occurred while performing additional fit with real scores: {e}")
+    #     raise
     
     return stacking_regressor_home
 

@@ -45,30 +45,30 @@ driver = initialize_driver()
 def get_all_urls():
     """Generate URLs for specific leagues and seasons to scrape data from."""
     leagues = [
-        ('Champions-League', '8'),
-        ('Premier League', '9'),
-        ('Championship','10'),
-        ('League One', '15'),
-        ('La Liga', '12'),
-        ('Segunda-Division', '17'),
-        ('Serie A', '11'),
-        ('Serie B', '18'),
-        ('Ligue 1', '13'),
-        ('Ligue 2', '60'),
-        ('Bundesliga', '20'),
-        ('2-Bundesliga','33'),
-        ('3-Liga','59'),
+        ('Champions-League', '8'),  # Europe
+        ('Premier League', '9'),  # England
+        ('Championship','10'),  # England
+        ('League One', '15'),  # England
+        ('La Liga', '12'),  # Spain
+        ('Segunda-Division', '17'),  # Spain
+        ('Serie A', '11'),  # Italy
+        ('Serie B', '18'),  # Italy
+        ('Ligue 1', '13'),  # France
+        ('Ligue 2', '60'),  # France
+        ('Bundesliga', '20'),  # Germany
+        ('2-Bundesliga','33'),  # Germany
+        ('3-Liga','59'),  # Germany
         ('Serie A', '24'),  # Brazil Serie A
-        ('Serie-B','38'),    # Brazil Serie B
-        ('Liga-Profesional-Argentina', '21'),
-        ('Eredivisie','23'),
-        ('J1-League','25'),
-        ('Allsvenskan','29'),
-        ('Russian-Premier-League','30'),
-        ('Primeira-Liga','32'),
-        ('Ekstraklasa','36'),
-        ('Superettan','48'),
-        ('Eerste-Divisie','51')
+        ('Serie-B','38'),  # Brazil Serie B
+        ('Liga-Profesional-Argentina', '21'),  # Argentina
+        ('Eredivisie','23'),  # Netherlands
+        ('J1-League','25'),  # Japan
+        ('Allsvenskan','29'),  # Sweden
+        ('Russian-Premier-League','30'),  # Russia
+        ('Primeira-Liga','32'),  # Portugal
+        ('Ekstraklasa','36'),  # Poland
+        ('Superettan','48'),  # Sweden
+        ('Eerste-Divisie','51')  # Netherlands
     ]
 
     # Specific seasons to scrape data for; add additional seasons as needed
@@ -175,7 +175,9 @@ def main():
     try:
         result = collection.delete_many({
             "$or": [
-                {"Date": None}
+                {"Date": None},
+                {"Score": ""},
+                {"Match Report": ""}
             ]
         })
         logging.info(f"Successfully deleted {result.deleted_count} matches that had null dates")

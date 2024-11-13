@@ -152,4 +152,4 @@ if __name__ == "__main__":
     calculator = ELOCalculator()
     calculator.process_training_data()
     calculator.process_prediction_data()
-    calculator.process_merged_data()
+    calculator .process_merged_data()
