@@ -6,7 +6,7 @@ sys.path.append('./')
 import logging
 from pymongo import MongoClient
 from util_tools.logging_config import LoggerSetup
-from util_tools.database import MongoClient
+# from util_tools.database import MongoClient
 
 # Set up logger with log file path
 logger = LoggerSetup.setup_logger(
@@ -16,19 +16,21 @@ logger = LoggerSetup.setup_logger(
 )
 
 
-# Initialize MongoDB client and get database connection
-db_client = MongoClient()
+# Connect to MongoDB server
+client = MongoClient('mongodb://192.168.0.77:27017/')
+db = client['football_data']  # Access football_data database
+aggregated_data = db['aggregated_data']  # Collection for storing fixtures data
 
 # Set directories and files
 model_dir = "./models/"
 os.makedirs(model_dir, exist_ok=True)
 logger.info(f"Model directory created/checked at {model_dir}")
 
-column_order = ['running_id', 'Date', 'league', 'Home', 'Away', 'Prediction_models', 
+column_order = ['running_id', 'Date', 'league_encoded', 'Home', 'Away', 'Prediction_models', 
                 'match_outcome_prediction_rounded', 'home_goals_prediction_rounded',
                 'away_goals_prediction_rounded', 'home_goals_prediction',
-                'away_goals_prediction', 'match_outcome_prediction',
-                'home_poisson_xG', 'away_poisson_xG'] #, 'Odd_Home', 'Odds_Draw', 'Odd_Away'
+                'away_goals_prediction', 'match_outcome_prediction'
+                ] #, 'Odd_Home', 'Odds_Draw', 'Odd_Away','home_poisson_xG', 'away_poisson_xG'
 
 
 def add_home_away_columns(existing_df):
@@ -41,13 +43,27 @@ def add_home_away_columns(existing_df):
         query = {'running_id': {'$in': running_ids}}
         projection = {'_id': 0, 'running_id': 1, 'Home': 1, 'Away': 1, 'league': 1, 'Date': 1}
 
-        with db_client.get_database() as db:
-            mongo_data = pd.DataFrame(list(db.aggregated_data.find(query, projection)))
+        # Corrected: Access the database and collection using methods
+        # db = db_client.get_database('football_data')
+        collection = aggregated_data
+        mongo_data = pd.DataFrame(list(collection.find(query, projection)))
+        
+        if len(mongo_data) == 0:
+            logger.error("MongoDB returned an empty dataframe")
+            base_data_path = './data/merged_data_prediction.csv'
+            mongo_df = pd.read_csv(base_data_path)
+            print(mongo_df.columns)
+            # Convert 'Date' column to string format 'YYYY-MM-DD' if it exists
+            if 'Date' in mongo_df.columns:
+                mongo_df['Date'] = mongo_df['Date'].dt.strftime('%Y-%m-%d')
+            mongo_df = mongo_df[['running_id', 'Date', 'league_encoded', 'Home', 'Away']]
+            # mongo_df['Date'] = pd.to_datetime(mongo_df['year'].astype(str) + '-' + mongo_df['month'].astype(str) + '-' + mongo_df['day_of_month'].astype(str))
+            logger.info(f"Retrieved {len(mongo_df)} documents from Excel")
+        else:
+            # Convert MongoDB result to a DataFrame
+            mongo_df = pd.DataFrame(mongo_data)
             logger.info(f"Retrieved {len(mongo_data)} documents from MongoDB")
-        
-        # Convert MongoDB result to a DataFrame
-        mongo_df = pd.DataFrame(mongo_data)
-        
+            
         # Merge the MongoDB data with the existing DataFrame based on 'running_id'
         merged_df = pd.merge(existing_df, mongo_df, on='running_id', how='left')
         logger.info(f"Merged dataframe shape: {merged_df.shape}")
@@ -56,7 +72,7 @@ def add_home_away_columns(existing_df):
         
     except Exception as e:
         logger.error(f"Error in add_home_away_columns: {str(e)}")
-        raise
+        pass
 
 
 # Function to round values based on 0.5 threshold
@@ -80,6 +96,11 @@ try:
 
     # Merge the data
     stacked_merged_df = add_home_away_columns(stacked_home)
+    if stacked_merged_df is None or stacked_merged_df.empty:
+        stacked_merged_df = stacked_home
+        logger.error("add_home_away_columns returned an empty dataframe or None")
+        
+  
     stacked_merged_df = stacked_merged_df.merge(stacked_away, how='left', on='running_id')
     stacked_merged_df = stacked_merged_df.merge(stacked_outcome, how='left', on='running_id')
     logger.info("Successfully merged all dataframes")
@@ -95,6 +116,7 @@ try:
     try:
         # Create MongoDB query and projection for odds data
         odds_query = {"running_id": {"$in": stacked_merged_df['running_id'].tolist()}}
+        # logger.info(f"odds query: {odds_query}")
         odds_projection = {
             "running_id": 1,
             "Odd_Home": 1, 
@@ -104,9 +126,8 @@ try:
         }
         
         # Query MongoDB for odds data
-        with db_client.get_database() as db:
-            odds_data = pd.DataFrame(list(db.aggregated_data.find(odds_query, odds_projection)))
-            logger.info(f"Retrieved odds data for {len(odds_data)} matches from MongoDB")
+        odds_data = pd.DataFrame(list(aggregated_data.find(odds_query, odds_projection)))
+        logger.info(f"Retrieved odds data for {len(odds_data)} matches from MongoDB")
         
         # Merge odds data with existing dataframe
         stacked_merged_df = pd.merge(stacked_merged_df, odds_data, on='running_id', how='left')
@@ -114,9 +135,10 @@ try:
         
     except Exception as e:
         logger.error(f"Error retrieving odds data from MongoDB: {str(e)}")
-        raise
+        pass
     
     # Reorder columns and save
+    # print(stacked_merged_df.columns)
     stacked_merged_df = stacked_merged_df[column_order]
     output_path = './made_predictions/predictions_stacked_2fit_merged.xlsx'
     stacked_merged_df.to_excel(output_path, index=False)

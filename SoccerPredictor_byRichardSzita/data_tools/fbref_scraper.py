@@ -122,9 +122,18 @@ def get_match_data():
     # Query fixtures collection for matches not in match_stats and have a score
     unmatched_fixtures = fixtures_collection.find({
         'unique_id': {'$nin': match_stats_ids},  # Exclude IDs already in match_stats
-        'Score': {'$ne': ''},  # Include only matches with a score
-        'Match Report': {'$ne': ''}  # Include only matches with a non-blank URL
+        'Score': {'$ne': '', '$ne': None, '$ne': 'nan'},  # Include only matches with a score and filter out nan values
+        'Match Report': {'$ne': '', '$ne': None, '$ne': 'nan', '$ne': 'Head-to-Head'}  # Include only matches with a non-blank URL
     })
+    
+    # Use count_documents to get the number of documents
+    count = fixtures_collection.count_documents({
+        'unique_id': {'$nin': match_stats_ids},
+        'Score': {'$ne': '', '$ne': None, '$ne': 'nan'},
+        'Match Report': {'$ne': '', '$ne': None, '$ne': 'nan', '$ne': 'Head-to-Head'}
+    })
+    
+    print(f"Number of matches without stats: {count}")
     return unmatched_fixtures  # Return the cursor to the matching documents
 
 def main():
@@ -138,8 +147,8 @@ def main():
         try:
             # Fetch and structure the match data
             # print(url)
-            if url == "" or url == "nan" or url == "None" or url == None:
-                print("No URL found")
+            if url == "" or str(url) == "nan" or str(url) == "NaN" or str(url) == "None" or url == None:
+                print(f"No URL found for {unique_id}")
                 continue
             else:
                 match_data = fetch_match_data(url, unique_id)
@@ -149,7 +158,7 @@ def main():
         except Exception as e:
             # Handle request overload error
             print("Too many requests, sleeping for 10 seconds..." + str(e))
-            print(str(unique_id) + str(url))  # Convert both to strings
+            print(str(unique_id) + ' ' + str(url))  # Convert both to strings
             time.sleep(5)  # Wait before retrying
             continue
 

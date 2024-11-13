@@ -277,10 +277,10 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     logger.info(f"Data prepared for modeling. Feature shape: {X.shape}, Target shape: {y.shape}")
 
     # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     logger.info(f"Data split into train and test. Train shape: {X_train.shape}, Test shape: {X_test.shape}")
     # Second fit on a different random split (or different configuration)
-    X_train2, X_test2, y_train2, y_test2 = train_test_split(X, y, test_size=0.2, random_state=123)
+    X_train2, X_test2, y_train2, y_test2 = train_test_split(X, y, test_size=0.3, random_state=123)
     logger.info(f"Data split into train2 and test2. Train2 shape: {X_train2.shape}, Test2 shape: {X_test2.shape}")
 
     # Scaling

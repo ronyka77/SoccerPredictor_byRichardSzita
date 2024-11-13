@@ -34,7 +34,7 @@ def drop_odds_columns() -> None:
         logger.error(f"Failed to drop columns: {str(e)}")
         raise
 
-drop_odds_columns()
+# drop_odds_columns()
 
 def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Load data from match_stats and odds_data collections in MongoDB.
@@ -59,6 +59,13 @@ def standardize_name(name: str) -> str:
     """Standardize team names by removing common abbreviations and special characters."""
     replacements = {
         "ã": "a",
+        "ñ": "n",
+        "é": "e",
+        "ò": "o",
+        "á": "a",
+        "ó": "o",
+        "Atletico Madrid": "Atl. Madrid",
+        "Cádiz": "Cadiz CF  ",
         "Nott'ham Forest": "Nottingham", 
         "B. Monchengladbach": "Gladbach",
         "Paris S-G": "PSG",
@@ -77,119 +84,93 @@ def standardize_name(name: str) -> str:
         name = name.replace(old, new)
     return name.strip()
 
-def fuzzy_merge(match_stats_df: pd.DataFrame, odds_data_df: pd.DataFrame, threshold: int = 90) -> Optional[pd.DataFrame]:
-    """Merge match_stats and odds_data DataFrames based on fuzzy matching of unique_id and matching date."""
-    # Validate input
-    if match_stats_df is None or odds_data_df is None:
-        logger.error("One or both DataFrames are None")
-        return None
+def fuzzy_merge_row(row: pd.Series, odds_data_df: pd.DataFrame, threshold: int = 90) -> Tuple[dict, Optional[dict]]:
+    """Merge a single row from match_stats with odds_data based on fuzzy matching of unique_id and matching date."""
+    try:
+        match_id = str(row['unique_id'])
+        match_date = row['Date']
+        # Standardize the match ID before comparison
+        standardized_match_id = standardize_name(match_id)
+
+        # Standardize all odds IDs for comparison
+        odds_unique_ids = [str(uid) for uid in odds_data_df['unique_id'].tolist()]
+        standardized_odds_ids = [standardize_name(uid) for uid in odds_unique_ids]
         
-    if match_stats_df.empty or odds_data_df.empty:
-        logger.error(f"Empty DataFrame provided - match_stats: {len(match_stats_df)}, odds_data: {len(odds_data_df)}")
-        return None
-
-    # Debug input data
-    logger.info(f"Sample match_stats unique_ids: {match_stats_df['unique_id'].head().tolist()}")
-    logger.info(f"Sample odds_data unique_ids: {odds_data_df['unique_id'].head().tolist()}")
-
-    # Convert unique_ids to list and ensure they're strings
-    odds_unique_ids = [str(uid) for uid in odds_data_df['unique_id'].tolist()]
-    
-    merged_data = []
-    unmatched_pairs = []  # List to store unmatched ID pairs
-    
-    for idx, row in match_stats_df.iterrows():
-        try:
-            match_id = str(row['unique_id'])
-            match_date = row['Date']
-            # Standardize the match ID before comparison
-            standardized_match_id = standardize_name(match_id)
-
-            # Standardize all odds IDs for comparison
-            standardized_odds_ids = [standardize_name(uid) for uid in odds_unique_ids]
+        result = process.extractOne(
+            standardized_match_id, 
+            standardized_odds_ids, 
+            scorer=fuzz.ratio,
+            score_cutoff=threshold
+        )
+        
+        if result is None:
+            return row.to_dict(), None
             
-            result = process.extractOne(
-                standardized_match_id, 
-                standardized_odds_ids, 
-                scorer=fuzz.ratio,
-                score_cutoff=threshold
-            )
-            
-            if result is None:
-                merged_data.append(row.to_dict())
-                continue
-                
-            best_match, score, index = result
-            
-            # Use the original odds ID for the database lookup
-            original_odds_id = odds_unique_ids[standardized_odds_ids.index(best_match)]
-            
-            if score >= threshold:
-                odds_row = odds_data_df[odds_data_df['unique_id'] == original_odds_id].iloc[0]
-                if odds_row['Date'] == match_date or abs((pd.to_datetime(odds_row['Date']) - pd.to_datetime(match_date)).days) <= 1:
-                    merged_data.append({**row.to_dict(), **odds_row.to_dict()})
-                    logger.info(f"Merged: {match_id} with {original_odds_id} (Score: {score})")
-                else:
-                    logger.info(f"Date mismatch for ID: {match_id} and {original_odds_id}")
-                    merged_data.append(row.to_dict())
+        best_match, score, index = result
+        
+        # Use the original odds ID for the database lookup
+        original_odds_id = odds_unique_ids[standardized_odds_ids.index(best_match)]
+        
+        if score >= threshold:
+            odds_row = odds_data_df[odds_data_df['unique_id'] == original_odds_id].iloc[0]
+            if odds_row['Date'] == match_date or abs((pd.to_datetime(odds_row['Date']) - pd.to_datetime(match_date)).days) <= 1:
+                return {**row.to_dict(), **odds_row.to_dict()}, None
             else:
-                merged_data.append(row.to_dict())
-                # Store unmatched pair with score
-                unmatched_pairs.append({
-                    'match_stats_id': match_id,
-                    'closest_odds_id': original_odds_id,
-                    'similarity_score': score
-                })
-                
-        except Exception as e:
-            logger.error(f"Error processing row {idx}: {str(e)}")
-            continue
-    
-    if not merged_data:
-        logger.error("No data was merged successfully")
-        return None
-    
-    # Export unmatched pairs to Excel if any exist
-    if unmatched_pairs:
-        unmatched_df = pd.DataFrame(unmatched_pairs)
-        export_path = 'unmatched_ids.xlsx'
-        unmatched_df.to_excel(export_path, index=False)
-        logger.info(f"Exported {len(unmatched_pairs)} unmatched ID pairs to {export_path}")
-    
-    merged_df = pd.DataFrame(merged_data)
-    merged_df.to_excel('merge_odds_data.xlsx', index=False)
-    return merged_df
+                logger.info(f"Date mismatch for ID: {match_id} and {original_odds_id}")
+                return row.to_dict(), None
+        else:
+            return row.to_dict(), {
+                'match_stats_id': match_id,
+                'closest_odds_id': original_odds_id,
+                'similarity_score': score
+            }
+    except Exception as e:
+        logger.error(f"Error processing row: {str(e)}")
+        return row.to_dict(), None
 
-# Function to store aggregated data back in MongoDB
-def store_aggregated_data(aggregated_data: pd.DataFrame, batch_size: int = 1000) -> None:
-    """Store aggregated data in MongoDB using batch processing.
+def store_aggregated_data_row_by_row(df: pd.DataFrame) -> None:
+    """Store each row of the DataFrame into the aggregated_data collection in MongoDB.
     
     Args:
-        aggregated_data (pd.DataFrame): Data to store
-        batch_size (int, optional): Size of each batch. Defaults to 1000.
+        df (pd.DataFrame): DataFrame containing the data to be stored.
+    
+    Raises:
+        ValueError: If the DataFrame is empty.
     """
+    if df.empty:
+        logger.error("The DataFrame to store is empty.")
+        raise ValueError("The DataFrame to store is empty.")
+    
     try:
-        with db_client.get_collection('fixtures') as fixtures_collection:
-            records = fixtures_collection.to_dict('records')
-            
-            for i in range(0, len(records), batch_size):
-                batch = records[i:i + batch_size]
-                # Fixed: Correct format for bulk write operations
-                operations = [
-                    UpdateOne(
-                        {'unique_id': record['unique_id']},
-                        {'$set': record},
-                        upsert=True
+        with db_client.get_database() as db:
+            collection = db.aggregated_data
+            operations = []
+            for _, row in df.iterrows():
+                # Convert the row to a dictionary and prepare the update operation
+                row_dict = row.to_dict()
+                running_id = row_dict.get('running_id')
+                if running_id is not None:
+                    operations.append(
+                        UpdateOne(
+                            {'running_id': running_id},
+                            {'$set': row_dict},
+                            upsert=True
+                        )
                     )
-                    for record in batch
-                ]
-                try:
-                    fixtures_collection.bulk_write(operations, ordered=False)
-                    logger.info(f"Processed batch {i//batch_size + 1}")
-                except Exception as e:
-                    logger.error(f"Error in batch {i//batch_size + 1}: {str(e)}")
+            
+            for operation in operations:
+                result = collection.update_one(operation.filter, operation.update, upsert=True)
+                if result.modified_count > 0 or result.upserted_id is not None:
+                    logger.info(f"Inserted/Updated document with filter: {operation.filter}")
+                else:
+                    logger.warning(f"No changes made for document with filter: {operation.filter}")
+    
     except Exception as e:
-        logger.error(f"Error connecting to database: {str(e)}")
+        logger.error(f"Failed to store data row by row: {str(e)}")
+        raise
+    
+# Drop 'League' and '_id' columns if they exist in the merged_row
+columns_to_drop = ['League', '_id']
 
 def main() -> None:
     try:
@@ -206,13 +187,34 @@ def main() -> None:
         logger.info(f"Loaded match_stats shape: {match_stats_df.shape}")
         logger.info(f"Loaded odds_data shape: {odds_data_df.shape}")
         
-        # Perform fuzzy matching and merge
-        merged_df = fuzzy_merge(match_stats_df, odds_data_df, threshold=90)
+        merged_data = []
+        unmatched_pairs = []  # List to store unmatched ID pairs
         
-        if merged_df is None:
-            logger.error("Merge operation failed - merged_df is None")
+        # Perform fuzzy matching and merge row by row
+        for idx, row in match_stats_df.iterrows():
+            merged_row, unmatched_pair = fuzzy_merge_row(row, odds_data_df, threshold=90)
+            merged_data.append(merged_row)
+            if merged_row and not pd.isna(merged_row.get('Odd_Home')):
+                merged_row = {k: v for k, v in merged_row.items() if k not in columns_to_drop}
+                store_aggregated_data_row_by_row(pd.DataFrame([merged_row]))
+                logger.info(f"Successfully stored row: {merged_row['unique_id']}")
+            if unmatched_pair:
+                unmatched_pairs.append(unmatched_pair)
+        
+        if not merged_data:
+            logger.error("No data was merged successfully")
             return
             
+        # Export unmatched pairs to Excel if any exist
+        if unmatched_pairs:
+            unmatched_df = pd.DataFrame(unmatched_pairs)
+            export_path = 'unmatched_ids.xlsx'
+            unmatched_df.to_excel(export_path, index=False)
+            logger.info(f"Exported {len(unmatched_pairs)} unmatched ID pairs to {export_path}")
+        
+        merged_df = pd.DataFrame(merged_data)
+        merged_df.to_excel('merge_odds_data.xlsx', index=False)
+        
         if merged_df.empty:
             logger.error("Merge operation resulted in empty DataFrame")
             return
@@ -234,14 +236,11 @@ def main() -> None:
             logger.info(f"Exported {len(na_odds_df)} rows with missing odds data to missing_odds_data.xlsx")
 
         # Drop specified columns if they exist in the DataFrame
-        columns_to_drop = ['League', '_id']
         filtered_df.drop(columns=[col for col in columns_to_drop if col in filtered_df.columns], inplace=True)
 
         # Check if the filtered DataFrame is not empty before proceeding
         if not filtered_df.empty:
             logger.info(f"Final filtered DataFrame shape: {filtered_df.shape}")
-            store_aggregated_data(filtered_df)
-            logger.info("Data merged and stored successfully.")
         else:
             logger.error("No data after filtering")
             
