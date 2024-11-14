@@ -10,6 +10,7 @@ import configparser
 from util_tools.database import MongoClient
 from util_tools.logging_config import LoggerSetup
 from pymongo import UpdateOne
+from util_tools.delete_duplicates import DuplicateHandler
 
 logger = LoggerSetup.setup_logger(
     name='merge_odds',
@@ -64,43 +65,8 @@ def load_data(match_stats_collection: str = MATCH_STATS_COLLECTION) -> Tuple[pd.
         logger.error(f"Failed to load data: {str(e)}")
         raise ConnectionError("Failed to connect to MongoDB")
 
-def standardize_name(name: str) -> str:
-    """Standardize team names by removing common abbreviations and special characters."""
-    replacements = {
-        "ã": "a",
-        "ñ": "n",
-        "é": "e",
-        "ò": "o",
-        "á": "a",
-        "ó": "o",
-        "Arminia": "Arminia Bielefeld",
-        "Athletic Club": "Ath Bilbao",
-        "Atletico Madrid": "Atl. Madrid",
-        "Athletic Club": "Athletic Bilbao",
-        "Athletico Paranaense": "Athletico-PR",
-        "B. Monchengladbach": "Gladbach",
-        "Cádiz": "Cadiz CF  ",
-        "Nott'ham Forest": "Nottingham", 
-        "Paris S-G": "PSG",
-        "Leeds United": "Leeds",
-        "FC Barcelona": "Barcelona",
-        "FC Bayern": "Bayern Munich",
-        "FC Internazionale": "Inter Milan",
-        "FC Porto": "Porto",
-        "Köln": "FC Koln",
-        "Leverkursen": "Bayer Leverkusen",
-        "Hellas Verona": "Verona",
-        "Hertha BSC":"Hertha Berlin",
-        "Luton Town": "Luton",
-        "Saint-Étienne": "St Etienne",
-        "Newcastle Utd": "Newcastle",
-        "Norwich City": "Norwich",
-        "Mainz 05": "Mainz"
-    }
-    name = str(name).strip()
-    for old, new in replacements.items():
-        name = name.replace(old, new)
-    return name.strip()
+# Import standardize_name from DuplicateHandler
+standardize_name = DuplicateHandler.standardize_name
 
 def fuzzy_merge_row(row: pd.Series, odds_data_df: pd.DataFrame, threshold: int = 90) -> Tuple[dict, Optional[dict]]:
     """Merge a single row from match_stats with odds_data based on fuzzy matching of unique_id and matching date."""

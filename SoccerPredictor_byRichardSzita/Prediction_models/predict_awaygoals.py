@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import joblib
 from keras.models import load_model
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from util_tools.logging_config import LoggerSetup
 from util_tools.model_classes import CustomStackingRegressor, CustomReduceLROnPlateau, WithinRangeMetric, LoggingEstimator
 from util_tools.model_functions import create_neural_network, prepare_data, prepare_new_data
@@ -28,7 +29,7 @@ logger.info(f"Model paths set: keras_nn_model_path={keras_nn_model_path}, model_
 # Define custom objects
 custom_objects = {
     'WithinRangeMetric': WithinRangeMetric,
-    'within_range_metric': WithinRangeMetric,  # If you have a function for the metric
+    'within_range_metric': WithinRangeMetric(),
     'CustomReduceLROnPlateau': CustomReduceLROnPlateau
 }
 
@@ -47,33 +48,61 @@ except Exception as e:
 new_data_path = './data/merged_data_prediction.csv'
 logger.info(f"Loading new data from {new_data_path}.")
 new_data = pd.read_csv(new_data_path)
-logger.info(f"New data loaded from {new_data_path} with shape: {new_data.shape}")
 
-# Prepare the new data
+# Drop unnecessary columns as done in training
+new_data = new_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Date', 'Unnamed: 0','match_outcome', 
+                                 'home_goals','away_goals', 'draw', 'away_win', 'home_win',
+                                 'away_points', 'home_points','HomeTeam_last_away_match',
+                                 'AwayTeam_last_home_match','home_points_rolling_avg',
+                                 'away_points_rolling_avg','home_advantage'], errors='ignore')
+
+# Convert data types and handle infinities
+new_data = new_data.replace(',', '.', regex=True)
+new_data = new_data.apply(pd.to_numeric, errors='coerce')
+new_data.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+logger.info(f"New data loaded and preprocessed with shape: {new_data.shape}")
+
+# Load preprocessing objects
 imputer_file = os.path.join(model_dir, f'imputer_{model_type}.pkl')
 selector_file = os.path.join(model_dir, f'rfe_{model_type}_selector.pkl')
+scaler_file = os.path.join(model_dir, f'scaler_{model_type}.pkl')
 
-logger.info(f"Loading imputer from {imputer_file} and selector from {selector_file}.")
+logger.info("Loading preprocessing objects...")
 try:
     imputer = joblib.load(imputer_file)
     selector = joblib.load(selector_file)
-    logger.info(f"Imputer and selector loaded successfully for {model_type}.")
+    scaler = joblib.load(scaler_file)
+    logger.info("Preprocessing objects loaded successfully.")
 except FileNotFoundError as e:
     logger.error(f"File not found: {e}")
     raise
 
-logger.info("Preparing new data for prediction.")
-X_new_prepared = prepare_new_data(new_data, imputer, selector, model_type, model_dir, logger)
-logger.info(f"New data prepared with shape: {X_new_prepared.shape}")
+# Select numeric features
+numeric_features = new_data.select_dtypes(include=['float64', 'int64']).columns.tolist()
+logger.info(f"Selected {len(numeric_features)} numeric features")
+
+# Prepare data with polynomial features
+logger.info("Preparing new data for prediction...")
+X = prepare_data(new_data, numeric_features, model_type, model_dir, logger)
+poly = PolynomialFeatures(degree=2, include_bias=False)
+X_poly = poly.fit_transform(X)
+
+# Scale the data
+X_scaled = scaler.transform(X_poly)
+
+# Apply feature selection
+X_selected = selector.transform(X_scaled)
+logger.info(f"Data prepared with final shape: {X_selected.shape}")
 
 # Make predictions
-logger.info("Making predictions with the loaded model.")
-predictions = custom_model.predict(X_new_prepared)
-logger.info(f"Predictions made: {predictions}")
+logger.info("Making predictions with the loaded model...")
+predictions = custom_model.predict(X_selected)
+logger.info(f"Predictions made with shape: {predictions.shape}")
 
-# Save predictions to a file
+# Add predictions to original data and save
+new_data[f'{model_type}_prediction'] = predictions
 output_file = f'./made_predictions/predictions_{model_type}_new.xlsx'
-logger.info(f"Saving predictions to {output_file}.")
-pd.DataFrame(predictions, columns=[f'{model_type}_prediction']).to_excel(output_file, index=False)
-logger.info(f"Predictions saved to {output_file}")
-
+logger.info(f"Saving predictions to {output_file}")
+new_data.to_excel(output_file, index=False)
+logger.info(f"Predictions saved successfully to {output_file}")

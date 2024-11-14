@@ -29,8 +29,9 @@ logger.info(f"Model directory created/checked at {model_dir}")
 column_order = ['running_id', 'Date', 'league', 'Home', 'Away', 'Prediction_models', 
                 'match_outcome_prediction_rounded', 'home_goals_prediction_rounded',
                 'away_goals_prediction_rounded', 'home_goals_prediction',
-                'away_goals_prediction', 'match_outcome_prediction'
-                ] #, 'Odd_Home', 'Odds_Draw', 'Odd_Away','home_poisson_xG', 'away_poisson_xG'
+                'away_goals_prediction', 'match_outcome_prediction',
+                'Odd_Home', 'Odds_Draw', 'Odd_Away'
+                ] #, ,'home_poisson_xG', 'away_poisson_xG'
 
 
 def add_home_away_columns(existing_df):
@@ -41,7 +42,7 @@ def add_home_away_columns(existing_df):
         
         # Query MongoDB to get the matching documents
         query = {'running_id': {'$in': running_ids}}
-        projection = {'_id': 0, 'running_id': 1, 'Home': 1, 'Away': 1, 'league': 1, 'Date': 1}
+        projection = {'_id': 0, 'running_id': 1, 'Home': 1, 'Away': 1, 'league': 1, 'Date': 1, 'Odd_Home': 1, 'Odds_Draw': 1, 'Odd_Away': 1}
 
         # Corrected: Access the database and collection using methods
         # db = db_client.get_database('football_data')
@@ -74,7 +75,6 @@ def add_home_away_columns(existing_df):
         logger.error(f"Error in add_home_away_columns: {str(e)}")
         pass
 
-
 # Function to round values based on 0.5 threshold
 def round_half_up(value):
     return np.floor(value + 0.5)
@@ -90,7 +90,7 @@ try:
     stacked_outcome = pd.read_excel(stacked_outcome_path)
     logger.info("Successfully loaded all prediction files")
 
-    stacked_home = stacked_home[['running_id','home_goals_prediction','home_poisson_xG','away_poisson_xG']].sort_values(by='running_id')
+    stacked_home = stacked_home[['running_id','home_goals_prediction']].sort_values(by='running_id')
     stacked_away = stacked_away[['running_id','away_goals_prediction']].sort_values(by='running_id')
     stacked_outcome = stacked_outcome[['running_id','match_outcome_prediction']].sort_values(by='running_id')
 
@@ -112,33 +112,7 @@ try:
     stacked_merged_df['Prediction_models'] = stacked_merged_df['home_goals_prediction_rounded'].astype(str) + '-' + stacked_merged_df['away_goals_prediction_rounded'].astype(str)
     logger.info("Successfully rounded all predictions")
 
-    # Get odds data from MongoDB
-    try:
-        # Create MongoDB query and projection for odds data
-        odds_query = {"running_id": {"$in": stacked_merged_df['running_id'].tolist()}}
-        # logger.info(f"odds query: {odds_query}")
-        odds_projection = {
-            "running_id": 1,
-            "Odd_Home": 1, 
-            "Odds_Draw": 1,
-            "Odd_Away": 1,
-            "_id": 0
-        }
-        
-        # Query MongoDB for odds data
-        odds_data = pd.DataFrame(list(aggregated_data.find(odds_query, odds_projection)))
-        logger.info(f"Retrieved odds data for {len(odds_data)} matches from MongoDB")
-        
-        # Merge odds data with existing dataframe
-        stacked_merged_df = pd.merge(stacked_merged_df, odds_data, on='running_id', how='left')
-        logger.info("Successfully merged odds data into predictions dataframe")
-        
-    except Exception as e:
-        logger.error(f"Error retrieving odds data from MongoDB: {str(e)}")
-        pass
-    
     # Reorder columns and save
-    # print(stacked_merged_df.columns)
     stacked_merged_df = stacked_merged_df[column_order]
     output_path = './made_predictions/predictions_stacked_2fit_merged.xlsx'
     stacked_merged_df.to_excel(output_path, index=False)

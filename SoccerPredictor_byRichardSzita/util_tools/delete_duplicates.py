@@ -43,12 +43,22 @@ class DuplicateHandler:
             return ""
             
         replacements = {
+            "â": "a",
             "ã": "a",
-            "ñ": "n", 
+            "ß": "ss",
+            "ç": "c",      
             "é": "e",
+            "è": "e",
+            "ê": "e",
+            "ï": "i",
             "ò": "o",
             "á": "a",
+            "ô": "o",
+            "ő": "o",
             "ó": "o",
+            "ű": "u",
+            "ü": "u",
+            "ñ": "n", 
             "Arminia": "Arminia Bielefeld",
             "Athletic Club": "Ath Bilbao",
             "Atletico Madrid": "Atl. Madrid", 
