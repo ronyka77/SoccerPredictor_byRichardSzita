@@ -73,8 +73,8 @@ This architecture ensures that the Soccer Predictor is both powerful and flexibl
 
 - Automated scraping from multiple sources:
   - FBRef match data and statistics (comprehensive match-level data)
-  - Team performance metrics (historical and real-time)
-  - Historical match data (for model training)
+  - Team performance metrics
+  - Historical match data 
   - Betting odds data (for incorporating market insights)
 - MongoDB integration for efficient data storage
 - Backup and restore system included with data validation
@@ -88,7 +88,7 @@ Two-tiered approach for maximum accuracy:
    - Cumulative statistics tracking:
      - Season-to-date goal sums
      - Running point totals
-     - Moving averages for key metrics
+     
      - Progressive performance indicators
    - Team form indicators using weighted metrics
    - ELO rating integration with dynamic K-factor
@@ -96,8 +96,8 @@ Two-tiered approach for maximum accuracy:
 
 2. Power BI advanced processing:
    - Complex feature derivation with DAX language
+   - Moving averages for key metrics
    - Rolling averages calculation
-   - Interactive data visualization
    - Export capabilities for model training
 
 ### 🎯 Prediction Models
@@ -186,14 +186,36 @@ Refresh Poisson_xG and ELO scores
    python ./data_tools/add_ELO_scores.py
 
 ### 3. Model Training
+Run feature selection script:
 
-Run the following scripts in `score_prediction` folder:
+   python ./Prediction_models/Feature_selector_for_model.py
 
-   python model_stacked_2fit_outcome.py
+This script performs feature selection for each model type (match outcome, home goals, away goals):
+- Generates polynomial features
+- Scales the data
+- Uses recursive feature elimination (RFE) to select optimal features
+- Saves selected features and scaler for each model type
 
-   python model_stacked_2fit_homegoals.py
+Run the following scripts in `score_prediction` folder to train the prediction models:
 
-   python model_stacked_2fit_awaygoals.py
+   python model_stacked_2fit_outcome.py     # Trains stacked model for match outcome prediction (win/draw/loss)
+                                           # Uses XGBoost, CatBoost and LightGBM as base models
+                                           # with logistic regression as meta-learner
+
+   python model_stacked_2fit_homegoals.py   # Trains stacked model for home team goals prediction
+                                           # Uses XGBoost, CatBoost and LightGBM as base models 
+                                           # with linear regression as meta-learner
+
+   python model_stacked_2fit_awaygoals.py   # Trains stacked model for away team goals prediction
+                                           # Uses XGBoost, CatBoost and LightGBM as base models
+                                           # with linear regression as meta-learner
+
+Each script:
+- Loads the preprocessed training data
+- Trains base models using cross-validation
+- Generates meta-features through predictions
+- Trains meta-learner on the stacked predictions
+- Saves trained models for later prediction
 
 ### 4. Making Predictions
 
