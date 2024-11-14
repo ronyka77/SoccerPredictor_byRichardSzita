@@ -47,8 +47,12 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     try:
         with db_client.get_database() as db:
-            match_stats_df = pd.DataFrame(list(db.fixtures.find({"Odd_Home": {"$exists": False}})))
+           
             odds_data_df = pd.DataFrame(list(db.odds_data.find()))
+            match_stats_df = pd.DataFrame(list(db.fixtures.find({"Odd_Home": {"$exists": False}})))
+            match_stats_df['Date'] = pd.to_datetime(match_stats_df['Date'])
+            odds_data_df['Date'] = pd.to_datetime(odds_data_df['Date'])
+            match_stats_df = match_stats_df[match_stats_df['Date'] < odds_data_df['Date'].max()]
             odds_data_df.to_excel('odds_data.xlsx', index=False)
             return match_stats_df, odds_data_df
     except Exception as e:
@@ -64,20 +68,29 @@ def standardize_name(name: str) -> str:
         "ò": "o",
         "á": "a",
         "ó": "o",
+        "Arminia": "Arminia Bielefeld",
+        "Athletic Club": "Ath Bilbao",
         "Atletico Madrid": "Atl. Madrid",
-        "Cádiz": "Cadiz CF  ",
-        "Nott'ham Forest": "Nottingham", 
-        "B. Monchengladbach": "Gladbach",
-        "Paris S-G": "PSG",
-        "Leeds United": "Leeds",
         "Athletic Club": "Athletic Bilbao",
         "Athletico Paranaense": "Athletico-PR",
+        "B. Monchengladbach": "Gladbach",
+        "Cádiz": "Cadiz CF  ",
+        "Nott'ham Forest": "Nottingham", 
+        "Paris S-G": "PSG",
+        "Leeds United": "Leeds",
         "FC Barcelona": "Barcelona",
         "FC Bayern": "Bayern Munich",
         "FC Internazionale": "Inter Milan",
         "FC Porto": "Porto",
+        "Köln": "FC Koln",
+        "Leverkursen": "Bayer Leverkusen",
+        "Hellas Verona": "Verona",
+        "Hertha BSC":"Hertha Berlin",
         "Luton Town": "Luton",
-        "Newcastle Utd": "Newcastle"
+        "Saint-Étienne": "St Etienne",
+        "Newcastle Utd": "Newcastle",
+        "Norwich City": "Norwich",
+        "Mainz 05": "Mainz"
     }
     name = str(name).strip()
     for old, new in replacements.items():

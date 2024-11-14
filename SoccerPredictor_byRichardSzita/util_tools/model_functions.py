@@ -3,13 +3,18 @@ import sys
 import numpy as np
 import pandas as pd
 import joblib
+import logging
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import KNNImputer
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.feature_selection import RFE
+from xgboost import XGBRegressor
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization, Activation
 from keras.optimizers import Adam
 from keras.regularizers import l2
 from util_tools.model_classes import WithinRangeMetric
+
 
 # Ensure the parent directory is in the path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -71,13 +76,68 @@ def prepare_new_data(new_data: pd.DataFrame, imputer, selector, model_type: str,
     # Apply imputation
     model_data_imputed = imputer.transform(model_data)
 
-    # Apply scaling
-    model_data_scaled = scaler_loaded.transform(model_data_imputed)
-
+    # Apply polynomial features transformation first
+    poly = PolynomialFeatures(degree=2, include_bias=False)
+    model_data_poly = poly.fit_transform(model_data_imputed)
+    
+    # Then apply scaling to polynomial features
+    model_data_scaled = scaler_loaded.transform(model_data_poly)
+    
     # Apply feature selection (RFE)
     model_data_selected = selector.transform(model_data_scaled)
 
     return pd.DataFrame(model_data_selected)
+
+def perform_feature_selection(X_train_scaled: np.ndarray, y_train: pd.Series, model_dir: str, model_type: str, logger: logging.Logger) -> RFE:
+    """
+    Perform feature selection using Recursive Feature Elimination (RFE) with XGBoost, which handles 
+    polynomial features well and can capture non-linear relationships.
+
+    Args:
+        X_train_scaled (np.ndarray): Training data with polynomial features, already scaled.
+        y_train (pd.Series): Training target variable.
+        model_dir (str): Directory to save model artifacts.
+        model_type (str): The type of model to train.
+        logger (logging.Logger): Logger for logging information.
+
+    Returns:
+        RFE: The fitted RFE selector.
+    """
+    logger.info("Feature Selection started.")
+    
+    # Using XGBoost as base estimator since it handles polynomial features well
+    base_estimator = XGBRegressor(
+        n_estimators=500,  # Increased from 100 for better model convergence
+        learning_rate=0.05,  # Reduced to allow for finer parameter updates
+        max_depth=8,  # Increased from 5 to capture more complex relationships
+        min_child_weight=3,  # Added to prevent overfitting on noisy data
+        subsample=0.8,  # Added to reduce overfitting
+        colsample_bytree=0.8,  # Added to reduce overfitting
+        gamma=0.1,  # Added to control tree growth
+        reg_alpha=0.1,  # L1 regularization to reduce model complexity
+        reg_lambda=1.0,  # L2 regularization for stability
+        random_state=42
+    )
+    
+    # Perform RFE with XGBoost
+    selector = RFE(
+        estimator=base_estimator,
+        n_features_to_select=120,  # ~5% of total 2400 features for optimal balance
+        step=0.1  # Remove 10% of features at each iteration
+    )
+    logger.info("RFE fitting started.")
+    selector.fit(X_train_scaled, y_train)
+    
+    # Save the RFE selector for future use
+    selector_file = os.path.join(model_dir, 'rfe_' + model_type + '_selector.pkl')
+    joblib.dump(selector, selector_file)
+    logger.info(f"RFE selector saved to {selector_file}")
+    
+    # Log feature selection results
+    n_selected = sum(selector.support_)
+    logger.info(f"Selected {n_selected} features out of {X_train_scaled.shape[1]}")
+    
+    return selector
 
 def create_neural_network(input_dim: int) -> Sequential:
     """

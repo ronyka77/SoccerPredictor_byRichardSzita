@@ -9,11 +9,11 @@ import pandas as pd
 import numpy as np
 import joblib
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
-from sklearn.ensemble import RandomForestRegressor, StackingRegressor
+from sklearn.ensemble import RandomForestRegressor, StackingRegressor, AdaBoostRegressor
 from sklearn.svm import SVR
 from scikeras.wrappers import KerasRegressor  # Ensure compatibility with Keras
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import KNNImputer
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -33,12 +33,13 @@ import cloudpickle as cp
 import dill
 from lightgbm import LGBMRegressor 
 from catboost import CatBoostRegressor
+from sklearn.tree import DecisionTreeRegressor
 manual_variable_initialization(True)
 # Import utilities
 import logging
 from util_tools.logging_config import LoggerSetup
 from util_tools.model_classes import CustomStackingRegressor, CustomReduceLROnPlateau, WithinRangeMetric, LoggingEstimator
-from util_tools.model_functions import create_neural_network, prepare_data, prepare_new_data, within_range_evaluation
+from util_tools.model_functions import create_neural_network, prepare_data, prepare_new_data, within_range_evaluation, perform_feature_selection
 
 model_type='match_outcome'
 
@@ -228,28 +229,6 @@ def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: 
     else:
         logger.info("No incorrect predictions found; no additional fitting needed.")
 
-def perform_feature_selection(X_train_scaled: np.ndarray, y_train: pd.Series, model_dir: str, model_type: str, logger: logging.Logger) -> RFE:
-    """
-    Perform feature selection using Recursive Feature Elimination (RFE) with a RandomForestRegressor.
-
-    Args:
-        y_train (pd.Series): Training target variable.
-        model_dir (str): Directory to save model artifacts.
-        model_type (str): The type of model to train.
-        logger (logging.Logger): Logger for logging information.
-
-    Returns:
-        RFE: The fitted RFE selector.
-    """
-    logger.info("Feature Selection started.")
-    selector = RFE(estimator=RandomForestRegressor(), n_features_to_select=40)
-    selector.fit(X_train_scaled, y_train)
-    # Save the RFE selector for future use
-    selector_file = os.path.join(model_dir, 'rfe_' + model_type + '_selector.pkl')
-    joblib.dump(selector, selector_file)
-    logger.info(f"RFE selector saved to {selector_file}")
-    
-    return selector
 
 # Train the model
 def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, model_dir: str, logger: logging.Logger) -> StackingRegressor:
@@ -276,12 +255,14 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     y = base_data[model_type]  # Target variable
     logger.info(f"Data prepared for modeling. Feature shape: {X.shape}, Target shape: {y.shape}")
 
-    # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-    logger.info(f"Data split into train and test. Train shape: {X_train.shape}, Test shape: {X_test.shape}")
-    # Second fit on a different random split (or different configuration)
-    X_train2, X_test2, y_train2, y_test2 = train_test_split(X, y, test_size=0.3, random_state=123)
-    logger.info(f"Data split into train2 and test2. Train2 shape: {X_train2.shape}, Test2 shape: {X_test2.shape}")
+    # Generate polynomial features
+    poly = PolynomialFeatures(degree=2, include_bias=False)
+    logger.info("Polynomial feature transformation started.")
+    X_poly = poly.fit_transform(X)
+
+    # Update train-test split to use polynomial features
+    X_train, X_test, y_train, y_test = train_test_split(X_poly, y, test_size=0.3, random_state=42)
+    X_train2, X_test2, y_train2, y_test2 = train_test_split(X_poly, y, test_size=0.3, random_state=123)
 
     # Scaling
     logger.info("Data scaling started.")
@@ -289,7 +270,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     X_train_scaled = scaler.fit_transform(X_train)
     
     # Save the scaler for future use
-    scaler_file = os.path.join(model_dir, 'scaler_' + model_type + '.pkl')
+    scaler_file = os.path.join(model_dir, f'scaler_{model_type}.pkl')
     joblib.dump(scaler, scaler_file)
     logger.info(f"Scaler saved to {scaler_file}")
     
@@ -297,8 +278,12 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     X_train2_scaled = scaler.transform(X_train2)
     X_test2_scaled = scaler.transform(X_test2)
     logger.info("Data scaling completed.")
-
-    selector = perform_feature_selection(X_train_scaled, y_train, model_dir, model_type, logger)
+    
+    # Load the RFE selector for future use
+    selector_file = os.path.join(model_dir, f'rfe_{model_type}_selector.pkl')
+    selector = joblib.load(selector_file)
+    logger.info(f"RFE selector loaded from {selector_file}")
+    # selector = perform_feature_selection(X_train_scaled, y_train, model_dir, model_type, logger)
 
     X_train_selected = selector.transform(X_train_scaled)
     X_test_selected = selector.transform(X_test_scaled)
@@ -306,7 +291,8 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     X_test2_selected = selector.transform(X_test2_scaled)
 
     # Log selected features
-    selected_features = list(X_train.columns[selector.support_])
+    # selected_features = list(X.columns[selector.support_])
+    selected_features = list(poly.get_feature_names_out(X.columns)[selector.support_])
     logger.info("Feature selection using RFE completed.")
     logger.info(f"Selected Features: {selected_features}")
     
@@ -368,19 +354,26 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
         n_jobs=-1  # Use all available cores
     )
 
+    # AdaBoost Regressor with optimized parameters for better performance
+    ada_regressor_home = AdaBoostRegressor(
+        base_estimator=DecisionTreeRegressor(max_depth=3, min_samples_split=5),
+        n_estimators=500,
+        learning_rate=0.05,
+        loss='linear',
+        random_state=42
+    )
+
     # Wrap each estimator with the LoggingEstimator
     estimators_home = [
         ('lgb', LoggingEstimator(lgb_regressor_home, 'LightGBM', logger)),
         # ('catboost', LoggingEstimator(catboost_regressor_home, 'CatBoost', logger)),
         ('xgb', LoggingEstimator(xgb_regressor_home, 'XGBoost', logger)),
         ('nn', LoggingEstimator(nn_regressor_home, 'Neural Network', logger)),
-        ('rf', LoggingEstimator(rf_regressor_home, 'Random Forest', logger))
+        ('rf', LoggingEstimator(rf_regressor_home, 'Random Forest', logger)),
+        ('ada', LoggingEstimator(ada_regressor_home, 'AdaBoost', logger))
     ]
     
-    
     stacking_regressor_home = StackingRegressor(estimators=estimators_home, final_estimator=Ridge())
-    
-   
     
     # Perform two separate fits
     logger.info('First fit started')

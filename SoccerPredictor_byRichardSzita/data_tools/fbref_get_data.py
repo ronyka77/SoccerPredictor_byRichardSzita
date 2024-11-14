@@ -180,7 +180,7 @@ def main():
                 {"Match Report": ""}
             ]
         })
-        logging.info(f"Successfully deleted {result.deleted_count} matches that had null dates")
+        logging.info(f"Successfully deleted {result.deleted_count} matches that had null dates or empty scores")
     except Exception as e:
         logging.error(f"Error deleting future/null date matches: {e}")
         raise

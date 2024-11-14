@@ -142,7 +142,7 @@ if __name__ == '__main__':
     try:
         # Ensure indexes exist
         ensure_indexes()
-        delete_matches()
+        # delete_matches()
         # Aggregate and clean the data
         logger.info("Starting data aggregation...")
         aggregated_data = aggregate_data()

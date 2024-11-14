@@ -102,7 +102,7 @@ def get_future_matches(collection, historical_data):
     
     columns_to_drop = [ 'Round','_id_stats'
                         ,'Home_xG', 'Attendance', 'Score', 'Away_xG', '_id', '_id_match', 'Day', 'Time',
-                       'Match Report', 'season', 'league', 'unique_id', 'match', 'team_stats', 'team_stats_extra',
+                       'Match Report', 'season', 'unique_id', 'match', 'team_stats', 'team_stats_extra',
                        'url', 'match_outcome']
     
     future_matches = future_matches.drop(columns=columns_to_drop, errors='ignore')

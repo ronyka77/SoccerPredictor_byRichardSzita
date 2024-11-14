@@ -43,8 +43,8 @@ class ELOCalculator:
             self.elo_ratings[team] = self.INITIAL_ELO
 
         # Add new columns to store ELO ratings before the match
-        matches['home_team_elo'] = 0
-        matches['away_team_elo'] = 0
+        matches['home_team_elo'] = 0.0
+        matches['away_team_elo'] = 0.0
 
         # Process each match and update ELO ratings
         for index, row in matches.iterrows():
@@ -152,4 +152,4 @@ if __name__ == "__main__":
     calculator = ELOCalculator()
     calculator.process_training_data()
     calculator.process_prediction_data()
-    calculator .process_merged_data()
+    calculator.process_merged_data()

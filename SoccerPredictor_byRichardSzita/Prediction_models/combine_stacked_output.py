@@ -26,7 +26,7 @@ model_dir = "./models/"
 os.makedirs(model_dir, exist_ok=True)
 logger.info(f"Model directory created/checked at {model_dir}")
 
-column_order = ['running_id', 'Date', 'league_encoded', 'Home', 'Away', 'Prediction_models', 
+column_order = ['running_id', 'Date', 'league', 'Home', 'Away', 'Prediction_models', 
                 'match_outcome_prediction_rounded', 'home_goals_prediction_rounded',
                 'away_goals_prediction_rounded', 'home_goals_prediction',
                 'away_goals_prediction', 'match_outcome_prediction'
