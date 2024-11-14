@@ -7,10 +7,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from typing import List, Dict
 import logging
 from util_tools.mongo_add_id import mongo_add_running_id
+from util_tools.delete_duplicates import DuplicateHandler
+from util_tools.logging_config import LoggerSetup
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = LoggerSetup.setup_logger(
+    name='aggregation',
+    log_file='./data_tools/log/aggregation.log',
+    level=logging.INFO
+)
 
 # MongoDB setup
 client = MongoClient('192.168.0.77', 27017)
@@ -31,16 +35,16 @@ def ensure_indexes():
     except Exception as e:
         logger.error(f"Error creating indexes: {e}")
 
-def delete_matches():
-    """Delete matches with dates after September 1st, 2024."""
-    try:
-        result = aggregated_collection.delete_many({
-            "Date": {"$gt": "2024-09-01"}
-        })
-        logger.info(f"Successfully deleted {result.deleted_count} future matches")
-    except Exception as e:
-        logger.error(f"Error deleting future matches: {e}")
-        raise
+# def delete_matches():
+#     """Delete matches with dates after September 1st, 2024."""
+#     try:
+#         result = aggregated_collection.delete_many({
+#             "Date": {"$gt": "2024-09-01"}
+#         })
+#         logger.info(f"Successfully deleted {result.deleted_count} future matches")
+#     except Exception as e:
+#         logger.error(f"Error deleting future matches: {e}")
+#         raise
 
 def aggregate_data():
     """Aggregate data with optimized DataFrame operations"""
@@ -142,7 +146,6 @@ if __name__ == '__main__':
     try:
         # Ensure indexes exist
         ensure_indexes()
-        # delete_matches()
         # Aggregate and clean the data
         logger.info("Starting data aggregation...")
         aggregated_data = aggregate_data()
@@ -159,6 +162,8 @@ if __name__ == '__main__':
         else:
             logger.error("No data was aggregated, stopping process")
             
+        duplicate_handler = DuplicateHandler('aggregated_data')
+        duplicate_handler.delete_duplicates()
     except Exception as e:
         logger.error(f"An error occurred: {e}")
     finally:

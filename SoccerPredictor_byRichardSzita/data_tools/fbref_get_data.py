@@ -15,6 +15,9 @@ import logging  # For logging information
 import random  # For random selections, used here for user-agent rotation
 import time  # For adding delays between actions
 import os 
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from util_tools.delete_duplicates import DuplicateHandler
 
 # Set up logging
 log_file_path = './data_tools/log/fbref_get_data.log'
@@ -30,6 +33,21 @@ user_agents = [
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36",
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.90 Safari/537.36"
 ]
+
+try:
+    logging.info("Starting duplicate deletion process")
+    print('Starting duplicate deletion process')
+    # Create duplicate handler instance
+    duplicate_handler = DuplicateHandler('fixtures')
+    
+    # Run duplicate deletion
+    duplicate_handler.delete_duplicates()
+    logging.info("Duplicate deletion completed successfully")
+    
+except Exception as e:
+    logging.error(f"Error during duplicate deletion: {str(e)}")
+    raise
+
 # Function to initialize and configure the Chrome WebDriver with specific options
 def initialize_driver():
     """Initialize the Chrome WebDriver with custom options, including user agent and headless mode."""

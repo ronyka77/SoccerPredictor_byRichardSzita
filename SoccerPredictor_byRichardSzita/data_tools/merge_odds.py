@@ -20,12 +20,18 @@ logger = LoggerSetup.setup_logger(
 # Initialize MongoDB client
 db_client = MongoClient()
 
+# Default collection names
+MATCH_STATS_COLLECTION = 'fixtures'
+
+# Drop 'League' and '_id' columns if they exist in the merged_row
+columns_to_drop = ['League', '_id']
+
 # Function to drop Odd_Home, Odd_Away, and Odd_Draw columns from the aggregated_data collection in MongoDB
-def drop_odds_columns() -> None:
-    """Drop Odd_Home, Odd_Away, and Odd_Draw columns from the aggregated_data collection in MongoDB."""
+def drop_odds_columns(collection_name: str = MATCH_STATS_COLLECTION) -> None:
+    """Drop Odd_Home, Odd_Away, and Odd_Draw columns from the specified collection in MongoDB."""
     try:
         with db_client.get_database() as db:
-            result = db.fixtures.update_many(
+            result = db[collection_name].update_many(
                 {},
                 {"$unset": {"Odd_Home": "", "Odd_Away": "", "Odds_Draw": ""}}
             )
@@ -34,22 +40,21 @@ def drop_odds_columns() -> None:
         logger.error(f"Failed to drop columns: {str(e)}")
         raise
 
-# drop_odds_columns()
+# drop_odds_columns() #Only use if you need to drop the odds columns from the collection
 
-def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Load data from match_stats and odds_data collections in MongoDB.
-    
-    Returns:
-        Tuple[pd.DataFrame, pd.DataFrame]: Match stats and odds data frames
-    
-    Raises:
-        ConnectionError: If MongoDB connection fails
-    """
+def load_data(match_stats_collection: str = MATCH_STATS_COLLECTION) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Load data from match_stats and odds_data collections in MongoDB."""
     try:
         with db_client.get_database() as db:
-           
             odds_data_df = pd.DataFrame(list(db.odds_data.find()))
-            match_stats_df = pd.DataFrame(list(db.fixtures.find({"Odd_Home": {"$exists": False}})))
+            match_stats_df = pd.DataFrame(list(db[match_stats_collection].find({
+                "$or": [
+                    {"Odds_Draw": {"$exists": False}},
+                    {"Odds_Draw": None},
+                    {"Odds_Draw": ""},
+                    {"Odds_Draw": "-"}
+                ]
+            })))
             match_stats_df['Date'] = pd.to_datetime(match_stats_df['Date'])
             odds_data_df['Date'] = pd.to_datetime(odds_data_df['Date'])
             match_stats_df = match_stats_df[match_stats_df['Date'] < odds_data_df['Date'].max()]
@@ -141,60 +146,53 @@ def fuzzy_merge_row(row: pd.Series, odds_data_df: pd.DataFrame, threshold: int =
         logger.error(f"Error processing row: {str(e)}")
         return row.to_dict(), None
 
-def store_aggregated_data_row_by_row(df: pd.DataFrame) -> None:
-    """Store each row of the DataFrame into the aggregated_data collection in MongoDB.
-    
-    Args:
-        df (pd.DataFrame): DataFrame containing the data to be stored.
-    
-    Raises:
-        ValueError: If the DataFrame is empty.
-    """
+def store_aggregated_data_row_by_row(df: pd.DataFrame, collection_name: str = MATCH_STATS_COLLECTION) -> None:
+    """Store each row of the DataFrame into the specified collection in MongoDB."""
     if df.empty:
         logger.error("The DataFrame to store is empty.")
         raise ValueError("The DataFrame to store is empty.")
     
     try:
         with db_client.get_database() as db:
-            collection = db.aggregated_data
+            collection = db[collection_name]
             operations = []
             for _, row in df.iterrows():
                 # Convert the row to a dictionary and prepare the update operation
                 row_dict = row.to_dict()
                 running_id = row_dict.get('running_id')
                 if running_id is not None:
-                    operations.append(
-                        UpdateOne(
-                            {'running_id': running_id},
-                            {'$set': row_dict},
-                            upsert=True
+                    # Only update odds-related fields
+                    odds_update = {
+                        k: v for k, v in row_dict.items() 
+                        if k in ['Odd_Home', 'Odd_Away', 'Odds_Draw']
+                    }
+                    if odds_update:
+                        operations.append(
+                            UpdateOne(
+                                {'running_id': running_id},
+                                {'$set': odds_update},
+                                upsert=True
+                            )
                         )
-                    )
             
-            for operation in operations:
-                result = collection.update_one(operation.filter, operation.update, upsert=True)
-                if result.modified_count > 0 or result.upserted_id is not None:
-                    logger.info(f"Inserted/Updated document with filter: {operation.filter}")
-                else:
-                    logger.warning(f"No changes made for document with filter: {operation.filter}")
+            if operations:
+                result = collection.bulk_write(operations)
+                logger.info(f"Bulk write result: {result.bulk_api_result}")
     
     except Exception as e:
         logger.error(f"Failed to store data row by row: {str(e)}")
         raise
     
-# Drop 'League' and '_id' columns if they exist in the merged_row
-columns_to_drop = ['League', '_id']
-
-def main() -> None:
+def main(match_stats_collection: str = MATCH_STATS_COLLECTION) -> None:
     try:
         # Add collection verification
         with db_client.get_database() as db:
             logger.info(f"Available collections: {db.list_collection_names()}")
-            logger.info(f"Fixtures count: {db.fixtures.count_documents({})}")
+            logger.info(f"Fixtures count: {db[match_stats_collection].count_documents({})}")
             logger.info(f"Odds data count: {db.odds_data.count_documents({})}")
 
         # Load data
-        match_stats_df, odds_data_df = load_data()
+        match_stats_df, odds_data_df = load_data(match_stats_collection)
         
         # Log data shapes for debugging
         logger.info(f"Loaded match_stats shape: {match_stats_df.shape}")
@@ -209,7 +207,7 @@ def main() -> None:
             merged_data.append(merged_row)
             if merged_row and not pd.isna(merged_row.get('Odd_Home')):
                 merged_row = {k: v for k, v in merged_row.items() if k not in columns_to_drop}
-                store_aggregated_data_row_by_row(pd.DataFrame([merged_row]))
+                store_aggregated_data_row_by_row(pd.DataFrame([merged_row]), match_stats_collection)
                 logger.info(f"Successfully stored row: {merged_row['unique_id']}")
             if unmatched_pair:
                 unmatched_pairs.append(unmatched_pair)

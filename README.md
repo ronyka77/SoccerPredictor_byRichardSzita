@@ -4,7 +4,9 @@
 ![Python](https://img.shields.io/badge/Python-3.8+-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-A comprehensive machine learning pipeline designed to predict football match outcomes, combining ensemble learning techniques and neural networks for enhanced predictive accuracy. Built with modern data science practices and scalable architecture.
+## 🏆 Project Overview
+
+The Soccer Predictor by Richard Szita is an advanced machine learning pipeline designed to forecast football match outcomes with high accuracy. By leveraging a combination of ensemble learning techniques and neural networks, the system integrates data collection, feature engineering, and prediction models to deliver precise match predictions. Key functionalities include automated data scraping, sophisticated feature engineering, and a state-of-the-art stacked ensemble model that predicts match results, home goals, and away goals. This project is built with modern data science practices and a scalable architecture, making it a powerful tool for football analytics enthusiasts and professionals alike.
 
 ## 🎯 System Overview
 
@@ -14,6 +16,57 @@ The system consists of three powerful, integrated components:
 2. 🔧 Feature Engineering - Advanced statistical modeling
 3. 🤖 Prediction Models - State-of-the-art ML ensemble
 
+## 🏗️ Model Architecture
+
+The Soccer Predictor employs a sophisticated stacked ensemble model to predict football match outcomes. The architecture is designed to leverage the strengths of various machine learning algorithms, ensuring robust and accurate predictions. Below are the key components and innovations of the model:
+
+### Ensemble Components
+
+The model utilizes a stacked ensemble approach, combining the predictive power of several machine learning algorithms:
+
+- **LightGBM**: Known for its efficiency and speed, LightGBM is used for handling large datasets and providing high accuracy.
+- **XGBoost**: A powerful gradient boosting framework that excels in predictive performance, particularly for structured data.
+- **Neural Networks**: Implemented using Keras, the neural network component is tailored for capturing complex patterns in the data.
+- **Random Forest**: Provides robustness and reduces overfitting by averaging multiple decision trees.
+- **AdaBoost**: Enhances the model's performance by focusing on difficult-to-predict instances.
+
+### Neural Network Architecture
+
+The neural network is constructed using Keras with the following architecture:
+
+- **Layers**: Includes Dense, Dropout, BatchNormalization, and Activation layers.
+- **Activation Functions**: Utilizes ReLU for hidden layers and linear activation for the output layer.
+- **Regularization**: L2 regularization is applied to prevent overfitting.
+- **Callbacks**: Incorporates EarlyStopping and a custom learning rate scheduler to optimize training.
+
+### Stacking Methodology
+
+The ensemble models are combined using a stacking regressor, with a Ridge regression model serving as the meta-learner. This approach allows the model to learn from the predictions of individual models, improving overall accuracy.
+
+### Feature Engineering
+
+Feature engineering is a critical component of the model, involving:
+
+- **Polynomial Features**: Generated to capture non-linear relationships in the data.
+- **Recursive Feature Elimination (RFE)**: Used for selecting the most relevant features, enhancing model performance.
+
+### Data Flow
+
+The data processing pipeline includes several stages:
+
+1. **Data Gathering**: Automated scripts collect data from various sources.
+2. **Odds Scraping**: Retrieves betting odds to incorporate into the model.
+3. **Data Merging and Aggregation**: Combines and processes data for feature engineering.
+4. **Feature Engineering**: Enhances data with additional features for improved predictions.
+5. **Model Training**: Trains the ensemble model using historical data.
+6. **Prediction**: Generates predictions for upcoming matches.
+
+### Innovations
+
+The model benefits from the domain knowledge of a late football player, incorporating insights into the sport's dynamics. This expertise is reflected in the feature engineering and model design, providing a unique edge in predicting match outcomes.
+
+This architecture ensures that the Soccer Predictor is both powerful and flexible, capable of delivering high-accuracy predictions for football matches.
+
 ## ✨ Features
 
 ### 📥 Data Collection & Storage
@@ -22,15 +75,16 @@ The system consists of three powerful, integrated components:
   - FBRef match data and statistics (comprehensive match-level data)
   - Team performance metrics (historical and real-time)
   - Historical match data (for model training)
+  - Betting odds data (for incorporating market insights)
 - MongoDB integration for efficient data storage
-- Backup system included with data validation
+- Backup and restore system included with data validation
 
 ### 🛠️ Feature Engineering
 
 Two-tiered approach for maximum accuracy:
 
 1. Python-based processing:
-   - Rolling averages calculation with configurable windows
+   
    - Cumulative statistics tracking:
      - Season-to-date goal sums
      - Running point totals
@@ -41,14 +95,14 @@ Two-tiered approach for maximum accuracy:
    - Expected goals (xG) modeling using Poisson regression
 
 2. Power BI advanced processing:
-   - Complex feature derivation with DAX
+   - Complex feature derivation with DAX language
+   - Rolling averages calculation
    - Interactive data visualization
    - Export capabilities for model training
 
 ### 🎯 Prediction Models
 
 State-of-the-art stacked ensemble combining:
-
 - LightGBM (gradient boosting)
 - CatBoost (gradient boosting)
 - XGBoost (gradient boosting)
@@ -305,3 +359,5 @@ Contributions are welcome! Please fork the repository and submit pull requests w
 For support or questions, please contact the project maintainers at:
 
 - Email: <szitar.9@gmail.com>
+
+
