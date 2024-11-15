@@ -1,1 +1,6 @@
 SoccerPredictor_byRichardSzita/models/*.pkl filter=lfs diff=lfs merge=lfs -text
+SoccerPredictor_byRichardSzita/data/processed/*.csv filter=lfs diff=lfs merge=lfs -text
+SoccerPredictor_byRichardSzita/data/raw/*.csv filter=lfs diff=lfs merge=lfs -text
+SoccerPredictor_byRichardSzita/Prediction_models/models/*.pkl filter=lfs diff=lfs merge=lfs -text
+SoccerPredictor_byRichardSzita/Prediction_models/selected_features/*.csv filter=lfs diff=lfs merge=lfs -text
+
