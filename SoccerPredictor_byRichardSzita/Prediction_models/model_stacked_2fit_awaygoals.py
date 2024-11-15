@@ -35,6 +35,8 @@ import cloudpickle as cp
 import dill
 from lightgbm import LGBMRegressor 
 from catboost import CatBoostRegressor
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import brier_score_loss
 manual_variable_initialization(True)
 # Import utilities
 import logging
@@ -109,18 +111,19 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
                                'home_points_rolling_avg','away_points_rolling_avg','home_advantage',
                                'Odd_Home','Odds_Draw','Odd_Away'], errors='ignore')
 
-# Load previously predicted scores
-try:
-    real_scores = pd.read_excel(real_scores_path)
-    real_scores = real_scores[real_scores['Date'] < '2024-11-06']
-    real_scores = real_scores.dropna(subset=['real_score'])
-    real_scores.replace([np.inf, -np.inf], np.nan, inplace=True)
-    logger.info(f"Previously predicted scores loaded from {real_scores_path} with shape: {real_scores.shape}")
-    # print(real_scores.head())
-   
-except Exception as e:
-    logger.error(f"Error loading previously predicted scores: {e}")
-    raise
+
+def load_real_scores():
+    # Load previously predicted scores
+    try:
+        real_scores = pd.read_excel(real_scores_path)
+        real_scores = real_scores[real_scores['Date'] < '2024-11-06']
+        real_scores = real_scores.dropna(subset=['real_score'])
+        real_scores.replace([np.inf, -np.inf], np.nan, inplace=True)
+        logger.info(f"Previously predicted scores loaded from {real_scores_path} with shape: {real_scores.shape}")
+        # print(real_scores.head())
+    except Exception as e:
+        logger.error(f"Error loading previously predicted scores: {e}")
+        raise
 
 # Prepare real scores data for additional fit
 def prepare_real_scores_data(real_scores: pd.DataFrame, new_prediction_data: pd.DataFrame, base_data: pd.DataFrame, model_type: str, original_features: list) -> pd.DataFrame:
@@ -230,29 +233,6 @@ def additional_fit_with_real_scores(model: StackingRegressor, real_scores_data: 
     else:
         logger.info("No incorrect predictions found; no additional fitting needed.")
 
-# def perform_feature_selection(X_train_scaled: np.ndarray, y_train: pd.Series, model_dir: str, model_type: str, logger: logging.Logger) -> RFE:
-#     """
-#     Perform feature selection using Recursive Feature Elimination (RFE) with a RandomForestRegressor.
-
-#     Args:
-#         y_train (pd.Series): Training target variable.
-#         model_dir (str): Directory to save model artifacts.
-#         model_type (str): The type of model to train.
-#         logger (logging.Logger): Logger for logging information.
-
-#     Returns:
-#         RFE: The fitted RFE selector.
-#     """
-#     logger.info("Feature Selection started.")
-#     selector = RFE(estimator=RandomForestRegressor(), n_features_to_select=40)
-#     selector.fit(X_train_scaled, y_train)
-#     # Save the RFE selector for future use
-#     selector_file = os.path.join(model_dir, 'rfe_' + model_type + '_selector.pkl')
-#     joblib.dump(selector, selector_file)
-#     logger.info(f"RFE selector saved to {selector_file}")
-    
-#     return selector
-
 # Train the model
 def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, model_dir: str, logger: logging.Logger) -> StackingRegressor:
     """
@@ -270,6 +250,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     """
     global selected_features
     global numeric_features
+    global X_train, X_test, y_train, y_test
     # Select all numeric features
     numeric_features = data.select_dtypes(include=['float64', 'int64']).columns.tolist()
     logger.info(f"Numeric features: {numeric_features}")
@@ -284,6 +265,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     X_poly = poly.fit_transform(X)
     
     # Train-test split
+    
     X_train, X_test, y_train, y_test = train_test_split(X_poly, y, test_size=0.3, random_state=42)
     logger.info(f"Data split into train and test. Train shape: {X_train.shape}, Test shape: {X_test.shape}")
     # Second fit on a different random split (or different configuration)
@@ -489,35 +471,62 @@ def make_prediction(model_type: str, model: StackingRegressor, prediction_data: 
     prediction_data.to_excel(output_file, index=False)
     logger.info(f"Predictions saved to {output_file}")
 
-prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals', 'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
-prediction_df = prediction_df.replace(',', '.', regex=True)
-prediction_df = prediction_df.apply(pd.to_numeric, errors='coerce')
-prediction_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+if __name__ == "__main__":
+    prediction_df = new_prediction_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Date', 'Unnamed: 0','match_outcome', 'home_goals','away_goals', 'draw', 'away_win', 'home_win','away_points', 'home_points','HomeTeam_last_away_match','AwayTeam_last_home_match','home_points_rolling_avg','away_points_rolling_avg','home_advantage'], errors='ignore')
+    prediction_df = prediction_df.replace(',', '.', regex=True)
+    prediction_df = prediction_df.apply(pd.to_numeric, errors='coerce')
+    prediction_df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-logger.info(f"prediction_df length: {len(prediction_df)}")
-stacking_regressor = train_model(base_data, data, model_type, model_dir, logger)
-logger.info(f"Start {model_type} predictions")
+    logger.info(f"prediction_df length: {len(prediction_df)}")
+    stacking_regressor = train_model(base_data, data, model_type, model_dir, logger)
 
-# MAKE PREDICTIONS
-try:
-    make_prediction(model_type, stacking_regressor, prediction_df, model_dir, logger, numeric_features)   
+    # Calibrate the model using isotonic regression
+    calibrated_model_iso = CalibratedClassifierCV(stacking_regressor, method='isotonic', cv='prefit')
+    # Use global test data from earlier train_test_split
+    calibrated_model_iso.fit(X_test, y_test)
+
+    # Evaluate the calibrated model
+    prob_pos_iso = calibrated_model_iso.predict_proba(X_test)[:, 1]
+    brier_score_iso = brier_score_loss(y_test, prob_pos_iso)
+    logger.info(f"Brier score (Isotonic regression): {brier_score_iso}")
+
+    # MAKE PREDICTIONS
+    try:
+        logger.info(f"Start {model_type} predictions")
+        make_prediction(model_type, stacking_regressor, prediction_df, model_dir, logger, numeric_features)          
+    except Exception as e:
+        logger.error(f"Error occurred while making prediction: {e}")
+        pass
+
+    # Initialize the wrappers
+    try:
+        nn_model = stacking_regressor.named_estimators_['nn'].model_
+        if nn_model is None:
+            raise AttributeError("The underlying model is not accessible.")
         
-except Exception as e:
-    logger.error(f"Error occurred while making prediction: {e}")
-    pass
+        # Save the neural network model separately first
+        nn_model.save(keras_nn_model_path, save_format='h5')
+        logger.info(f"Neural network model saved to {keras_nn_model_path}")
+        
+    except AttributeError as e:
+        logger.error(f"Error occurred while accessing the model: {e}")
+        raise
 
-# Initialize the wrappers
-try:
-    nn_model = stacking_regressor.named_estimators_['nn'].model_
-    if nn_model is None:
-        raise AttributeError("The underlying model is not accessible.")
-except AttributeError as e:
-    logger.error(f"Error occurred while accessing the model: {e}")
-    raise
+    # Create custom stacking regressor with saved model paths
+    custom_model = CustomStackingRegressor(
+        stacking_regressor,
+        nn_model,
+        keras_nn_model_path,
+        custom_objects={
+            'WithinRangeMetric': WithinRangeMetric,
+            'within_range_metric': WithinRangeMetric(),
+            'CustomReduceLROnPlateau': CustomReduceLROnPlateau,
+            'CustomStackingRegressor': CustomStackingRegressor,
+            'LoggingEstimator': LoggingEstimator
+        }
+    )
 
-custom_model = CustomStackingRegressor(stacking_regressor, 
-                                       nn_model,
-                                       keras_nn_model_path)
+    # Save the complete stacking model
+    custom_model.save(model_file)
+    logger.info(f"Complete stacking model saved to {model_file}")
 
-# Save the model (this will save both the Keras model and the rest of the stacking regressor)
-custom_model.save(model_file)

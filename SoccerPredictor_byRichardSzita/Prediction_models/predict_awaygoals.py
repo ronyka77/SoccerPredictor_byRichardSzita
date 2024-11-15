@@ -10,6 +10,8 @@ from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from util_tools.logging_config import LoggerSetup
 from util_tools.model_classes import CustomStackingRegressor, CustomReduceLROnPlateau, WithinRangeMetric, LoggingEstimator
 from util_tools.model_functions import create_neural_network, prepare_data, prepare_new_data
+import cloudpickle
+from keras.metrics import Metric
 
 # Set up logger
 logger = LoggerSetup.setup_logger(
@@ -26,16 +28,54 @@ model_file = os.path.join(model_dir, f'model_stacked_2fit_{model_type}.pkl')
 
 logger.info(f"Model paths set: keras_nn_model_path={keras_nn_model_path}, model_file={model_file}")
 
+# Test serialization and deserialization
+def test_serialization():
+    # Create an instance of the custom metric
+    original_metric = WithinRangeMetric()
+
+    # Serialize the object
+    with open('metric.pkl', 'wb') as f:
+        cloudpickle.dump(original_metric, f)
+
+    # Deserialize the object
+    with open('metric.pkl', 'rb') as f:
+        loaded_metric = cloudpickle.load(f)
+
+    # Verify that the deserialized object is the same as the original
+    assert original_metric.get_config() == loaded_metric.get_config(), "Config mismatch after deserialization"
+
+    print("Serialization and deserialization test passed.")
+
+class CustomMetric(Metric):
+    def get_config(self):
+        # Return a dictionary of the configuration
+        return super().get_config()
+
+    @classmethod
+    def from_config(cls, config):
+        # Create an instance from the configuration
+        return cls(**config)
+    
+# Run the test
+test_serialization()
+
+# Clean up
+os.remove('metric.pkl')
+
 # Define custom objects
 custom_objects = {
     'WithinRangeMetric': WithinRangeMetric,
     'within_range_metric': WithinRangeMetric(),
-    'CustomReduceLROnPlateau': CustomReduceLROnPlateau
+    'CustomReduceLROnPlateau': CustomReduceLROnPlateau,
+    '_tf_keras_metric': CustomMetric,
+    'CustomStackingRegressor': CustomStackingRegressor,
+    'LoggingEstimator': LoggingEstimator,
+    # Add any other necessary custom objects here
 }
 
 logger.info("Custom objects defined for model loading.")
 
-# Load the trained model
+# Load the model
 try:
     logger.info("Attempting to load the trained model.")
     custom_model = CustomStackingRegressor.load(model_file, keras_nn_model_path, custom_objects=custom_objects)
@@ -106,3 +146,9 @@ output_file = f'./made_predictions/predictions_{model_type}_new.xlsx'
 logger.info(f"Saving predictions to {output_file}")
 new_data.to_excel(output_file, index=False)
 logger.info(f"Predictions saved successfully to {output_file}")
+
+
+
+
+
+

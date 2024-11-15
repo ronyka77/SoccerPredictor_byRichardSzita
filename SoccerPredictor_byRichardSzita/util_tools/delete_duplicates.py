@@ -60,6 +60,7 @@ class DuplicateHandler:
             "ü": "u",
             "ñ": "n", 
             "Arminia": "Arminia Bielefeld",
+            "AC Ajaccio": "Ajaccio",
             "Athletic Club": "Ath Bilbao",
             "Atletico Madrid": "Atl. Madrid", 
             "Athletic Club": "Athletic Bilbao",
@@ -81,7 +82,8 @@ class DuplicateHandler:
             "Saint-Étienne": "St Etienne",
             "Newcastle Utd": "Newcastle",
             "Norwich City": "Norwich",
-            "Mainz 05": "Mainz"
+            "Mainz 05": "Mainz",
+            "Sparta R'dam": "Sparta Rotterdam"
         }
         name = str(name).strip()
         for old, new in replacements.items():
