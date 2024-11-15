@@ -65,8 +65,11 @@ class DuplicateHandler:
             "Atletico Madrid": "Atl. Madrid", 
             "Athletic Club": "Athletic Bilbao",
             "Athletico Paranaense": "Athletico-PR",
+            "Bayern Munich de": "Bayern Munich",
             "B. Monchengladbach": "Gladbach",
             "Cádiz": "Cadiz CF  ",
+            "Estudiantes L.P.": "Estudiantes",
+            "Eint Frankfurt": "Eintracht Frankfurt",
             "Nott'ham Forest": "Nottingham",
             "Paris S-G": "PSG",
             "Leeds United": "Leeds",
@@ -79,11 +82,13 @@ class DuplicateHandler:
             "Hellas Verona": "Verona",
             "Hertha BSC":"Hertha Berlin",
             "Luton Town": "Luton",
-            "Saint-Étienne": "St Etienne",
             "Newcastle Utd": "Newcastle",
             "Norwich City": "Norwich",
             "Mainz 05": "Mainz",
-            "Sparta R'dam": "Sparta Rotterdam"
+            "Oxford United": "Oxford Utd",
+            "Sparta R'dam": "Sparta Rotterdam",
+            "Saint-Étienne": "St Etienne",
+            "Swansea City": "Swansea"
         }
         name = str(name).strip()
         for old, new in replacements.items():
