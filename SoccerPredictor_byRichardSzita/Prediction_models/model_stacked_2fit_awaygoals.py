@@ -480,15 +480,6 @@ if __name__ == "__main__":
     logger.info(f"prediction_df length: {len(prediction_df)}")
     stacking_regressor = train_model(base_data, data, model_type, model_dir, logger)
 
-    # Calibrate the model using isotonic regression
-    calibrated_model_iso = CalibratedClassifierCV(stacking_regressor, method='isotonic', cv='prefit')
-    # Use global test data from earlier train_test_split
-    calibrated_model_iso.fit(X_test, y_test)
-
-    # Evaluate the calibrated model
-    prob_pos_iso = calibrated_model_iso.predict_proba(X_test)[:, 1]
-    brier_score_iso = brier_score_loss(y_test, prob_pos_iso)
-    logger.info(f"Brier score (Isotonic regression): {brier_score_iso}")
 
     # MAKE PREDICTIONS
     try:

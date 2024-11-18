@@ -132,8 +132,22 @@ class DuplicateHandler:
                 
                 # Pre-standardize all team names to avoid repeated processing
                 for doc in documents:
-                    doc['std_home'] = self.standardize_name(doc.get('Home', ''))
-                    doc['std_away'] = self.standardize_name(doc.get('Away', ''))
+                    # Standardize names and update in MongoDB
+                    std_home = self.standardize_name(doc.get('Home', ''))
+                    std_away = self.standardize_name(doc.get('Away', ''))
+                    
+                    # Store standardized names in doc for later use
+                    doc['std_home'] = std_home
+                    doc['std_away'] = std_away
+                    
+                    # Update MongoDB document with standardized names
+                    collection.update_one(
+                        {'_id': doc['_id']},
+                        {'$set': {
+                            'Home': std_home,
+                            'Away': std_away
+                        }}
+                    )
                     try:
                         doc['date_obj'] = pd.to_datetime(doc.get('Date', ''))
                     except:

@@ -175,6 +175,7 @@ def generate_urls(leagues, years):
     return urls  # Return all generated URLs for scraping
 
 urls = generate_urls(LEAGUES, YEARS)  # Generate URLs using LEAGUES and YEARS
+
 def initialize_driver() -> webdriver.Chrome:
     """
     Initialize the Chrome WebDriver with custom options, including a random user agent and headless mode.
