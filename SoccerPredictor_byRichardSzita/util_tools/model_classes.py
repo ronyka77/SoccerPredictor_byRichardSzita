@@ -4,6 +4,9 @@ import keras.backend as K
 import numpy as np
 import cloudpickle as cp
 from keras.models import load_model
+from lightgbm import LGBMRegressor
+# from lightgbm.basic import _LightGBMError as LightGBMError
+
 from sklearn.base import BaseEstimator, RegressorMixin
 import time
 
@@ -110,6 +113,7 @@ class CustomStackingRegressor:
         return cls(stacking_regressor, keras_model, keras_model_path)
 
 class LoggingEstimator(BaseEstimator, RegressorMixin):
+    
     def __init__(self, estimator, name, logger):
         self.estimator = estimator
         self.name = name
@@ -129,3 +133,28 @@ class LoggingEstimator(BaseEstimator, RegressorMixin):
     @property
     def model_(self):
         return getattr(self.estimator, 'model_', None) 
+    
+# You can also create a callback to handle early stopping more explicitly
+class EarlyStoppingCallback:
+    def __init__(self, stopping_rounds, verbose=True):
+        self.stopping_rounds = stopping_rounds
+        self.verbose = verbose
+        self.best_score = None
+        self.best_iteration = 0
+        self.counter = 0
+
+    def __call__(self, env):
+        score = env.evaluation_result_list[0][2]
+        iteration = env.iteration
+
+        if self.best_score is None or score > self.best_score:
+            self.best_score = score
+            self.best_iteration = iteration
+            self.counter = 0
+        else:
+            self.counter += 1
+
+        if self.counter >= self.stopping_rounds:
+            if self.verbose:
+                print(f'Early stopping at iteration {iteration}')
+            raise LightGBMError('Early stopping')

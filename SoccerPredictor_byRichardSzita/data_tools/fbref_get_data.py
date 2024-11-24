@@ -18,6 +18,13 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from util_tools.delete_duplicates import DuplicateHandler
+# Suppress pandas warnings about duplicate columns
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning, module='pandas')
+warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
+warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
+# Add this specific warning filter
+warnings.filterwarnings('ignore', message='DataFrame columns are not unique')
 
 # Set up logging
 log_file_path = './data_tools/log/fbref_get_data.log'
@@ -34,19 +41,25 @@ user_agents = [
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.90 Safari/537.36"
 ]
 
-try:
-    logging.info("Starting duplicate deletion process")
-    print('Starting duplicate deletion process')
-    # Create duplicate handler instance
-    duplicate_handler = DuplicateHandler('fixtures')
+def delete_duplicate_fixtures():
+    """Delete duplicate entries from the fixtures collection in MongoDB.
     
-    # Run duplicate deletion
-    duplicate_handler.delete_duplicates()
-    logging.info("Duplicate deletion completed successfully")
-    
-except Exception as e:
-    logging.error(f"Error during duplicate deletion: {str(e)}")
-    raise
+    Raises:
+        Exception: If there is an error during the duplicate deletion process.
+    """
+    try:
+        logging.info("Starting duplicate deletion process")
+        print('Starting duplicate deletion process')
+        # Create duplicate handler instance
+        duplicate_handler = DuplicateHandler('fixtures')
+        
+        # Run duplicate deletion
+        duplicate_handler.delete_duplicates()
+        logging.info("Duplicate deletion completed successfully")
+        
+    except Exception as e:
+        logging.error(f"Error during duplicate deletion: {str(e)}")
+        raise
 
 # Function to initialize and configure the Chrome WebDriver with specific options
 def initialize_driver():
@@ -80,13 +93,13 @@ def get_all_urls():
         ('Serie-B','38'),  # Brazil Serie B
         ('Liga-Profesional-Argentina', '21'),  # Argentina
         ('Eredivisie','23'),  # Netherlands
+        ('Eerste-Divisie','51'),  # Netherlands
         ('J1-League','25'),  # Japan
-        ('Allsvenskan','29'),  # Sweden
         ('Russian-Premier-League','30'),  # Russia
         ('Primeira-Liga','32'),  # Portugal
         ('Ekstraklasa','36'),  # Poland
-        ('Superettan','48'),  # Sweden
-        ('Eerste-Divisie','51')  # Netherlands
+        ('Allsvenskan','29'),  # Sweden
+        ('Superettan','48')  # Sweden
     ]
 
     # Specific seasons to scrape data for; add additional seasons as needed
@@ -149,7 +162,7 @@ def get_html_data(url, league, season, collection):
             # Ensure the data length matches headers by adjusting as needed
             if len(flat_data) > len(headers):
                 flat_data = flat_data[:-1]  # Remove extra items if present
-                print(flat_data)
+                # print(flat_data)
                 if len(flat_data) > len(headers):
                     headers.append('Matchweek Number')  # Re-add 'Matchweek Number' if data requires it
             
@@ -158,6 +171,11 @@ def get_html_data(url, league, season, collection):
             fixtures = df  # Assign DataFrame to fixtures
             fixtures['season'] = season  # Add season as a column
             fixtures['league'] = league  # Add league as a column
+
+            fixtures['Home'] = DuplicateHandler.standardize_name(fixtures['Home'].iloc[0])
+            fixtures['Away'] = DuplicateHandler.standardize_name(fixtures['Away'].iloc[0])
+            # print(fixtures['Home'])
+            # print(fixtures['Away'])
             
             # Generate a unique identifier based on date, home, and away team names
             fixtures['unique_id'] = fixtures['Date'] + "_" + fixtures['Home'] + "_" + fixtures['Away']
@@ -183,13 +201,18 @@ def get_html_data(url, league, season, collection):
 
     print(f"Data successfully inserted for {league} {season}.")  # Print completion message for league/season
 
-# Main function to initialize MongoDB, generate URLs, and run scraping
-def main():
-    """Main execution function to scrape data and store it in MongoDB."""
-    client = MongoClient('192.168.0.77', 27017)  # Connect to MongoDB server
-    db = client['football_data']  # Database for storing football data
-    collection = db['fixtures']  # Collection for fixtures
-    # Delete matches with null dates
+def delete_invalid_matches(collection):
+    """Delete matches with null dates, empty scores, or missing match reports from the collection.
+    
+    Args:
+        collection: MongoDB collection containing match data
+        
+    Returns:
+        None
+        
+    Raises:
+        Exception: If deletion operation fails
+    """
     try:
         result = collection.delete_many({
             "$or": [
@@ -202,6 +225,14 @@ def main():
     except Exception as e:
         logging.error(f"Error deleting future/null date matches: {e}")
         raise
+
+# Main function to initialize MongoDB, generate URLs, and run scraping
+def main():
+    """Main execution function to scrape data and store it in MongoDB."""
+    client = MongoClient('192.168.0.77', 27017)  # Connect to MongoDB server
+    db = client['football_data']  # Database for storing football data
+    collection = db['fixtures']  # Collection for fixtures
+    delete_invalid_matches(collection)
     
     all_urls = get_all_urls()  # Generate URLs for scraping
 
@@ -217,6 +248,7 @@ def main():
 
     driver.quit()  # Close the WebDriver after scraping
     logging.info("All data scraped and stored in MongoDB successfully.")  # Log final completion
+    delete_duplicate_fixtures()
 
 # Run the main function if the script is executed directly
 if __name__ == "__main__":

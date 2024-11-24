@@ -16,6 +16,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from util_tools.logging_config import LoggerSetup
 from util_tools.database import MongoClient  # Import MongoClient from database.py
+from util_tools.delete_duplicates import DuplicateHandler
 
 logger = LoggerSetup.setup_logger(
     name='odds_scraper',
@@ -105,11 +106,11 @@ def generate_urls(leagues, years):
         })
         
         # URLs for past seasons with specified years
-        # for year in years:
-        #     urls.append({
-        #         "url": f"https://www.oddsportal.com/soccer/{country}/{league}-{year}/results/",
-        #         "league": league
-        #     })
+        for year in years:
+            urls.append({
+                "url": f"https://www.oddsportal.com/soccer/{country}/{league}-{year}/results/",
+                "league": league
+            })
     
     # Define a dictionary to organize special URLs by league
     special_urls_by_league = {
@@ -254,7 +255,8 @@ def parse_date(event):
                         logger.info(f"Date found: {datum}")
                         return datum
                     except ValueError:
-                        logger.info(f"Wrong date format: {date_part}")
+                        # logger.info(f"Wrong date format: {date_part}")
+                        pass
     except Exception as e:
         logger.error(f"Failed to parse date: {e}")
     # logger.warning(f"Date format not recognized for '{date_text}'. Skipping event.")
@@ -283,6 +285,8 @@ def process_event(event, league, actual_date):
 
     # Extract home and away teams, generate unique_id
     home_team, away_team = odds[1], odds[2]
+    home_team = DuplicateHandler.standardize_name(home_team)
+    away_team = DuplicateHandler.standardize_name(away_team)
     unique_id = f"{actual_date}_{home_team}_{away_team}"
     
     # Create event data dictionary
@@ -359,6 +363,10 @@ def insert_to_mongodb(data):
     collection = initialize_mongodb()  # Access MongoDB collection
     if data:
         for record in data:
+            # Home = DuplicateHandler.standardize_name(record['Home'])
+            # Away = DuplicateHandler.standardize_name(record['Away'])
+            print(f"{record['Date']}-{record['Home']}-{record['Away']}")
+            
             # Define the filter to check if a matching record exists
             filter_query = {
                 'Date': record['Date'],

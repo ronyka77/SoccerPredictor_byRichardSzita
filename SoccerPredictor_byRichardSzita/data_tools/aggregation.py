@@ -35,17 +35,6 @@ def ensure_indexes():
     except Exception as e:
         logger.error(f"Error creating indexes: {e}")
 
-# def delete_matches():
-#     """Delete matches with dates after September 1st, 2024."""
-#     try:
-#         result = aggregated_collection.delete_many({
-#             "Date": {"$gt": "2024-09-01"}
-#         })
-#         logger.info(f"Successfully deleted {result.deleted_count} future matches")
-#     except Exception as e:
-#         logger.error(f"Error deleting future matches: {e}")
-#         raise
-
 def aggregate_data():
     """Aggregate data with optimized DataFrame operations"""
     try:

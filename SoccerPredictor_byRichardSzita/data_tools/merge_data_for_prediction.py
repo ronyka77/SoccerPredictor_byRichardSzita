@@ -89,7 +89,7 @@ def get_future_matches(collection, historical_data):
     # future_matches = pd.DataFrame(list(collection.find({"match_outcome": {"$eq": None}})))
     # Query MongoDB for future matches (after 2024-10-22) where match_outcome is still None
     future_matches = pd.DataFrame(list(collection.find({
-        "Date": {"$gt": '2024-10-21'}
+        "Date": {"$gt": '2024-10-30'}
     })))
     
     if future_matches.empty:

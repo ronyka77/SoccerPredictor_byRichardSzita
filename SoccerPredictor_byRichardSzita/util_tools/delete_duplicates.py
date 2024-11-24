@@ -43,14 +43,57 @@ class DuplicateHandler:
             return ""
             
         replacements = {
+            # Common symbols
+            "'": "",
+            "-": " ",
+            ".": " ",
+            "_": " ",
+            "&": "and",
+            "+": "and",
+            "/": " ",
+            "\\": " ",
+            "(": "",
+            ")": "",
+            "[": "",
+            "]": "",
+            "{": "",
+            "}": "",
+            "*": "",
+            "#": "",
+            "@": "",
+            "$": "",
+            "%": "",
+            "^": "",
+            "|": "",
+            "~": "",
+            "`": "",
+            "å": "a",
+            "à": "a",
+            "æ": "ae",
+            "ë": "e",
+            "ì": "i",
+            "í": "i",
+            "î": "i",
+            "ø": "o",
+            "ö": "o",
+            "õ": "o",
+            "ù": "u",
+            "ú": "u",
+            "û": "u",
+            "ý": "y",
+            "ÿ": "y",
+            "ž": "z",
+            "š": "s",
             "â": "a",
             "ã": "a",
+            "ä": "a",
             "ß": "ss",
             "ç": "c",      
             "é": "e",
             "è": "e",
             "ê": "e",
             "ï": "i",
+            "î": "i",
             "ò": "o",
             "á": "a",
             "ô": "o",
@@ -59,36 +102,141 @@ class DuplicateHandler:
             "ű": "u",
             "ü": "u",
             "ñ": "n", 
-            "Arminia": "Arminia Bielefeld",
+            "ą": "a",
+            "ć": "c", 
+            "ę": "e",
+            "ł": "l",
+            "ń": "n",
+            "ś": "s",
+            "ź": "z",
+            "ż": "z",
+            "Arminia Bielefeld": "Arminia",
+            "Amazonas FC": "Amazonas",
+            "Aston Villa eng": "Aston Villa",
+            "at Sturm Graz": "Sturm Graz",
+            "at RB Salzburg": "RB Salzburg",
             "AC Ajaccio": "Ajaccio",
+            "AC Milan": "Milan",
+            "AS Roma": "Roma",
             "Athletic Club": "Ath Bilbao",
-            "Atletico Madrid": "Atl. Madrid", 
-            "Athletic Club": "Athletic Bilbao",
+            "Atletico Madrid": "Atl Madrid", 
+            "Atl Madrid es": "Atl Madrid",
+            "Athletic Club": "Ath Bilbao",
+            "Athletic Bilbao": "Ath Bilbao",
             "Athletico Paranaense": "Athletico-PR",
+            "Barcelona es": "Barcelona",
             "Bayern Munich de": "Bayern Munich",
+            "de Bayern Munich": "Bayern Munich",
+            "Bayer Leverkusen": "Leverkursen",
             "B. Monchengladbach": "Gladbach",
-            "Cádiz": "Cadiz CF  ",
+            "Birmingham City": "Birmingham",
+            "Cadiz CF": "Cadiz",
+            "Cádiz": "Cadiz",
+            "CD Mirandes": "Mirandes",
+            "Cardiff City": "Cardiff",
+            "Coventry City": "Coventry",
+            "Clermont Foot": "Clermont",
+            "Crawley Town": "Crawley",
+            "Chapeconense SC": "Chapecoense",
+            "Darmstadt 98": "Darmstadt",
+            "Defensa y Justicia": "Defensa y Just",
+            "Dep Riestra": "Deportivo Riestra",
+            "Dep La Coruna": "La Coruna",
+            "Dortmund de": "Dortmund",
+            "de RB Leipzig": "RB Leipzig",
+            "de Leverkusen": "Leverkusen",
             "Estudiantes L.P.": "Estudiantes",
             "Eint Frankfurt": "Eintracht Frankfurt",
-            "Nott'ham Forest": "Nottingham",
-            "Paris S-G": "PSG",
+            "es Girona": "Girona",
+            "Girona es": "Girona",
+            "eng Manchester City": "Manchester City",
+            "eng Arsenal": "Arsenal",
+            "eng Aston Villa": "Aston Villa",
+            "eng Liverpool": "Liverpool",
             "Leeds United": "Leeds",
+            "Flamengo RJ": "Flamengo",
             "FC Barcelona": "Barcelona",
             "FC Bayern": "Bayern Munich", 
+            "FC Emmen": "Emmen",
             "FC Internazionale": "Inter Milan",
             "FC Porto": "Porto",
-            "Köln": "FC Koln",
-            "Leverkursen": "Bayer Leverkusen",
+            "FC Volendam": "Volendam",
+            "FC Eindhoven": "Eindhoven FC",
+            "fr Brest": "Brest",
+            "Brest fr": "Brest",
+            "fr Monaco": "Monaco",
+            "Monaco fr": "Monaco",
+            "fr PSG": "PSG",
+            "Granada CF": "Granada",
+            "Gimnasia L P": "Gimnasia LP",
+            "Gimnasia-LP": "Gimnasia LP",
             "Hellas Verona": "Verona",
+            "Helmond Sport": "Helmond",
             "Hertha BSC":"Hertha Berlin",
+            "Hannover 96": "Hannover",
+            "Hull City": "Hull",
+            "it Bologna": "Bologna",
+            "Bologna it": "Bologna",
+            "it Juventus": "Juventus",
+            "Juventus it": "Juventus",
+            "it Milan": "Milan",
+            "Milan it": "Milan",
+            "it Inter": "Inter",
+            "Inter it": "Inter",
+            "it Atalanta": "Atalanta",
+            "Ipswich Town": "Ipswich",
+            "Ingolstadt 04": "Ingolstadt",
+            "Leverkusen": "Leverkursen",
+            "Leverkursen de": "Leverkursen",
             "Luton Town": "Luton",
+            "Lincoln City": "Lincoln",
+            "Lille fr": "Lille",
+            "fr Lille": "Lille",
+            "Liverpool eng": "Liverpool",
+            "Leicester City": "Leicester",
+            "Kawa Frontale": "Kawasaki Frontale",
+            "Kyoto Sanga": "Kyoto",
+            "Karlsruher SC": "Karlsruher",
+            "Köln": "FC Koln",
             "Newcastle Utd": "Newcastle",
+            "NEC Nijmegen": "Nijmegen",
             "Norwich City": "Norwich",
+            "Nottham Forest": "Nottingham",
             "Mainz 05": "Mainz",
+            "Malmo FF": "Malmo",
+            "Mansfield Town": "Mansfield",
+            "MVV Maastricht": "Maastricht",
             "Oxford United": "Oxford Utd",
-            "Sparta R'dam": "Sparta Rotterdam",
+            "Paris S-G": "PSG",
+            "Paris S G": "PSG",
+            "Paris S-G fr": "PSG",
+            "P'borough Utd": "Peterborough",
+            "Paderborn 07": "Paderborn",
+            "pt Benfica": "Benfica",
+            "Racing Santander": "Racing Sant",
+            "Racing Club Ferrol": "Racing Ferrol",
+            "R Oviedo": "Oviedo",
+            "RB Salzburg au": "RB Salzburg",
+            "RB Leipzig de": "RB Leipzig",
+            "RKC Waalwijk": "Waalwijk",
+            "RKS Rakow": "Rakow",
+            "Roda JC": "Roda",
+            "Rotherham Utd": "Rotherham",
+            "Sparta Rdam": "Sparta Rotterdam",
+            "Sparta Prague cz": "Sparta Prague",
+            "Sporting CP pt": "Sporting CP",
+            "Stuttgart de": "Stuttgart",
+            "Schalke 04": "Schalke",
+            "Sarmiento Junin": "Sarmiento",
             "Saint-Étienne": "St Etienne",
-            "Swansea City": "Swansea"
+            "Stoke City": "Stoke",
+            "Swansea City": "Swansea",
+            "Wigan Athletic": "Wigan",
+            "Sheffield Weds": "Sheffield Wed",
+            "Varnamo Sodra FF": "Varnamo",
+            "Vila Nova FC": "Vila Nova",
+            "Vfl Osnabruck": "Osnabruck",
+            "VVV Venlo": "Venlo"
         }
         name = str(name).strip()
         for old, new in replacements.items():
@@ -132,15 +280,10 @@ class DuplicateHandler:
                 
                 # Pre-standardize all team names to avoid repeated processing
                 for doc in documents:
-                    # Standardize names and update in MongoDB
+                    # Update MongoDB document with standardized names
                     std_home = self.standardize_name(doc.get('Home', ''))
                     std_away = self.standardize_name(doc.get('Away', ''))
                     
-                    # Store standardized names in doc for later use
-                    doc['std_home'] = std_home
-                    doc['std_away'] = std_away
-                    
-                    # Update MongoDB document with standardized names
                     collection.update_one(
                         {'_id': doc['_id']},
                         {'$set': {
@@ -148,6 +291,11 @@ class DuplicateHandler:
                             'Away': std_away
                         }}
                     )
+                    
+                    # Update the document in memory too since we'll use it later
+                    doc['Home'] = std_home
+                    doc['Away'] = std_away
+                    
                     try:
                         doc['date_obj'] = pd.to_datetime(doc.get('Date', ''))
                     except:
@@ -157,9 +305,9 @@ class DuplicateHandler:
                 # Filter out documents with invalid dates
                 documents = [doc for doc in documents if doc['date_obj'] is not None]
                 
-                # Sort documents by Odd_Home in descending order
-                documents.sort(key=lambda x: float(x.get('Odd_Home', '0') if x.get('Odd_Home') not in [None, '', '-'] else '0'), reverse=True)
-                self.logger.info(f"Sorted {len(documents)} documents by Odd_Home")
+                # Sort documents by unique_id
+                documents.sort(key=lambda x: x.get('unique_id', ''))
+                self.logger.info(f"Sorted {len(documents)} documents by unique_id")
             
                 # Create a dictionary to track unique combinations
                 seen_matches = {}
@@ -171,8 +319,6 @@ class DuplicateHandler:
                     self.logger.info(f"Processing batch {i // batch_size + 1} of {len(documents) // batch_size + 1}")
                     print(f"Processing batch {i // batch_size + 1} of {len(documents) // batch_size + 1}")  
                     for doc in batch:
-                        base_id = doc.get('unique_id', '')
-                        
                         # Check for matches within ±2 days
                         match_found = False
                         for key, existing in seen_matches.items():
@@ -180,8 +326,8 @@ class DuplicateHandler:
                             date_diff = abs((doc['date_obj'] - existing_date).days)
                             
                             if (date_diff <= 2 and 
-                                doc['std_home'] == existing['home'] and 
-                                doc['std_away'] == existing['away']):
+                                doc['Home'] == existing['home'] and 
+                                doc['Away'] == existing['away']):
                                 # This is a duplicate
                                 duplicates.append(doc)
                                 match_found = True
@@ -200,18 +346,17 @@ class DuplicateHandler:
                                 
                         if not match_found:
                             # No duplicate found, add to seen matches
-                            match_key = f"{doc['date_obj']}_{doc['std_home']}_{doc['std_away']}"
+                            match_key = f"{doc['date_obj']}_{doc['Home']}_{doc['Away']}"
                             seen_matches[match_key] = {
                                 '_id': doc['_id'],
                                 'date': doc['date_obj'],
-                                'home': doc['std_home'],
-                                'away': doc['std_away']
+                                'home': doc['Home'],
+                                'away': doc['Away']
                             }
             
             self.logger.info(f"Found {len(duplicates)} duplicate entries in {self.collection_name}")
             print(f"Found {len(duplicates)} duplicate entries in {self.collection_name}")
             return duplicates
-            
         except Exception as e:
             self.logger.error(f"Error finding duplicates in {self.collection_name}: {str(e)}")
             raise

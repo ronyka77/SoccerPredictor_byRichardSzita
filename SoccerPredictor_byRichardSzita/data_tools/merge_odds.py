@@ -48,14 +48,15 @@ def load_data(match_stats_collection: str = MATCH_STATS_COLLECTION) -> Tuple[pd.
     try:
         with db_client.get_database() as db:
             odds_data_df = pd.DataFrame(list(db.odds_data.find()))
-            match_stats_df = pd.DataFrame(list(db[match_stats_collection].find({
-                "$or": [
-                    {"Odds_Draw": {"$exists": False}},
-                    {"Odds_Draw": None},
-                    {"Odds_Draw": ""},
-                    {"Odds_Draw": "-"}
-                ]
-            })))
+            match_stats_df = pd.DataFrame(list(db[match_stats_collection].find(
+                {"Odds_Draw": {"$exists": 0}}
+            )))
+            
+            # Drop rows where Odds_Draw is a number
+            # match_stats_df = match_stats_df[
+            #     ~match_stats_df['Odds_Draw'].apply(lambda x: isinstance(x, (int, float)) if 'Odds_Draw' in match_stats_df.columns and x is not None else False)
+            # ]
+            print(f"Rows after dropping numeric Odds_Draw: {len(match_stats_df)}")
             match_stats_df['Date'] = pd.to_datetime(match_stats_df['Date'])
             odds_data_df['Date'] = pd.to_datetime(odds_data_df['Date'])
             match_stats_df = match_stats_df[match_stats_df['Date'] < odds_data_df['Date'].max()]
@@ -74,11 +75,12 @@ def fuzzy_merge_row(row: pd.Series, odds_data_df: pd.DataFrame, threshold: int =
         match_id = str(row['unique_id'])
         match_date = row['Date']
         # Standardize the match ID before comparison
-        standardized_match_id = standardize_name(match_id)
+        standardized_match_id = match_id
 
         # Standardize all odds IDs for comparison
         odds_unique_ids = [str(uid) for uid in odds_data_df['unique_id'].tolist()]
-        standardized_odds_ids = [standardize_name(uid) for uid in odds_unique_ids]
+        # standardized_odds_ids = [standardize_name(uid) for uid in odds_unique_ids]
+        standardized_odds_ids = odds_unique_ids
         
         result = process.extractOne(
             standardized_match_id, 
@@ -125,8 +127,8 @@ def store_aggregated_data_row_by_row(df: pd.DataFrame, collection_name: str = MA
             for _, row in df.iterrows():
                 # Convert the row to a dictionary and prepare the update operation
                 row_dict = row.to_dict()
-                running_id = row_dict.get('running_id')
-                if running_id is not None:
+                unique_id = row_dict.get('unique_id')
+                if unique_id is not None:
                     # Only update odds-related fields
                     odds_update = {
                         k: v for k, v in row_dict.items() 
@@ -135,15 +137,15 @@ def store_aggregated_data_row_by_row(df: pd.DataFrame, collection_name: str = MA
                     if odds_update:
                         operations.append(
                             UpdateOne(
-                                {'running_id': running_id},
+                                {'unique_id': unique_id},
                                 {'$set': odds_update},
                                 upsert=True
                             )
                         )
             
-            if operations:
-                result = collection.bulk_write(operations)
-                logger.info(f"Bulk write result: {result.bulk_api_result}")
+            # if operations:
+            #     result = collection.bulk_write(operations)
+            #     logger.info(f"Bulk write result: {result.bulk_api_result}")
     
     except Exception as e:
         logger.error(f"Failed to store data row by row: {str(e)}")

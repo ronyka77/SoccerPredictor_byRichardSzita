@@ -5,6 +5,11 @@ from pymongo import MongoClient  # For MongoDB interactions
 import pandas as pd  # For data manipulation with DataFrames
 import re  # For regex operations (used in text extraction)
 import time  # For adding delays between requests
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# from util_tools.database import MongoClient  # Import MongoClient from database.py
+from util_tools.delete_duplicates import DuplicateHandler
 
 # Connect to MongoDB server
 client = MongoClient('mongodb://192.168.0.77:27017/')
@@ -141,11 +146,12 @@ def main():
     matches = get_match_data()  # Retrieve matches needing stats
     print("Match selection successful...")
     for match in matches:
-        url = match['Match Report']  # Get URL for match report
-        unique_id = match['unique_id']  # Get match unique ID
         
         try:
-            # Fetch and structure the match data
+            # Get URL and unique ID before any processing
+            
+            unique_id = match['unique_id']  # Get match unique ID
+            url = match['Match Report']  # Get URL for match report
             # print(url)
             if url == "" or str(url) == "nan" or str(url) == "NaN" or str(url) == "None" or url == None:
                 print(f"No URL found for {unique_id}")
@@ -158,7 +164,13 @@ def main():
         except Exception as e:
             # Handle request overload error
             print("Too many requests, sleeping for 10 seconds..." + str(e))
-            print(str(unique_id) + ' ' + str(url))  # Convert both to strings
+            # Only try to print IDs if they were successfully retrieved
+            try:
+                print(str(unique_id) + ' ' + str(url))  # Convert both to strings
+            except UnboundLocalError:
+                print(unique_id)
+                # print(url)
+                print("Error occurred before URL/ID could be retrieved")
             time.sleep(5)  # Wait before retrying
             continue
 
