@@ -104,10 +104,37 @@ Two-tiered approach for maximum accuracy:
 
 State-of-the-art stacked ensemble combining:
 - LightGBM (gradient boosting)
-- CatBoost (gradient boosting)
+  - Optimized hyperparameters via grid search
+  - Early stopping to prevent overfitting
+  - Custom objective function for match prediction
+- CatBoost (gradient boosting) 
+  - Handles categorical features natively
+  - GPU acceleration enabled
+  - Symmetric tree growth for balanced predictions
 - XGBoost (gradient boosting)
-- Neural Networks (Keras with custom architecture)
+  - Feature importance analysis
+  - Built-in L1/L2 regularization
+  - Parallel processing support
+- AdaBoost (adaptive boosting)
+  - Sequential learning from misclassified samples
+  - Weighted voting mechanism
+  - Decision tree base estimators
+- Neural Networks (Keras)
+  - Custom architecture with 3 hidden layers
+  - Dropout layers for regularization
+  - ReLU activation functions
+  - Adam optimizer with learning rate scheduling
 - Random Forest (ensemble learning)
+  - 500 estimators with max depth control
+  - Bootstrap aggregation for robust predictions
+  - Feature selection via importance ranking
+
+Model training includes:
+- K-fold cross validation (k=5)
+- Stratified sampling for imbalanced classes
+- Automated hyperparameter tuning
+- Model persistence with versioning
+- Performance metrics tracking
 - Separate models optimized for:
   - Match outcomes (W/D/L)
   - Home goals prediction
@@ -244,14 +271,37 @@ Football_predictor_byRichardSzita/
 │   └── PowerBI/
 │       ├── model_data_pred.pbix
 │       ├── model_data_training.pbix
-│       ├── merge_data_prediction.pbix
-│       └── score_prediction/
-│           ├── model_stacked_2fit_outcome.py
-│           ├── model_stacked_2fit_homegoals.py
-│           ├── model_stacked_2fit_awaygoals.py
-│           ├── predict_match_outcome.py
-│           ├── predict_home_goals.py
-│           └── predict_away_goals.py
+│       └── merge_data_prediction.pbix
+├── score_prediction/
+│   ├── model_stacked_2fit_outcome.py
+│   ├── model_stacked_2fit_homegoals.py
+│   ├── model_stacked_2fit_awaygoals.py
+│   ├── predict_match_outcome.py
+│   ├── predict_home_goals.py
+│   └── predict_away_goals.py
+├── util_tools/
+│   ├── logging_config.py
+│   ├── model_classes.py
+│   └── model_functions.py
+├── log/
+│   ├── stacked_away_goals_model.log
+│   ├── stacked_home_goals_model.log
+│   └── stacked_match_outcome_model.log
+├── models/
+│   ├── imputer_away_goals.pkl
+│   ├── imputer_home_goals.pkl
+│   ├── imputer_match_outcome.pkl
+│   ├── scaler_away_goals.pkl
+│   ├── scaler_home_goals.pkl
+│   ├── scaler_match_outcome.pkl
+│   ├── rfe_away_goals_selector.pkl
+│   ├── rfe_home_goals_selector.pkl
+│   └── rfe_match_outcome_selector.pkl
+├── data/
+│   ├── model_data_training_newPoisson.xlsx
+│   ├── merged_data_prediction.csv
+│   └── mongodb_backup/
+│       └── football_data/
 ├── requirements.txt
 └── README.md
 
