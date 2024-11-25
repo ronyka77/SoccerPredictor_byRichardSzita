@@ -26,8 +26,9 @@ model_dir = "./models/"
 os.makedirs(model_dir, exist_ok=True)
 logger.info(f"Model directory created/checked at {model_dir}")
 
-column_order = ['running_id', 'Date', 'league', 'Home', 'Away','Score', 'Prediction_models', 
-                'Prediction_models_enhanced_positive', 'Prediction_models_enhanced_negative',
+column_order = ['running_id', 'Date', 'league', 'Home', 'Away','Score', 'real_outcome', 'Prediction_models','Outcome_models', 
+                'Prediction_models_enhanced_positive', 'Outcome_models_enhanced_positive',
+                'Prediction_models_enhanced_negative', 'Outcome_models_enhanced_negative',
                 'Odd_Home', 'Odds_Draw', 'Odd_Away',
                 'match_outcome_prediction_base', 'home_goals_prediction_base',
                 'home_goals_confidence','home_goals_uncertainty',
@@ -39,12 +40,12 @@ column_order = ['running_id', 'Date', 'league', 'Home', 'Away','Score', 'Predict
 def add_home_away_columns(existing_df):
     try:
         # Get the list of running_ids to filter in MongoDB
-        running_ids = existing_df['running_id'].tolist()
-        logger.info(f"Processing {len(running_ids)} running IDs")
+        unique_ids = existing_df['unique_id'].tolist()
+        logger.info(f"Processing {len(unique_ids)} unique IDs")
         
         # Query MongoDB to get the matching documents
-        query = {'running_id': {'$in': running_ids}}
-        projection = {'_id': 0, 'running_id': 1, 'Home': 1, 'Away': 1, 'league': 1, 'Date': 1, 'Odd_Home': 1, 'Odds_Draw': 1, 'Odd_Away': 1}
+        query = {'unique_id': {'$in': unique_ids}}
+        projection = {'_id': 0, 'unique_id': 1, 'Home': 1, 'Away': 1, 'league': 1, 'Date': 1, 'Odd_Home': 1, 'Odds_Draw': 1, 'Odd_Away': 1}
 
         # Corrected: Access the database and collection using methods
         # db = db_client.get_database('football_data')
@@ -59,7 +60,7 @@ def add_home_away_columns(existing_df):
             # Convert 'Date' column to string format 'YYYY-MM-DD' if it exists
             if 'Date' in mongo_df.columns:
                 mongo_df['Date'] = mongo_df['Date'].dt.strftime('%Y-%m-%d')
-            mongo_df = mongo_df[['running_id', 'Date', 'league_encoded', 'Home', 'Away']]
+            mongo_df = mongo_df[['unique_id', 'Date', 'league_encoded', 'Home', 'Away']]
             # mongo_df['Date'] = pd.to_datetime(mongo_df['year'].astype(str) + '-' + mongo_df['month'].astype(str) + '-' + mongo_df['day_of_month'].astype(str))
             logger.info(f"Retrieved {len(mongo_df)} documents from Excel")
         else:
@@ -67,8 +68,8 @@ def add_home_away_columns(existing_df):
             mongo_df = pd.DataFrame(mongo_data)
             logger.info(f"Retrieved {len(mongo_data)} documents from MongoDB")
             
-        # Merge the MongoDB data with the existing DataFrame based on 'running_id'
-        merged_df = pd.merge(existing_df, mongo_df, on='running_id', how='left')
+        # Merge the MongoDB data with the existing DataFrame based on 'unique_id'
+        merged_df = pd.merge(existing_df, mongo_df, on='unique_id', how='left')
         logger.info(f"Merged dataframe shape: {merged_df.shape}")
         
         return merged_df
@@ -125,7 +126,28 @@ def add_score(existing_df):
         logger.error(f"Error in add_score: {str(e)}")
         return existing_df
 
-
+def calculate_outcome(home_goals, away_goals):
+    """
+    Calculate match outcome based on score string.
+    
+    Args:
+        score (str): Score in format 'X-Y' where X is home goals and Y is away goals
+        
+    Returns:
+        int: 1 for home win, 2 for draw, 3 for away win
+    """
+    try:
+        if home_goals > away_goals:
+            return 1  # Home win
+        elif home_goals == away_goals:
+            return 2  # Draw
+        elif home_goals < away_goals:
+            return 3  # Away win
+        else:
+            return None
+    except (ValueError, AttributeError) as e:
+        logger.error(f"Error parsing score '{home_goals}-{away_goals}': {str(e)}")
+        return None
 
 # Function to round values based on 0.5 threshold
 def round_half_up(value):
@@ -175,9 +197,32 @@ try:
     logger.info("Successfully rounded all predictions")
 
     # Reorder columns and save
-    stacked_merged_df = stacked_merged_df[column_order]
     stacked_merged_df['unique_id'] = stacked_merged_df['Date'].astype(str) + '_' + stacked_merged_df['Home'] + '_' + stacked_merged_df['Away']
     stacked_merged_df = add_score(stacked_merged_df)
+    # Add outcome columns based on goal predictions using existing calculate_outcome function
+    stacked_merged_df['Outcome_models'] = stacked_merged_df.apply(
+        lambda row: calculate_outcome(row['home_goals_prediction_base'], row['away_goals_prediction_base']), axis=1
+    )
+    stacked_merged_df['Outcome_models_enhanced_positive'] = stacked_merged_df.apply(
+        lambda row: calculate_outcome(row['home_goals_prediction_enhanced'], row['away_goals_prediction_enhanced']), axis=1
+    )
+    stacked_merged_df['Outcome_models_enhanced_negative'] = stacked_merged_df.apply(
+        lambda row: calculate_outcome(row['home_goals_prediction_enhanced_negative'], row['away_goals_prediction_enhanced_negative']), axis=1
+    )
+    # Extract home and away goals from Score column and calculate real outcome
+    stacked_merged_df['Score'] = stacked_merged_df['Score'].str.replace('–', '-')  # Replace en dash with regular hyphen
+    # First split the scores
+    score_split = stacked_merged_df['Score'].str.split('-', expand=True)
+    # Replace empty strings with NaN
+    score_split = score_split.replace('', np.nan)
+    # Convert to float, NaN values will be preserved
+    stacked_merged_df[['home_goals', 'away_goals']] = score_split.astype(float)
+    stacked_merged_df['real_outcome'] = stacked_merged_df.apply(
+        lambda row: calculate_outcome(row['home_goals'], row['away_goals']), axis=1
+    )
+ 
+    logger.info("Successfully added outcome columns based on goal predictions")
+    stacked_merged_df = stacked_merged_df[column_order]
     output_path = './made_predictions/predictions_stacked_2fit_merged_enhanced.xlsx'
     stacked_merged_df.to_excel(output_path, index=False)
     logger.info(f"Successfully saved merged predictions to {output_path}")

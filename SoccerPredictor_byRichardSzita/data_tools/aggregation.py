@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import List, Dict
 import logging
-from util_tools.mongo_add_id import mongo_add_running_id
+from util_tools.mongo_functions import mongo_add_running_id
 from util_tools.delete_duplicates import DuplicateHandler
 from util_tools.logging_config import LoggerSetup
 

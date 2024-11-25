@@ -29,12 +29,12 @@ def mongo_add_running_id():
 
     print(f"Added running IDs starting from {counter-1}.")
 
-def update_fixtures_unique_id():
+def update_unique_id(collection_name: str):
     """Update unique_id format in fixtures collection to Date_Home_Away."""
-    fixtures_collection = db['fixtures']
+    collection = db[collection_name]
     
     # Find all documents in fixtures collection
-    for doc in fixtures_collection.find():
+    for doc in collection.find():
         try:
             # Extract required fields
             date = doc.get('Date')
@@ -50,7 +50,7 @@ def update_fixtures_unique_id():
             new_unique_id = f"{date}_{home}_{away}"
             
             # Update document with new unique_id
-            fixtures_collection.update_one(
+            collection.update_one(
                 {'_id': doc['_id']},
                 {'$set': {'unique_id': new_unique_id}}
             )
@@ -59,7 +59,7 @@ def update_fixtures_unique_id():
             print(f"Error processing document {doc.get('_id')}: {str(e)}")
             continue
             
-    print("Finished updating unique_ids in fixtures collection")
+    print(f"Finished updating unique_ids in {collection_name} collection")
 
 # update_fixtures_unique_id()
 def update_match_stats_unique_id():
@@ -106,8 +106,6 @@ def update_match_stats_unique_id():
 
     print("Finished updating unique_ids in match_stats collection")
 
-# update_match_stats_unique_id()
-
 def drop_team_names():
     """Drop documents from fixtures collection where Home column does not exist."""
     try:
@@ -124,4 +122,5 @@ def drop_team_names():
         print(f"Error dropping documents: {str(e)}")
         raise
 
-drop_team_names()
+# update_unique_id(collection_name='odds_data')
+# update_match_stats_unique_id()

@@ -78,14 +78,14 @@ LEAGUES = {
     "league-one": "england",
     "eredivisie":"netherlands",
     "eerste-divisie":"netherlands",
-    "primeira-liga":"portugal",
+    "liga-portugal":"portugal",
     "allsvenskan":"sweden",
     "ekstraklasa":"poland"
 }
 
 # Define years for historical data scraping
 # YEARS = ["2020-2021", "2021-2022", "2022-2023", "2023-2024"] # Use this for all historical data scraping
-YEARS = ["2023-2024"]
+YEARS = ["2020-2021","2023-2024"]
 # Define column names for the DataFrame where scraped data will be stored
 columns = ['Date', 'Time', 'Home', 'Away', 'Odd_Home', 'Odds_Draw', 'Odd_Away']
 
@@ -121,15 +121,15 @@ def generate_urls(leagues, years):
             "https://www.oddsportal.com/football/brazil/serie-a-betano/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2022/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2021/results/",
-            # "https://www.oddsportal.com/football/brazil/serie-a-2020/results/"
+            "https://www.oddsportal.com/football/brazil/serie-a-2020/results/"
         ],
         "argentina": [
             "https://www.oddsportal.com/football/argentina/torneo-betano/",
             "https://www.oddsportal.com/football/argentina/torneo-betano/results/",
             # "https://www.oddsportal.com/football/argentina/liga-profesional-2023/results/",
             # "https://www.oddsportal.com/football/argentina/liga-profesional-2022/results/",
-            # "https://www.oddsportal.com/football/argentina/liga-profesional-2021/results/",
-            # "https://www.oddsportal.com/football/argentina/superliga-2019-2020/results/"
+            "https://www.oddsportal.com/football/argentina/liga-profesional-2021/results/",
+            "https://www.oddsportal.com/football/argentina/superliga-2019-2020/results/"
         ],
         "japan": [
             "https://www.oddsportal.com/football/japan/j1-league/",
@@ -137,14 +137,15 @@ def generate_urls(leagues, years):
             # "https://www.oddsportal.com/football/japan/j1-league-2023/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2022/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2021/results/",
-            # "https://www.oddsportal.com/football/japan/j1-league-2020/results/"
+            "https://www.oddsportal.com/football/japan/j1-league-2020/results/"
         ],
-        # "netherlands": [
+        "netherlands": [
         #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2023/results/",
         #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2022/results/",
         #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2021/results/",
-        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2020/results/"
-        # ],
+            "https://www.oddsportal.com/football/netherlands/eerste-divisie-2020-2021/results/",
+            "https://www.oddsportal.com/football/netherlands/eredivisie-2020-2021/results/"
+        ],
         # "sweden": [
         #     "https://www.oddsportal.com/football/sweden/allsvenskan-2023/results/",
         #     "https://www.oddsportal.com/football/sweden/allsvenskan-2022/results/",
@@ -157,12 +158,12 @@ def generate_urls(leagues, years):
         #     "https://www.oddsportal.com/football/portugal/primeira-liga-2021-2022/results/",
         #     "https://www.oddsportal.com/football/portugal/primeira-liga-2020-2021/results/"
         # ],
-        # "poland": [
-        #     "https://www.oddsportal.com/football/poland/ekstraklasa-2023-2024/results/",
-        #     "https://www.oddsportal.com/football/poland/ekstraklasa-2022-2023/results/",
-        #     "https://www.oddsportal.com/football/poland/ekstraklasa-2021-2022/results/",
-        #     "https://www.oddsportal.com/football/poland/ekstraklasa-2020-2021/results/"
-        # ]
+        "poland": [
+            "https://www.oddsportal.com/football/poland/ekstraklasa-2023-2024/results/",
+            "https://www.oddsportal.com/football/poland/ekstraklasa-2022-2023/results/",
+            "https://www.oddsportal.com/football/poland/ekstraklasa-2021-2022/results/",
+            "https://www.oddsportal.com/football/poland/ekstraklasa-2020-2021/results/"
+        ]
         
         
     }
