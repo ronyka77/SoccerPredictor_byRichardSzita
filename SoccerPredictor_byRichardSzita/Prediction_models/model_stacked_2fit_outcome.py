@@ -48,7 +48,7 @@ from util_tools.model_classes import CustomStackingRegressor, CustomReduceLROnPl
 from util_tools.model_functions import (create_enhanced_neural_network, prepare_data,
         prepare_new_data, within_range_evaluation, perform_feature_selection, calculate_poisson_deviance, analyze_goals_difference,
         calculate_calibration_score, calculate_expected_value, evaluate_model, calculate_prediction_intervals, analyze_ensemble_diversity, apply_dynamic_weights,
-        create_lgb_regressor, create_xgb_regressor, create_nn_regressor, create_rf_regressor, create_ada_regressor, create_elasticnet_regressor, create_gbm_regressor)
+        create_lgb_regressor, create_xgb_regressor, create_nn_regressor, create_rf_regressor, create_ada_regressor, create_elasticnet_regressor, create_gbm_regressor, optimize_hyperparameters)
 
 model_type='match_outcome'
 
@@ -185,7 +185,7 @@ def train_model(base_data: pd.DataFrame, data: pd.DataFrame, model_type: str, mo
     # Optimize hyperparameters
     # best_params = optimize_hyperparameters(X_poly, y, logger)
     
-    # Update model parameters with optimized values
+    # # Update model parameters with optimized values
     # logger.info(f"Applying optimized hyperparameters: {list(best_params.keys())}")
     # for param, value in best_params.items():
     #     model_name, param_name = param.split('__')

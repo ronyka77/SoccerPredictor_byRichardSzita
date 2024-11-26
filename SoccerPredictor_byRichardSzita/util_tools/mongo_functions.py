@@ -1,4 +1,9 @@
 from pymongo import MongoClient
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from util_tools.delete_duplicates import DuplicateHandler
+
 
 # Connect to MongoDB
 client = MongoClient('mongodb://192.168.0.77:27017/')  # Change the URI to your MongoDB connection
@@ -122,5 +127,66 @@ def drop_team_names():
         print(f"Error dropping documents: {str(e)}")
         raise
 
-# update_unique_id(collection_name='odds_data')
-# update_match_stats_unique_id()
+def update_team_names(collection_name: str = 'fixtures'):
+    """Update Home and Away team names in specified collection using standardized names.
+    
+    Args:
+        collection_name: Name of MongoDB collection to process. Defaults to 'fixtures'.
+    """
+    try:
+        # Initialize DuplicateHandler to use its standardize_name function
+        duplicate_handler = DuplicateHandler()
+        
+        # Get collection
+        collection = db[collection_name]
+        
+        # Get all documents with Home and Away fields
+        documents = collection.find({
+            'Home': {'$exists': True},
+            'Away': {'$exists': True}
+        })
+        
+        update_count = 0
+        error_count = 0
+        
+        print(f"Starting team name standardization for collection: {collection_name}")
+        
+        for doc in documents:
+            try:
+                # Get current team names
+                home_team = doc.get('Home', '')
+                away_team = doc.get('Away', '')
+                
+                # Standardize names
+                std_home = duplicate_handler.standardize_name(home_team)
+                std_away = duplicate_handler.standardize_name(away_team)
+                
+                # Update document if names changed
+                if std_home != home_team or std_away != away_team:
+                    collection.update_one(
+                        {'_id': doc['_id']},
+                        {'$set': {
+                            'Home': std_home,
+                            'Away': std_away
+                        }}
+                    )
+                    update_count += 1
+                    
+            except Exception as e:
+                print(f"Error processing document {doc.get('_id')}: {str(e)}")
+                error_count += 1
+                continue
+                
+        print(f"Finished updating team names:")
+        print(f"- Updated {update_count} documents")
+        print(f"- Encountered {error_count} errors")
+        
+    except Exception as e:
+        print(f"Error in update_team_names: {str(e)}")
+        raise
+
+if __name__ == "__main__":
+    
+    update_match_stats_unique_id()
+    # update_team_names('match_stats')
+    # update_unique_id(collection_name='match_stats')

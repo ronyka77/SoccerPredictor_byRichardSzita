@@ -102,6 +102,10 @@ data = base_data.drop(columns=['Unnamed: 0.1','Unnamed: 0.2','Unnamed: 0','match
 numeric_features = data.select_dtypes(include=['float64', 'int64']).columns.tolist()
 logger.info(f"Numeric features: {numeric_features}")
 
+# After initial data preparation
+logger.info(f"Initial number of features: {len(data.columns)}")
+logger.info(f"Initial feature names: {data.columns.tolist()}")
+
 for model_type in model_types:
     logger.info(f"\nPerforming feature selection for {model_type}")
     
@@ -114,6 +118,10 @@ for model_type in model_types:
     poly = PolynomialFeatures(degree=2, include_bias=False)
     logger.info("Polynomial feature transformation started.")
     X_poly = poly.fit_transform(X)
+
+    # After polynomial feature generation
+    logger.info(f"Number of polynomial features: {X_poly.shape[1]}")
+    logger.info(f"Polynomial feature names: {poly.get_feature_names_out(X.columns)}")
 
     # Train-test split
     X_train, X_test, y_train, y_test = train_test_split(X_poly, y, test_size=0.3, random_state=42)
@@ -132,9 +140,19 @@ for model_type in model_types:
     # Perform feature selection
     selector = perform_feature_selection(X_train_scaled, y_train, model_dir, model_type, logger)
 
-    # Log selected features
-    selected_features = list(poly.get_feature_names_out(X.columns)[selector.support_])
-    logger.info(f"Selected Features for {model_type}: {selected_features}")
-    logger.info(f"Number of selected features: {len(selected_features)}")
+    # After feature selection
+    selected_features = poly.get_feature_names_out(X.columns)[selector.support_]
+    logger.info(f"Number of selected features after RFE: {len(selected_features)}")
+    logger.info(f"Selected feature names: {selected_features.tolist()}")
+
+    # Calculate feature importance if using RFE with RandomForest
+    if hasattr(selector.estimator_, 'feature_importances_'):
+        feature_importance = pd.DataFrame({
+            'feature': selected_features,
+            'importance': selector.estimator_.feature_importances_
+        })
+        feature_importance = feature_importance.sort_values('importance', ascending=False)
+        logger.info("\nFeature Importance:")
+        logger.info(feature_importance.to_string())
 
 logger.info("Feature selection completed for all model types")

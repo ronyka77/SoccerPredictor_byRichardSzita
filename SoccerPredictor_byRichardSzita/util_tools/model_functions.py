@@ -9,8 +9,8 @@ from sklearn.impute import KNNImputer, IterativeImputer
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler, MinMaxScaler
 from sklearn.feature_selection import RFE, RFECV, SelectKBest, f_regression
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-from sklearn.model_selection import train_test_split, cross_val_score, RandomizedSearchCV
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
+from sklearn.model_selection import train_test_split, cross_val_score, RandomizedSearchCV, cross_validate
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor, StackingRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import Ridge, ElasticNet
 from xgboost import XGBRegressor
@@ -23,6 +23,10 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 from scikeras.wrappers import KerasRegressor
 from scipy.stats import uniform, randint
 from util_tools.model_classes import WithinRangeMetric, EarlyStoppingCallback, LoggingEstimator, CustomReduceLROnPlateau
+import optuna
+from sklearn.pipeline import Pipeline
+from multiprocessing import cpu_count
+import gc
 
 # Ensure the parent directory is in the path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -615,18 +619,27 @@ def enhance_data_quality(data: pd.DataFrame, logger: logging.Logger) -> pd.DataF
 
 def optimize_hyperparameters(X: np.ndarray, y: np.ndarray, logger: logging.Logger) -> dict:
     """
-    Implement RandomizedSearchCV for hyperparameters.
+    Implement hyperparameter optimization using pipeline and Optuna.
     """
     try:
         logger.info("Starting hyperparameter optimization")
         
-        # Create early stopping callback
-        early_stopping = EarlyStoppingCallback(
-            stopping_rounds=50,
-            verbose=True
-        )
+        # 1. Memory optimization
+        gc.collect()  # Force garbage collection
         
+        # 2. Check data size and potentially downsample
+        if X.shape[0] > 10000:
+            logger.info("Large dataset detected, using stratified sampling")
+            X_sample, _, y_sample, _ = train_test_split(
+                X, y, train_size=10000, random_state=42, stratify=y if len(y.shape) == 1 else None
+            )
+            X, y = X_sample, y_sample
+            
+        # Convert to float32 (existing code)
+        X = X.astype(np.float32)
+        y = y.astype(np.float32)
         
+        # Create base estimators
         lgb_regressor = create_lgb_regressor()
         xgb_regressor = create_xgb_regressor()
         nn_regressor = create_nn_regressor(X)
@@ -636,68 +649,104 @@ def optimize_hyperparameters(X: np.ndarray, y: np.ndarray, logger: logging.Logge
         # Define estimators list
         estimators = [
             ('lgb', lgb_regressor),
-            ('xgb', xgb_regressor), 
-            ('nn', nn_regressor),
+            ('xgb', xgb_regressor),
+            ('nn', nn_regressor), 
             ('rf', rf_regressor),
             ('ada', ada_regressor)
         ]
+
+        # Create final estimator
+        final_estimator = VotingRegressor([
+            ('ridge', Ridge(alpha=0.1)),
+            ('lasso', Lasso(alpha=0.1)),
+            ('elasticnet', ElasticNet(alpha=0.1, l1_ratio=0.5))
+        ])
+
+        # Define cross-validation strategy
+        cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+        # Create preprocessing pipeline
+        preprocessor = StandardScaler()
         
-        # Define parameter space
-        param_distributions = {
-            # LightGBM parameters
-            'lgb__n_estimators': randint(100, 1000),
-            'lgb__learning_rate': uniform(0.01, 0.09),  # from 0.01 to 0.1
-            'lgb__max_depth': randint(3, 15),
-            'lgb__num_leaves': randint(20, 100),
-            'lgb__min_child_samples': randint(10, 50),
-            
-            # Neural Network parameters
-            'nn__model__epochs': randint(50, 200),
-            'nn__batch_size': randint(32, 256),
-            'nn__model__learning_rate': uniform(0.0001, 0.0099),  # from 0.0001 to 0.01
-            
-            # XGBoost parameters
-            'xgb__n_estimators': randint(100, 1000),
-            'xgb__learning_rate': uniform(0.01, 0.09),
-            'xgb__max_depth': randint(3, 15),
-            
-            # Random Forest parameters
-            'rf__n_estimators': randint(100, 500),
-            'rf__max_depth': randint(5, 20),
-            'rf__min_samples_split': randint(2, 10),
-            
-            # Final estimator parameters
-            'final_estimator__alpha': uniform(0.01, 0.99)
-        }
+        # 4. Resource-aware configuration
+        n_cores = cpu_count()
+        n_jobs = max(1, min(4, n_cores - 1))  # Leave one core free
         
-        # Create base estimator with default parameters
-        base_estimator = StackingRegressor(
+        # Update stacking regressor
+        stacking_regressor = StackingRegressor(
             estimators=estimators,
-            final_estimator=Ridge()
+            final_estimator=final_estimator,
+            cv=cv,
+            n_jobs=n_jobs,  # Limited parallel jobs
+            verbose=1
         )
-        
-        # Initialize RandomizedSearchCV
-        optimizer = RandomizedSearchCV(
-            estimator=base_estimator,
-            param_distributions=param_distributions,
-            n_iter=50,  # Number of parameter settings sampled
-            cv=5,       # Number of cross-validation folds
-            n_jobs=-1,  # Use all available cores
-            verbose=2,
-            scoring='neg_mean_squared_error',
-            random_state=42
-        )
-        
-        # Fit the optimizer
-        logger.info("Starting RandomizedSearchCV optimization...")
-        optimizer.fit(X, y)
-        
-        # Log results
-        logger.info(f"Best score: {optimizer.best_score_}")
-        logger.info(f"Best parameters: {optimizer.best_params_}")
-        
-        return optimizer.best_params_
-        
+
+        # Create full pipeline
+        pipeline = Pipeline([
+            ('preprocessor', preprocessor),
+            ('stacking', stacking_regressor)
+        ])
+
+        # Define Optuna objective
+        def objective(trial):
+            try:
+                params = {
+                    'stacking__lgb__n_estimators': trial.suggest_int('lgb_n_estimators', 100, 300),
+                    'stacking__lgb__learning_rate': trial.suggest_float('lgb_lr', 0.01, 0.05),
+                    'stacking__lgb__max_depth': trial.suggest_int('lgb_depth', 3, 10),
+                    'stacking__xgb__n_estimators': trial.suggest_int('xgb_n_estimators', 100, 500),
+                    'stacking__xgb__learning_rate': trial.suggest_float('xgb_lr', 0.01, 0.05),
+                    'stacking__rf__n_estimators': trial.suggest_int('rf_n_estimators', 100, 300),
+                    'stacking__nn__fit__epochs': trial.suggest_int('nn_epochs', 50, 100),
+                    'stacking__nn__fit__batch_size': trial.suggest_int('nn_batch', 32, 128)
+                }
+
+                pipeline.set_params(**params)
+                
+                # Use cross_validate instead of cross_val_score for more metrics
+                scores = cross_validate(
+                    pipeline, X, y,
+                    cv=cv,
+                    scoring={
+                        'mse': 'neg_mean_squared_error',
+                        'mae': 'neg_mean_absolute_error'
+                    },
+                    n_jobs=-1,
+                    return_train_score=True
+                )
+                
+                # Check for overfitting
+                train_mse = -scores['train_mse'].mean()
+                val_mse = -scores['test_mse'].mean()
+                
+                if train_mse < val_mse * 0.5:  # Significant overfitting
+                    logger.warning(f"Overfitting detected: train_mse={train_mse}, val_mse={val_mse}")
+                    return float('inf')  # Penalize overfitting
+                
+                return val_mse
+
+            except Exception as e:
+                logger.error(f"Error in trial: {str(e)}")
+                return float('inf')  # Return worst possible score
+
+        # Run optimization
+        study = optuna.create_study(direction='minimize')
+        study.optimize(objective, n_trials=10)
+
+        # Get best parameters
+        best_params = study.best_params
+        logger.info(f"Best parameters: {best_params}")
+
+        # # Train final model with best parameters
+        # pipeline.set_params(**best_params)
+        # pipeline.fit(X, y)
+
+        # # Save model
+        # joblib.dump(pipeline, 'soccer_predictor_model.joblib')
+        # logger.info("Model saved successfully")
+
+        return best_params
+
     except Exception as e:
         logger.error(f"Error in optimize_hyperparameters: {str(e)}")
         raise
@@ -759,12 +808,14 @@ def create_nn_regressor(X):
     
     return KerasRegressor(
         model=create_enhanced_neural_network,
-        model__input_dim=X.shape[1],
-        epochs=200,
-        batch_size=128,  # Updated to 128
-        validation_split=0.2,
-        callbacks=[reduce_lr, early_stopping],  # Both callbacks in a list
-        verbose=1
+        # Model parameters
+        model__input_dim=X.shape[1],  # This goes to create_enhanced_neural_network
+        # Fit parameters
+        fit__epochs=200,              # Changed from epochs to fit__epochs
+        fit__batch_size=128,          # Changed from batch_size to fit__batch_size
+        fit__validation_split=0.2,
+        fit__callbacks=[reduce_lr, early_stopping],
+        fit__verbose=1
     )
 
 def create_rf_regressor():
@@ -796,14 +847,38 @@ def create_ada_regressor():
     )
 
 def create_elasticnet_regressor():
-    return ElasticNet(
-        alpha=0.1,  # L1 and L2 regularization strength
-        l1_ratio=0.5,  # Balance between L1 and L2 (0.5 = equal mix)
-        max_iter=1000,  # Maximum iterations for convergence
-        tol=0.0001,  # Tolerance for optimization
-        random_state=42,  # For reproducibility
-        selection='cyclic'  # Feature selection method
-    )
+    """Create and return an optimized ElasticNet regressor for regression tasks.
+    
+    The ElasticNet combines L1 and L2 regularization to handle correlated features
+    and prevent overfitting. This implementation uses optimized hyperparameters
+    and performance settings.
+    
+    Returns:
+        ElasticNet: Configured ElasticNet regressor instance
+    
+    Note:
+        - alpha=0.1 provides moderate regularization
+        - l1_ratio=0.5 balances L1/L2 penalties
+        - precompute=True speeds up fitting for dense data
+        - max_iter increased to 1000 to ensure convergence
+    """
+    try:
+        return ElasticNet(
+            alpha=0.1,  # Regularization strength
+            l1_ratio=0.5,  # Balance between L1/L2
+            max_iter=1000,  # Increased to ensure convergence
+            tol=0.0001,  # Tighter tolerance for better accuracy
+            random_state=42,
+            selection='cyclic',  # More reliable than random
+            precompute=True,  # Speeds up on dense data
+            warm_start=True,  # Reuse previous solution
+            fit_intercept=True,
+            normalize=False,  # Data should be scaled externally
+            positive=False  # Allow negative coefficients
+        )
+    except Exception as e:
+        logger.error(f"Error creating ElasticNet regressor: {str(e)}")
+        raise
 
 def create_gbm_regressor():
     """Create and return a configured Gradient Boosting regressor"""

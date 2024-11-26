@@ -37,15 +37,15 @@ column_order = ['running_id', 'Date', 'league', 'Home', 'Away','Score', 'real_ou
                 ] #, ,'home_poisson_xG', 'away_poisson_xG'
 
 
-def add_home_away_columns(existing_df):
+def add_base_columns(existing_df):
     try:
         # Get the list of running_ids to filter in MongoDB
-        unique_ids = existing_df['unique_id'].tolist()
+        unique_ids = existing_df['running_id'].tolist()
         logger.info(f"Processing {len(unique_ids)} unique IDs")
         
         # Query MongoDB to get the matching documents
-        query = {'unique_id': {'$in': unique_ids}}
-        projection = {'_id': 0, 'unique_id': 1, 'Home': 1, 'Away': 1, 'league': 1, 'Date': 1, 'Odd_Home': 1, 'Odds_Draw': 1, 'Odd_Away': 1}
+        query = {'running_id': {'$in': unique_ids}}
+        projection = {'_id': 0, 'running_id': 1, 'Home': 1, 'Away': 1, 'league': 1, 'Date': 1, 'Odd_Home': 1, 'Odds_Draw': 1, 'Odd_Away': 1}
 
         # Corrected: Access the database and collection using methods
         # db = db_client.get_database('football_data')
@@ -60,7 +60,7 @@ def add_home_away_columns(existing_df):
             # Convert 'Date' column to string format 'YYYY-MM-DD' if it exists
             if 'Date' in mongo_df.columns:
                 mongo_df['Date'] = mongo_df['Date'].dt.strftime('%Y-%m-%d')
-            mongo_df = mongo_df[['unique_id', 'Date', 'league_encoded', 'Home', 'Away']]
+            mongo_df = mongo_df[['running_id', 'Date', 'league_encoded', 'Home', 'Away']]
             # mongo_df['Date'] = pd.to_datetime(mongo_df['year'].astype(str) + '-' + mongo_df['month'].astype(str) + '-' + mongo_df['day_of_month'].astype(str))
             logger.info(f"Retrieved {len(mongo_df)} documents from Excel")
         else:
@@ -69,13 +69,13 @@ def add_home_away_columns(existing_df):
             logger.info(f"Retrieved {len(mongo_data)} documents from MongoDB")
             
         # Merge the MongoDB data with the existing DataFrame based on 'unique_id'
-        merged_df = pd.merge(existing_df, mongo_df, on='unique_id', how='left')
+        merged_df = pd.merge(existing_df, mongo_df, on='running_id', how='left')
         logger.info(f"Merged dataframe shape: {merged_df.shape}")
         
         return merged_df
         
     except Exception as e:
-        logger.error(f"Error in add_home_away_columns: {str(e)}")
+        logger.error(f"Error in add_base_columns: {str(e)}")
         pass
 
 def add_score(existing_df):
@@ -169,7 +169,7 @@ try:
     stacked_outcome = stacked_outcome[['running_id','match_outcome_prediction_base','match_outcome_prediction_enhanced','match_outcome_prediction_enhanced_negative','match_outcome_confidence','match_outcome_uncertainty']].sort_values(by='running_id')
 
     # Merge the data
-    stacked_merged_df = add_home_away_columns(stacked_home)
+    stacked_merged_df = add_base_columns(stacked_home)
     if stacked_merged_df is None or stacked_merged_df.empty:
         stacked_merged_df = stacked_home
         logger.error("add_home_away_columns returned an empty dataframe or None")

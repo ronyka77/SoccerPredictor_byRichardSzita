@@ -103,7 +103,7 @@ def get_all_urls():
     ]
 
     # Specific seasons to scrape data for; add additional seasons as needed
-    seasons = ['2024-2025'] 
+    seasons = ["2021-2022",'2024-2025'] 
     urls = []  # List to store generated URLs
     
     # Generate URLs for each league and season, appending to the urls list

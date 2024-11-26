@@ -99,10 +99,11 @@ def fuzzy_merge_row(row: pd.Series, odds_data_df: pd.DataFrame, threshold: int =
         
         if score >= threshold:
             odds_row = odds_data_df[odds_data_df['unique_id'] == original_odds_id].iloc[0]
-            if odds_row['Date'] == match_date or abs((pd.to_datetime(odds_row['Date']) - pd.to_datetime(match_date)).days) <= 1:
+            if odds_row['Date'] == match_date or abs((pd.to_datetime(odds_row['Date']) - pd.to_datetime(match_date)).days) <= 2:
                 return {**row.to_dict(), **odds_row.to_dict()}, None
             else:
                 logger.info(f"Date mismatch for ID: {match_id} and {original_odds_id}")
+                print(f"Date mismatch for days: {abs((pd.to_datetime(odds_row['Date']) - pd.to_datetime(match_date)).days)}")
                 return row.to_dict(), None
         else:
             return row.to_dict(), {
@@ -143,9 +144,9 @@ def store_aggregated_data_row_by_row(df: pd.DataFrame, collection_name: str = MA
                             )
                         )
             
-            # if operations:
-            #     result = collection.bulk_write(operations)
-            #     logger.info(f"Bulk write result: {result.bulk_api_result}")
+            if operations:
+                result = collection.bulk_write(operations)
+                print(f"Bulk write result: {result.bulk_api_result}")
     
     except Exception as e:
         logger.error(f"Failed to store data row by row: {str(e)}")
