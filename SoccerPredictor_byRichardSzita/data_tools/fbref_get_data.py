@@ -89,21 +89,34 @@ def get_all_urls():
         ('Bundesliga', '20'),  # Germany
         ('2-Bundesliga','33'),  # Germany
         ('3-Liga','59'),  # Germany
+        ('Liga-Profesional-Argentina', '21'),  # Argentina
         ('Serie A', '24'),  # Brazil Serie A
         ('Serie-B','38'),  # Brazil Serie B
-        ('Liga-Profesional-Argentina', '21'),  # Argentina
         ('Eredivisie','23'),  # Netherlands
         ('Eerste-Divisie','51'),  # Netherlands
         ('J1-League','25'),  # Japan
-        ('Russian-Premier-League','30'),  # Russia
+        ('Super-Lig','26'),  # Turkey
+        ('Allsvenskan','29'),  # Sweden
+        ('Superettan','48'),  # Sweden
+        ('Russian-Premier-League','30'),  # Russia       
         ('Primeira-Liga','32'),  # Portugal
         ('Ekstraklasa','36'),  # Poland
-        ('Allsvenskan','29'),  # Sweden
-        ('Superettan','48')  # Sweden
+        ('Scottish-Premiership','40'),  # Scotland
+        ('Primera-A','41'), #Colombia
+        ('Liga-I','47'), #Romania
+        ('Danish-Superliga','50') #Denmark
     ]
+    
+    # leagues = [
+    #     ('Super-Lig','26'),  # Turkey
+    #     ('Scottish-Premiership','40'),  # Scotland
+    #     ('Primera-A','41'), #Colombia
+    #     ('Liga-I','47'), #Romania
+    #     ('Danish-Superliga','50') #Denmark
+    # ]
 
     # Specific seasons to scrape data for; add additional seasons as needed
-    seasons = ["2021-2022",'2024-2025'] 
+    seasons = ["2020-2021","2021-2022"] 
     urls = []  # List to store generated URLs
     
     # Generate URLs for each league and season, appending to the urls list
@@ -218,7 +231,8 @@ def delete_invalid_matches(collection):
             "$or": [
                 {"Date": None},
                 {"Score": ""},
-                {"Match Report": ""}
+                {"Match Report": ""},
+                {"Home": {"$exists": False}}
             ]
         })
         logging.info(f"Successfully deleted {result.deleted_count} matches that had null dates or empty scores")
@@ -232,9 +246,11 @@ def main():
     client = MongoClient('192.168.0.77', 27017)  # Connect to MongoDB server
     db = client['football_data']  # Database for storing football data
     collection = db['fixtures']  # Collection for fixtures
-    delete_invalid_matches(collection)
     
     all_urls = get_all_urls()  # Generate URLs for scraping
+    # Only run delete_invalid_matches if 2024-2025 season exists in URLs
+    if any(season == "2024-2025" for _, _, season in all_urls):
+        delete_invalid_matches(collection)
 
     # Loop through each URL and scrape data
     for url, league, season in all_urls:

@@ -9,10 +9,11 @@ from sklearn.impute import KNNImputer, IterativeImputer
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler, MinMaxScaler
 from sklearn.feature_selection import RFE, RFECV, SelectKBest, f_regression
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-from sklearn.model_selection import train_test_split, cross_val_score, RandomizedSearchCV, cross_validate
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor, StackingRegressor
+from sklearn.model_selection import train_test_split, cross_val_score, RandomizedSearchCV, cross_validate, KFold, LeaveOneOut, StratifiedKFold
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor, StackingRegressor, ExtraTreesRegressor, VotingRegressor
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.linear_model import Ridge, ElasticNet
+from sklearn.linear_model import Ridge, ElasticNet, Lasso
+from sklearn.pipeline import Pipeline
 from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
 from keras.models import Sequential, load_model
@@ -24,9 +25,15 @@ from scikeras.wrappers import KerasRegressor
 from scipy.stats import uniform, randint
 from util_tools.model_classes import WithinRangeMetric, EarlyStoppingCallback, LoggingEstimator, CustomReduceLROnPlateau
 import optuna
-from sklearn.pipeline import Pipeline
+import optuna.visualization as vis
+import mlflow
+import psutil
 from multiprocessing import cpu_count
 import gc
+
+
+# Set this before running your code
+os.environ["MLFLOW_TRACKING_URI"] = "file:///192.168.0.77/Betting/Chatgpt/SoccerPredictor_byRichardSzita/mlruns"
 
 # Ensure the parent directory is in the path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -193,29 +200,40 @@ def create_neural_network(input_dim: int) -> Sequential:
 
     return model
 
-def create_enhanced_neural_network(input_dim: int) -> Sequential:
-    model = Sequential([
-        Dense(256, input_dim=input_dim, kernel_regularizer=l2(0.01)),
-        BatchNormalization(),
-        Activation('relu'),
-        Dropout(0.3),
+def create_enhanced_neural_network(input_dim: int, n_layers: int = 3, units: int = 256) -> Sequential:
+    """
+    Creates an enhanced neural network with configurable layers and units.
+    
+    Args:
+        input_dim (int): Input dimension
+        n_layers (int): Number of hidden layers
+        units (int): Number of units in first layer (halved for each subsequent layer)
         
-        Dense(128, kernel_regularizer=l2(0.01)),
-        BatchNormalization(),
-        Activation('relu'),
-        Dropout(0.2),
-        
-        Dense(64, kernel_regularizer=l2(0.01)),
-        BatchNormalization(),
-        Activation('relu'),
-        Dropout(0.1),
-        
-        Dense(1, activation='relu')  # For goals prediction
-    ])
+    Returns:
+        Sequential: Compiled Keras model
+    """
+    model = Sequential()
+    
+    # Input layer
+    model.add(Dense(units, input_dim=input_dim, kernel_regularizer=l2(0.01)))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.3))
+    
+    # Hidden layers
+    for i in range(n_layers - 1):
+        units = units // 2
+        model.add(Dense(units, kernel_regularizer=l2(0.01)))
+        model.add(BatchNormalization())
+        model.add(Activation('relu'))
+        model.add(Dropout(max(0.1, 0.3 - i * 0.1)))
+    
+    # Output layer
+    model.add(Dense(1, activation='relu'))
     
     model.compile(
         optimizer=Adam(learning_rate=0.001),
-        loss='huber',  # More robust to outliers
+        loss='huber',
         metrics=['mae', WithinRangeMetric()]
     )
     return model
@@ -617,139 +635,305 @@ def enhance_data_quality(data: pd.DataFrame, logger: logging.Logger) -> pd.DataF
     
     # def enhance_predictions(base_predictions, model, recent_performance, data, logger):
 
+def prepare_data_for_optimization(X: np.ndarray, y: np.ndarray) -> tuple:
+    """
+    Prepare data for hyperparameter optimization by handling missing values,
+    scaling features, and validating data integrity.
+    
+    Args:
+        X (np.ndarray): Input features array
+        y (np.ndarray): Target values array
+        
+    Returns:
+        tuple: Processed (X, y) arrays ready for optimization
+    """
+    # Handle missing values
+    if np.isnan(X).any():
+        imputer = KNNImputer(n_neighbors=5)
+        X = imputer.fit_transform(X)
+    
+    # Scale features
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+    
+    # Ensure y is 1D array
+    y = np.ravel(y)
+    
+    # Remove any remaining invalid values
+    mask = ~(np.isnan(y) | np.isinf(y))
+    X = X[mask]
+    y = y[mask]
+    
+    return X, y
+
 def optimize_hyperparameters(X: np.ndarray, y: np.ndarray, logger: logging.Logger) -> dict:
-    """
-    Implement hyperparameter optimization using pipeline and Optuna.
-    """
+    """Enhanced hyperparameter optimization"""
     try:
         logger.info("Starting hyperparameter optimization")
+        gc.collect()
         
-        # 1. Memory optimization
-        gc.collect()  # Force garbage collection
+        # Configure resources
+        resources = configure_resources(X.shape)
         
-        # 2. Check data size and potentially downsample
-        if X.shape[0] > 10000:
-            logger.info("Large dataset detected, using stratified sampling")
-            X_sample, _, y_sample, _ = train_test_split(
-                X, y, train_size=10000, random_state=42, stratify=y if len(y.shape) == 1 else None
-            )
-            X, y = X_sample, y_sample
+        # Prepare data
+        X, y = prepare_data_for_optimization(X, y)
+        
+        # Create pipeline components
+        estimators = create_estimators(X)
+        cv_strategy = create_cv_strategy(X, y)
+        pipeline = create_pipeline(estimators, resources)
+        
+        # Create study with tracking
+        study, callback = create_study_with_tracking()
+        
+        # Define objective with enhanced parameter space
+        def objective(trial):
+            params = get_parameter_space(trial)
+            pipeline.set_params(**params)
             
-        # Convert to float32 (existing code)
-        X = X.astype(np.float32)
-        y = y.astype(np.float32)
+            # Quick evaluation
+            # quick_scores = evaluate_quick(pipeline, X, y)  # This line causes the NameError
+            # Replace or remove the above line
+            # Example: quick_scores = some_other_evaluation_function(pipeline, X, y)
+            
+            # Full evaluation
+            scores = evaluate_full(pipeline, X, y, cv_strategy)
+            return compute_objective_value(scores)
         
+        # Run optimization with improved error handling
+        best_params = safe_optimize(objective, study, n_trials=50, logger=logger)
+        
+        # Analyze and log results
+        analyze_and_log_results(study, logger)
+        
+        return best_params
+        
+    except Exception as e:
+        logger.error(f"Error in optimize_hyperparameters: {str(e)}")
+        raise
+
+def analyze_optimization_results(study, logger):
+    """Analyze and visualize optimization results."""
+    try:
+        
+        
+        # Plot optimization history
+        history_plot = vis.plot_optimization_history(study)
+        
+        # Plot parameter importances
+        param_importance = vis.plot_param_importances(study)
+        
+        # Plot parallel coordinate plot
+        parallel_plot = vis.plot_parallel_coordinate(study)
+        
+        # Plot slice plot
+        slice_plot = vis.plot_slice(study)
+        
+        # Save visualization results
+        plots = {
+            'history': history_plot,
+            'importance': param_importance,
+            'parallel': parallel_plot,
+            'slice': slice_plot
+        }
+        
+        # Log optimization results
+        logger.info(f"Best trial value: {study.best_value}")
+        logger.info(f"Best parameters: {study.best_params}")
+        
+        return plots
+        
+    except Exception as e:
+        logger.error(f"Error in optimization analysis: {str(e)}")
+        return None
+
+# Define MLflow callback here instead
+def mlflow_callback(study, trial):
+    trial_value = trial.value if trial.value is not None else float('nan')
+    mlflow.log_params(trial.params)
+    mlflow.log_metrics({'value': trial_value})
+
+def create_study_with_tracking():
+    """Create Optuna study with MLflow tracking."""
+    
+    # Custom sampler for better exploration
+    sampler = optuna.samplers.CmaEsSampler(
+        seed=42,
+        n_startup_trials=10,
+        independent_sampler=optuna.samplers.TPESampler(seed=42)
+    )
+    
+    study = optuna.create_study(
+        direction='minimize',
+        sampler=sampler,
+        pruner=optuna.pruners.HyperbandPruner(
+            min_resource=1,
+            max_resource=50,
+            reduction_factor=3
+        )
+    )
+    
+    # Return both study and callback
+    return study, mlflow_callback
+
+def safe_optimize(objective, study, n_trials, logger):
+    """Safer optimization with better error handling"""
+    try:
+        mlflow.set_tracking_uri("file:///192.168.0.77/Betting/Chatgpt/SoccerPredictor_byRichardSzita/mlruns")
+        
+        for _ in range(n_trials):
+            with mlflow.start_run():
+                study.optimize(
+                    objective,
+                    n_trials=1,  # Run one trial at a time
+                    callbacks=[
+                        mlflow_callback,
+                    ],
+                    n_jobs=3,
+                    catch=(ValueError, RuntimeError),
+                    timeout=7200
+                )
+                
+                # Log detailed results
+                mlflow.log_metrics({
+                    'best_value': study.best_value,
+                    'n_trials': len(study.trials),
+                    'n_completed': len([t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]),
+                    'n_pruned': len([t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED])
+                })
+                
+        return study.best_params
+            
+    except Exception as e:
+        logger.error(f"Optimization failed: {str(e)}")
+        if len(study.trials) > 0:
+            return study.best_params
+        raise
+
+def create_cv_strategy(X, y):
+    """Create adaptive cross-validation strategy"""
+    n_samples = len(X)
+    
+    if n_samples < 1000:
+        # Use leave-one-out for very small datasets
+        return LeaveOneOut()
+    else:
+        # Use standard k-fold for larger datasets
+        return KFold(n_splits=5, shuffle=True, random_state=42)
+
+def configure_resources(X_shape):
+    """Smart resource allocation"""
+    total_memory = psutil.virtual_memory().total
+    data_size = X_shape[0] * X_shape[1] * 4  # Assuming float32
+    
+    # Adjust batch size based on available memory
+    max_batch_size = min(256, max(16, int(total_memory * 0.1 / data_size)))
+    
+    # Adjust parallel jobs based on CPU cores and memory
+    n_cores = cpu_count()
+    memory_factor = min(1.0, (total_memory - data_size) / total_memory)
+    n_jobs = max(1, min(4, int(n_cores * memory_factor)))
+    
+    return {
+        'batch_size': max_batch_size,
+        'n_jobs': n_jobs
+    }
+
+def check_early_stopping(scores, trial, study):
+    """More sophisticated early stopping logic"""
+    train_mse = -scores['train_mse'].mean()
+    val_mse = -scores['test_mse'].mean()
+    
+    # Dynamic threshold based on study progress
+    n_trials = len(study.trials)
+    threshold_multiplier = max(1.2, 2.0 * np.exp(-n_trials / 20))  # Relaxes over time
+    
+    # Multiple stopping conditions
+    conditions = [
+        (val_mse > study.best_value * threshold_multiplier, "poor performance"),
+        (train_mse < val_mse * 0.3, "severe overfitting"),
+        (np.isnan(val_mse), "numerical instability")
+    ]
+    
+    for condition, reason in conditions:
+        if condition:
+            return True, reason
+    return False, None
+
+def get_parameter_space(trial): 
+    """Define a more sophisticated parameter space"""
+    params = {
+        # LightGBM parameters with more nuanced ranges
+        'stacking__lgb__n_estimators': trial.suggest_int('lgb_n_estimators', 100, 1000, step=50),
+        'stacking__lgb__learning_rate': trial.suggest_float('lgb_lr', 1e-4, 0.1, log=True),
+        'stacking__lgb__max_depth': trial.suggest_int('lgb_depth', 3, 15),
+        'stacking__lgb__min_child_samples': trial.suggest_int('lgb_min_child_samples', 5, 100),
+        'stacking__lgb__subsample': trial.suggest_float('lgb_subsample', 0.5, 1.0),
+        
+        # XGBoost with additional parameters
+        'stacking__xgb__n_estimators': trial.suggest_int('xgb_n_estimators', 100, 1000, step=50),
+        'stacking__xgb__learning_rate': trial.suggest_float('xgb_lr', 1e-4, 0.1, log=True),
+        'stacking__xgb__max_depth': trial.suggest_int('xgb_max_depth', 3, 15),
+        'stacking__xgb__subsample': trial.suggest_float('xgb_subsample', 0.5, 1.0),
+        'stacking__xgb__colsample_bytree': trial.suggest_float('xgb_colsample', 0.5, 1.0),
+        
+        # Neural Network parameters updated to match the new structure
+        'stacking__nn__model__n_layers': trial.suggest_int('nn_layers', 2, 5),
+        'stacking__nn__model__units': trial.suggest_int('nn_units', 32, 512, log=True),
+        'stacking__nn__fit__epochs': trial.suggest_int('nn_epochs', 50, 200),
+        'stacking__nn__fit__batch_size': trial.suggest_int('nn_batch', 16, 256, log=True),
+    }
+    return params
+
+def create_estimators(X: np.ndarray) -> list:
+    """
+    Create a list of estimators for the stacked model.
+    
+    Args:
+        X (np.ndarray): Input features array to determine input dimensions for NN
+        
+    Returns:
+        list: List of tuples containing (name, estimator) pairs
+    """
+    try:
         # Create base estimators
         lgb_regressor = create_lgb_regressor()
         xgb_regressor = create_xgb_regressor()
         nn_regressor = create_nn_regressor(X)
         rf_regressor = create_rf_regressor()
         ada_regressor = create_ada_regressor()
+        gbm_regressor = create_gbm_regressor()
+        elasticnet_regressor = create_elasticnet_regressor()
         
-        # Define estimators list
+        # Create estimator list with logging wrappers
         estimators = [
             ('lgb', lgb_regressor),
             ('xgb', xgb_regressor),
-            ('nn', nn_regressor), 
+            ('nn', nn_regressor),
             ('rf', rf_regressor),
-            ('ada', ada_regressor)
+            ('ada', ada_regressor),
+            ('gbm', gbm_regressor),
+            ('elasticnet', elasticnet_regressor)
         ]
-
-        # Create final estimator
-        final_estimator = VotingRegressor([
-            ('ridge', Ridge(alpha=0.1)),
-            ('lasso', Lasso(alpha=0.1)),
-            ('elasticnet', ElasticNet(alpha=0.1, l1_ratio=0.5))
-        ])
-
-        # Define cross-validation strategy
-        cv = KFold(n_splits=5, shuffle=True, random_state=42)
-
-        # Create preprocessing pipeline
-        preprocessor = StandardScaler()
         
-        # 4. Resource-aware configuration
-        n_cores = cpu_count()
-        n_jobs = max(1, min(4, n_cores - 1))  # Leave one core free
+        return estimators
         
-        # Update stacking regressor
-        stacking_regressor = StackingRegressor(
-            estimators=estimators,
-            final_estimator=final_estimator,
-            cv=cv,
-            n_jobs=n_jobs,  # Limited parallel jobs
-            verbose=1
-        )
-
-        # Create full pipeline
-        pipeline = Pipeline([
-            ('preprocessor', preprocessor),
-            ('stacking', stacking_regressor)
-        ])
-
-        # Define Optuna objective
-        def objective(trial):
-            try:
-                params = {
-                    'stacking__lgb__n_estimators': trial.suggest_int('lgb_n_estimators', 100, 300),
-                    'stacking__lgb__learning_rate': trial.suggest_float('lgb_lr', 0.01, 0.05),
-                    'stacking__lgb__max_depth': trial.suggest_int('lgb_depth', 3, 10),
-                    'stacking__xgb__n_estimators': trial.suggest_int('xgb_n_estimators', 100, 500),
-                    'stacking__xgb__learning_rate': trial.suggest_float('xgb_lr', 0.01, 0.05),
-                    'stacking__rf__n_estimators': trial.suggest_int('rf_n_estimators', 100, 300),
-                    'stacking__nn__fit__epochs': trial.suggest_int('nn_epochs', 50, 100),
-                    'stacking__nn__fit__batch_size': trial.suggest_int('nn_batch', 32, 128)
-                }
-
-                pipeline.set_params(**params)
-                
-                # Use cross_validate instead of cross_val_score for more metrics
-                scores = cross_validate(
-                    pipeline, X, y,
-                    cv=cv,
-                    scoring={
-                        'mse': 'neg_mean_squared_error',
-                        'mae': 'neg_mean_absolute_error'
-                    },
-                    n_jobs=-1,
-                    return_train_score=True
-                )
-                
-                # Check for overfitting
-                train_mse = -scores['train_mse'].mean()
-                val_mse = -scores['test_mse'].mean()
-                
-                if train_mse < val_mse * 0.5:  # Significant overfitting
-                    logger.warning(f"Overfitting detected: train_mse={train_mse}, val_mse={val_mse}")
-                    return float('inf')  # Penalize overfitting
-                
-                return val_mse
-
-            except Exception as e:
-                logger.error(f"Error in trial: {str(e)}")
-                return float('inf')  # Return worst possible score
-
-        # Run optimization
-        study = optuna.create_study(direction='minimize')
-        study.optimize(objective, n_trials=10)
-
-        # Get best parameters
-        best_params = study.best_params
-        logger.info(f"Best parameters: {best_params}")
-
-        # # Train final model with best parameters
-        # pipeline.set_params(**best_params)
-        # pipeline.fit(X, y)
-
-        # # Save model
-        # joblib.dump(pipeline, 'soccer_predictor_model.joblib')
-        # logger.info("Model saved successfully")
-
-        return best_params
-
     except Exception as e:
-        logger.error(f"Error in optimize_hyperparameters: {str(e)}")
+        logger.error(f"Error creating estimators: {str(e)}")
         raise
+
+def create_final_estimator() -> VotingRegressor:
+    """
+    Creates the final estimator for the stacking ensemble.
+    
+    Returns:
+        VotingRegressor: A voting regressor that combines Ridge, Lasso, and ElasticNet
+    """
+    return VotingRegressor([
+        ('ridge', Ridge(alpha=0.1)),
+        ('lasso', Lasso(alpha=0.1)),
+        ('elasticnet', ElasticNet(alpha=0.1, l1_ratio=0.5))
+    ])
 
 def create_lgb_regressor():
     """Create and return a configured LightGBM regressor"""
@@ -808,11 +992,11 @@ def create_nn_regressor(X):
     
     return KerasRegressor(
         model=create_enhanced_neural_network,
-        # Model parameters
-        model__input_dim=X.shape[1],  # This goes to create_enhanced_neural_network
-        # Fit parameters
-        fit__epochs=200,              # Changed from epochs to fit__epochs
-        fit__batch_size=128,          # Changed from batch_size to fit__batch_size
+        model__input_dim=X.shape[1],
+        model__n_layers=3,  # Default value
+        model__units=256,   # Default value
+        fit__epochs=200,
+        fit__batch_size=128,
         fit__validation_split=0.2,
         fit__callbacks=[reduce_lr, early_stopping],
         fit__verbose=1
@@ -893,17 +1077,123 @@ def create_gbm_regressor():
         random_state=42
     )
 
-
-
-
-#     """
-#     Enhance predictions with uncertainty estimates and ensemble analysis.
+def create_pipeline(estimators: list, resources: dict) -> Pipeline:
+    """
+    Create a scikit-learn pipeline with the given estimators and resources.
     
-#     Args:
-#         base_predictions: Original model predictions
-#         model: Trained model
-#         data: Input data
+    Args:
+        estimators (list): List of (name, estimator) tuples
+        resources (dict): Dictionary containing resource configurations
         
+    Returns:
+        Pipeline: Configured scikit-learn pipeline
+    """
+    try:
+        # Create the stacking regressor with the estimators
+        stacking = StackingRegressor(
+            estimators=estimators,
+            final_estimator=create_final_estimator(),
+            n_jobs=resources['n_jobs'],
+            cv=5,
+            verbose=1
+        )
+        # Create and return the full pipeline
+        return Pipeline([
+            ('scaler', StandardScaler()),
+            ('stacking', stacking)
+        ])
+        
+    except Exception as e:
+        logger.error(f"Error creating pipeline: {str(e)}")
+        raise  
+
+def evaluate_full(pipeline, X, y, cv_strategy, logger=None):
+    """
+    Perform full model evaluation using cross-validation.
+    
+    Args:
+        pipeline: The sklearn pipeline to evaluate
+        X: Input features
+        y: Target values
+        cv_strategy: Cross-validation strategy
+        logger: Optional logger instance
+        
+    Returns:
+        dict: Dictionary containing evaluation scores
+    """
+    try:
+        # Create default logger if none provided
+        if logger is None:
+            logger = logging.getLogger(__name__)
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+            logger.setLevel(logging.INFO)
+            
+        # Perform cross-validation with multiple metrics
+        scores = cross_validate(
+            pipeline,
+            X, 
+            y,
+            cv=cv_strategy,
+            scoring={
+                'mse': 'neg_mean_squared_error',
+                'mae': 'neg_mean_absolute_error',
+                'r2': 'r2'
+            },
+            return_train_score=True,
+            n_jobs=-1,
+            error_score='raise'  # Added to help with debugging
+        )
+        
+        return scores
+        
+    except Exception as e:
+        if logger:
+            logger.error(f"Error in evaluate_full: {str(e)}")
+        # Return worst possible scores instead of None
+        return {
+            'train_mse': np.array([-float('inf')]),
+            'test_mse': np.array([-float('inf')]),
+            'train_mae': np.array([-float('inf')]),
+            'test_mae': np.array([-float('inf')]),
+            'train_r2': np.array([-float('inf')]),
+            'test_r2': np.array([-float('inf')])
+        }
+
+def compute_objective_value(scores):
+    """
+    Compute the objective value to minimize from cross-validation scores.
+    
+    Args:
+        scores: Dictionary of cross-validation scores
+        
+    Returns:
+        float: The objective value to minimize
+    """
+    # Convert negative MSE back to positive
+    test_mse = -scores['test_mse'].mean()
+    train_mse = -scores['train_mse'].mean()
+    
+    # Add regularization to prevent overfitting
+    # Penalize large gaps between train and test performance
+    regularization = abs(train_mse - test_mse) * 0.1
+    
+    return test_mse + regularization
+
+# Update the objective function to use these new functions
+def objective(trial):
+    """Objective function for hyperparameter optimization"""
+    params = get_parameter_space(trial)
+    pipeline.set_params(**params)
+    
+    # Full evaluation
+    scores = evaluate_full(pipeline, X, y, cv_strategy)
+    return compute_objective_value(scores)
+
+
+
 #     Returns:
 #         Dictionary containing enhanced predictions and metrics
 #     """

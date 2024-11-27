@@ -79,13 +79,16 @@ LEAGUES = {
     "eredivisie":"netherlands",
     "eerste-divisie":"netherlands",
     "liga-portugal":"portugal",
+    "superliga":"denmark",
+    "superliga":"romania",
+    "super-lig":"turkey",
     # "allsvenskan":"sweden",
     "ekstraklasa":"poland"
 }
 
 # Define years for historical data scraping
 # YEARS = ["2020-2021", "2021-2022", "2022-2023", "2023-2024"] # Use this for all historical data scraping
-YEARS = ["2021-2022","2023-2024"]
+YEARS = ["2020-2021"]
 # Define column names for the DataFrame where scraped data will be stored
 columns = ['Date', 'Time', 'Home', 'Away', 'Odd_Home', 'Odds_Draw', 'Odd_Away']
 
@@ -123,6 +126,14 @@ def generate_urls(leagues, years):
             # "https://www.oddsportal.com/football/brazil/serie-a-2021/results/",
             # "https://www.oddsportal.com/football/brazil/serie-a-2020/results/"
         ],
+        "colombia": [
+            "https://www.oddsportal.com/football/colombia/primera-a/",
+            "https://www.oddsportal.com/football/colombia/primera-a/results/"
+            # "https://www.oddsportal.com/football/colombia/primera-a-2023/results/",
+            # "https://www.oddsportal.com/football/colombia/primera-a-2022/results/",
+            # "https://www.oddsportal.com/football/colombia/primera-a-2021/results/",
+            # "https://www.oddsportal.com/football/colombia/primera-a-2020/results/"
+        ],
         "argentina": [
             "https://www.oddsportal.com/football/argentina/torneo-betano/",
             "https://www.oddsportal.com/football/argentina/torneo-betano/results/",
@@ -139,23 +150,23 @@ def generate_urls(leagues, years):
             # "https://www.oddsportal.com/football/japan/j1-league-2021/results/",
             # "https://www.oddsportal.com/football/japan/j1-league-2020/results/"
         ],
-        "netherlands": [
-        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2023/results/",
-            "https://www.oddsportal.com/football/netherlands/eerste-divisie-2022/results/",
-            "https://www.oddsportal.com/football/netherlands/eerste-divisie-2021/results/"
-        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2020-2021/results/",
-        #     "https://www.oddsportal.com/football/netherlands/eredivisie-2020-2021/results/"
-        ],
-        # "sweden": [
-        #     "https://www.oddsportal.com/football/sweden/allsvenskan-2023/results/",
-        #     "https://www.oddsportal.com/football/sweden/allsvenskan-2022/results/",
-        #     "https://www.oddsportal.com/football/sweden/allsvenskan-2021/results/",
-        #     "https://www.oddsportal.com/football/sweden/allsvenskan-2020/results/"
+        # "netherlands": [
+        # #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2023/results/",
+        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2022-2023/results/",
+        #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2021-2022/results/"
+        # #     "https://www.oddsportal.com/football/netherlands/eerste-divisie-2020-2021/results/",
+        # #     "https://www.oddsportal.com/football/netherlands/eredivisie-2020-2021/results/"
+        # ],
+        # "romania": [
+        #     "https://www.oddsportal.com/football/romania/liga-1-2023-2024/results/",
+        #     "https://www.oddsportal.com/football/romania/liga-1-2022-2023/results/",
+        #     "https://www.oddsportal.com/football/romania/liga-1-2021-2022/results/",
+        #     "https://www.oddsportal.com/football/romania/liga-1-2020-2021/results/"
         # ],
         "portugal": [
         #     "https://www.oddsportal.com/football/portugal/primeira-liga-2023-2024/results/",
         #     "https://www.oddsportal.com/football/portugal/primeira-liga-2022-2023/results/",
-            "https://www.oddsportal.com/football/portugal/primeira-liga-2021-2022/results/",
+            "https://www.oddsportal.com/football/portugal/liga-portugal-2021-2022/results/",
         #     "https://www.oddsportal.com/football/portugal/primeira-liga-2020-2021/results/"
         ],
         # "poland": [
@@ -216,16 +227,52 @@ def approve_cookie():
     except Exception as e:
         logger.warning(f"Cookie approval failed: {e}")  # Log any issue with cookie handling
 
-def get_pagination(url):
+def get_pagination(url, max_retries=3):
     """
-    Retrieve the number of pages available for a given URL.
-    This function assumes the presence of pagination links with data-number attributes.
+    Retrieve the number of pages with improved reliability and debugging.
     """
-    driver.get(url)  # Load the page
-    soup = BeautifulSoup(driver.page_source, "lxml")  # Parse the page source with BeautifulSoup
-    pagination_links = soup.select('a[data-number]')  # Select pagination links based on data-number attribute
-    # Return the last pagination number, or default to 1 if no pagination exists
-    return int(pagination_links[-1].text) if pagination_links else 1
+    for attempt in range(max_retries):
+        try:
+            driver.get(url)
+            time.sleep(2)  # Allow time for page load
+            
+            # Scroll to bottom to ensure all elements are loaded
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
+            
+            soup = BeautifulSoup(driver.page_source, "lxml")
+            pagination_links = soup.select('a[data-number]')
+            
+            if pagination_links:
+                max_page = int(pagination_links[-1].text)
+                logger.info(f"URL: {url}")
+                logger.info(f"Found pagination links: {[link.text for link in pagination_links]}")
+                logger.info(f"Max page number: {max_page}")
+                return max_page
+            else:
+                logger.warning(f"Attempt {attempt + 1}: No pagination links found for {url}")
+                
+                # Debug information
+                logger.debug("Page source excerpt:")
+                logger.debug(soup.prettify()[:1000])  # First 1000 chars of HTML
+                
+                # Check if we're being rate limited or blocked
+                if "rate limit" in soup.text.lower() or "blocked" in soup.text.lower():
+                    logger.warning("Possible rate limiting detected")
+                    time.sleep(5 * (attempt + 1))  # Exponential backoff
+                
+                # Try an alternative pagination selector
+                alt_pagination = soup.select('.pagination a')
+                if alt_pagination:
+                    logger.info("Found alternative pagination elements")
+                    logger.info(f"Alternative elements: {[link.text for link in alt_pagination]}")
+        
+        except Exception as e:
+            logger.error(f"Pagination error on attempt {attempt + 1}: {str(e)}")
+            time.sleep(3)
+    
+    logger.error(f"Failed to get pagination after {max_retries} attempts for {url}")
+    return 1  # Default to 1 page if all attempts fail
 
 def load_page_and_scroll(url, page):
     """Load the page and scroll to the bottom to load all elements."""
@@ -310,51 +357,74 @@ def process_event(event, league, actual_date):
     }
     
 def scrape_page(url, page, league, retries=3, delay=5):
-    """Scrapes event odds data from a specific page of a URL, with retries if data is empty."""
+    """Enhanced page scraping with better error handling and debugging."""
     for attempt in range(retries):
         try:
-            # Use Selenium to locate event rows directly without parsing the entire page HTML
-            event_elements = load_page_and_scroll(url, page)
-            data = []  # Initialize list to store parsed data
-            actual_date = None  # Variable to store parsed date
-            event_number = 1  # Track event number for logging
+            full_url = f"{url}#/page/{page}"
+            logger.info(f"Attempting to scrape: {full_url}")
             
-            # Process each event row to extract date and odds information
-            for event_element in event_elements:
-                # logger.info(f"Event number: {event_number}")
-                event_html = event_element.get_attribute('outerHTML')  # Get HTML of each event row
-                event = BeautifulSoup(event_html, "lxml")  # Parse only this row's HTML with BeautifulSoup
+            driver.get(full_url)
+            time.sleep(2)  # Initial wait
+            
+            # Scroll multiple times to ensure all content loads
+            for _ in range(3):
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+            
+            # Wait for events to be present
+            try:
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, 'eventRow'))
+                )
+            except Exception as e:
+                logger.warning(f"Timeout waiting for events on page {page}: {e}")
                 
-                # Parse date
+                # Debug information
+                soup = BeautifulSoup(driver.page_source, "lxml")
+                logger.debug(f"Current URL: {driver.current_url}")
+                logger.debug(f"Page title: {driver.title}")
+                logger.debug("Page source excerpt:")
+                logger.debug(soup.prettify()[:1000])
+                
+                if attempt < retries - 1:
+                    continue
+            
+            event_elements = driver.find_elements(By.CLASS_NAME, 'eventRow')
+            
+            if not event_elements:
+                logger.warning(f"No events found on page {page} (attempt {attempt + 1})")
+                if attempt < retries - 1:
+                    time.sleep(delay * (attempt + 1))
+                    continue
+            
+            # Process events as before...
+            data = []
+            actual_date = None
+            
+            for event_element in event_elements:
+                event_html = event_element.get_attribute('outerHTML')
+                event = BeautifulSoup(event_html, "lxml")
                 date = parse_date(event)
                 if date:
-                    actual_date = date  # Update actual date if found
+                    actual_date = date
                 if actual_date is None:
-                    logger.warning(f"Date format not recognized for '{date}'. Skipping event.")
-                    continue  # Skip this event if date parsing fails 
-                
+                    logger.warning(f"No date found for event {event_element}")
+                    continue
                 event_data = process_event(event_element, league, actual_date)
                 if event_data:
                     data.append(event_data)
-                    # logger.info(f"Processed event: {event_data['unique_id']}")
-                else:
-                    logger.info(f"Skipped event {event_number} due to parsing issues.")
-
-                # Increment event number after processing each event
-                event_number += 1
             
-            # Return collected data if available
             if data:
-                logger.info(f"Data found for {str(len(data))} matches")
+                logger.info(f"Successfully scraped {len(data)} events from page {page}")
                 return data
             else:
                 logger.warning(f"No data found on attempt {attempt + 1} for {url} page {page}")
                 time.sleep(delay)  # Wait before retrying if data is missing
             
         except Exception as e:
-            logger.error(f"Error on {url} page {page} attempt {attempt + 1}: {e}")
-            print(f"Error on {url} page {page} attempt {attempt + 1}: {e}")
-            time.sleep(delay)  # Wait before retrying if an error occurs
+            logger.error(f"Error scraping page {page} (attempt {attempt + 1}): {str(e)}")
+            if attempt < retries - 1:
+                time.sleep(delay * (attempt + 1))
     
     # Log if all retries failed and return empty data
     logger.error(f"Failed to scrape data from {url} page {page} after {retries} attempts")
@@ -395,18 +465,43 @@ def scrape_data():
     for entry in urls:
         url = entry["url"]
         league = entry["league"]
-        pagination = get_pagination(url)
-        for page in range(1, pagination + 1):
-            event_data = scrape_page(url, page, league)
-            if event_data:
-                # Validate and insert to MongoDB if data is present
-                if validate_data(event_data):
-                    insert_to_mongodb(event_data)
+        
+        try:
+            logger.info(f"\nStarting to scrape {url} for {league}")
+            pagination = get_pagination(url)
+            logger.info(f"Found {pagination} pages to scrape")
+            
+            successful_pages = 0
+            failed_pages = 0
+            
+            for page in range(1, pagination + 1):
+                logger.info(f"Scraping page {page}/{pagination}")
+                event_data = scrape_page(url, page, league)
+                
+                if event_data:
+                    successful_pages += 1
+                    if validate_data(event_data):
+                        insert_to_mongodb(event_data)
+                    else:
+                        logger.warning(f"Data validation failed for page {page}")
+                        failed_pages += 1
                 else:
-                    logger.warning(f"Data validation failed. No data inserted into MongoDB. {event_data}")
-                logger.info(f"Scraped data from {url} page {page}")
-            else:
-                logger.warning(f"Skipping empty data for {url} page {page}")
+                    logger.warning(f"No data retrieved for page {page}")
+                    failed_pages += 1
+            
+            # Log summary for this URL
+            logger.info(f"\nScraping summary for {url}:")
+            logger.info(f"Successfully scraped pages: {successful_pages}/{pagination}")
+            logger.info(f"Failed pages: {failed_pages}")
+            
+            # If too many failures, log additional information
+            if failed_pages > pagination * 0.3:  # More than 30% failed
+                logger.warning(f"High failure rate detected for {url}")
+                logger.warning("Consider investigating rate limiting or blocking")
+                
+        except Exception as e:
+            logger.error(f"Error processing {url}: {str(e)}")
+            continue
 
 # Run cookie approval and start data scraping process
 approve_cookie()

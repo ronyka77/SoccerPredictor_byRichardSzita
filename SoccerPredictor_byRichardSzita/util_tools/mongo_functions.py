@@ -187,6 +187,6 @@ def update_team_names(collection_name: str = 'fixtures'):
 
 if __name__ == "__main__":
     
-    update_match_stats_unique_id()
-    # update_team_names('match_stats')
-    # update_unique_id(collection_name='match_stats')
+    # update_match_stats_unique_id()
+    update_team_names('fixtures')
+    update_unique_id(collection_name='fixtures')

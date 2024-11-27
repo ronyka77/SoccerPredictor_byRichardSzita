@@ -224,6 +224,20 @@ def main(match_stats_collection: str = MATCH_STATS_COLLECTION) -> None:
         else:
             logger.error("No data after filtering")
             
+        # Drop rows from fixtures collection where Date or Home fields don't exist
+        try:
+            with db_client.get_database() as db:
+                result = db['fixtures'].delete_many({
+                    '$or': [
+                        {'Date': {'$exists': 0}},
+                        {'Home': {'$exists': 0}}
+                    ]
+                })
+                logger.info(f"Deleted {result.deleted_count} documents missing Date or Home fields")
+        except Exception as e:
+            logger.error(f"Error deleting documents: {str(e)}")
+            raise
+            
     except Exception as e:
         logger.error(f"Error in main function: {str(e)}", exc_info=True)
         raise
