@@ -6,7 +6,7 @@
 
 ## 🏆 Project Overview
 
-The Soccer Predictor by Richard Szita is an advanced machine learning pipeline designed to forecast football match outcomes with high accuracy. By leveraging a combination of ensemble learning techniques and neural networks, the system integrates data collection, feature engineering, and prediction models to deliver precise match predictions. Key functionalities include automated data scraping, sophisticated feature engineering, and a state-of-the-art stacked ensemble model that predicts match results, home goals, and away goals. This project is built with modern data science practices and a scalable architecture, making it a powerful tool for football analytics enthusiasts and professionals alike.
+The Soccer Predictor a is an advanced machine learning pipeline designed to forecast football match outcomes with high accuracy. By leveraging a combination of ensemble learning techniques and neural networks, the system integrates data collection, feature engineering, and prediction models to deliver precise match predictions. Key functionalities include automated data scraping, sophisticated feature engineering, and a state-of-the-art stacked ensemble model that predicts match results, home goals, and away goals. This project is built with modern data science practices and a scalable architecture, making it a powerful tool for football analytics enthusiasts and professionals alike.
 
 ## 🎯 System Overview
 
